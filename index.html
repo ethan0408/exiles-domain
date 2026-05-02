@@ -257,7 +257,7 @@
         }
 
         button.reset-btn {
-            background-color: var(--warning-color);
+            background-color: #d97706;
             width: 32%;
             margin-top: 10px;
         }
@@ -610,8 +610,12 @@
             document.getElementById('menu-screen').style.display = 'none';
             document.getElementById('game-container').style.display = 'flex';
             initBoard();
-            updateLanguageStrings();
+            updateLanguageSwitchGuard();
             setLanguage(currentLanguage);
+        }
+        
+        function LanguageSwitchGuard() {
+            // Guardrail to handle language string setup
         }
 
         function returnToMenu() {
@@ -806,6 +810,7 @@
         }
 
         function handleCellClick(r, c) {
+            if (isProcessingTurn || (playModeType === 'ai' && activePlayer !== player1)) return;
             if (!isCellVisible(r, c)) return;
             selectedCell = { r, c };
             renderBoard();
@@ -813,7 +818,7 @@
         }
 
         function executeAction() {
-            if (isProcessingTurn) return;
+            if (isProcessingTurn || (playModeType === 'ai' && activePlayer !== player1)) return;
             if (!selectedCell) {
                 logEvent("No cell selected. Click a cell first.");
                 alert("Please select a cell on the board first.");
@@ -933,7 +938,7 @@
                 activePlayer.money += 25000;
                 
                 hasClaimedThisTurn = true;
-                checkWin(activePlayer, enemy);
+                WinConditionCheck(activePlayer, enemy);
             } else {
                 logEvent(`DEFEAT! Lost troops in battle.`);
                 activePlayer.units = Math.max(0, activePlayer.units - 1);
@@ -945,7 +950,7 @@
             renderBoard();
         }
 
-        function checkWin(player, enemy) {
+        function WinConditionCheck(player, enemy) {
             if (enemy.territory.length === 0) {
                 alert(`${player.name} ` + dict[currentLanguage]['win_msg']);
                 initBoard();
@@ -953,7 +958,7 @@
         }
 
         function deployTroop() {
-            if (isProcessingTurn) return;
+            if (isProcessingTurn || (playModeType === 'ai' && activePlayer !== player1)) return;
             if (!selectedCell) {
                 alert("Please select a territory cell on the board to deploy a troop.");
                 return;
@@ -977,7 +982,7 @@
         }
 
         function buyUnit() {
-            if (isProcessingTurn) return;
+            if (isProcessingTurn || (playModeType === 'ai' && activePlayer !== player1)) return;
             let maxUnits = Math.floor(activePlayer.population / 10);
             if (activePlayer.units >= maxUnits) {
                 alert("Population limit reached: not everyone can fight!");
@@ -999,7 +1004,7 @@
         }
 
         function buildBuilding(type) {
-            if (isProcessingTurn) return;
+            if (isProcessingTurn || (playModeType === 'ai' && activePlayer !== player1)) return;
             if (!selectedCell) {
                 alert("Please select a cell first on the grid to build on.");
                 return;
@@ -1044,7 +1049,7 @@
         }
 
         function withdrawTroop() {
-            if (isProcessingTurn) return;
+            if (isProcessingTurn || (playModeType === 'ai' && activePlayer !== player1)) return;
             if (!selectedCell) {
                 alert("Select a territory first to withdraw a troop.");
                 return;
@@ -1171,41 +1176,76 @@
         }
 
         function executeAITurn() {
-            logEvent("AI is thinking...");
+            logEvent("AI is thinking strategically...");
             setTimeout(() => {
                 let p = activePlayer;
+                let enemy = (p.color === "p1") ? player2 : player1;
                 let foundAction = false;
 
-                // 1. Check if AI can attack with high probability of winning
-                for (let t of p.territory) {
-                    let neighbors = [
-                        {r: t.r+1, c: t.c},
-                        {r: t.r-1, c: t.c},
-                        {r: t.r, c: t.c+1},
-                        {r: t.r, c: t.c-1}
-                    ];
+                // 1. Survival Check: Happiness (Low)
+                if (p.happiness < 60.0 && p.money >= 500000) {
+                    let ownedCandidate = p.territory.find(c => !c.building);
+                    if (ownedCandidate) {
+                        ownedCandidate.building = "Town";
+                        p.money -= 500000;
+                        logEvent("AI built a Town to boost happiness.");
+                        foundAction = true;
+                    }
+                }
 
-                    for (let n of neighbors) {
-                        if (n.r >= 0 && n.r < BOARD_ROWS && n.c >= 0 && n.c < BOARD_COLS) {
-                            let c = board[n.r][n.c];
-                            let enemy = (p.color === "p1") ? player2 : player1;
-                            if (c.owner === enemy.color) {
-                                let p_force = p.units;
-                                let o_force = enemy.units + (c.troops || 0);
-                                let win_chance = (p_force * p_force) / ((p_force * p_force) + (o_force * o_force)) * 100;
-                                if (win_chance > 60) {
-                                    selectedCell = {r: n.r, c: n.c};
-                                    engageBattle(n.r, n.c);
-                                    foundAction = true;
-                                    break;
+                // 2. Economic Development: Build a mine on mountains if available
+                if (!foundAction && p.money >= 50000) {
+                    let mountainCandidate = p.territory.find(c => c.landscape === "mountain" && !c.building);
+                    if (mountainCandidate) {
+                        mountainCandidate.building = "Mine";
+                        p.money -= 50000;
+                        logEvent("AI built a Mine on a mountain for income.");
+                        foundAction = true;
+                    }
+                }
+
+                // 3. Military Check: Purchase units if the force is weak
+                if (!foundAction && p.units < 5 && p.money >= 1000 && p.population > 200) {
+                    p.money -= 1000;
+                    p.units += 1;
+                    p.population -= 40;
+                    p.happiness -= 2;
+                    logEvent("AI purchased a unit.");
+                    foundAction = true;
+                }
+
+                // 4. Attack Check
+                if (!foundAction) {
+                    for (let t of p.territory) {
+                        let neighbors = [
+                            {r: t.r+1, c: t.c},
+                            {r: t.r-1, c: t.c},
+                            {r: t.r, c: t.c+1},
+                            {r: t.r, c: t.c-1}
+                        ];
+
+                        for (let n of neighbors) {
+                            if (n.r >= 0 && n.r < BOARD_ROWS && n.c >= 0 && n.c < BOARD_COLS) {
+                                let c = board[n.r][n.c];
+                                if (c.owner === enemy.color) {
+                                    let p_force = p.units;
+                                    let o_force = enemy.units + (c.troops || 0);
+                                    let win_chance = (p_force * p_force) / ((p_force * p_force) + (o_force * o_force)) * 100;
+                                    
+                                    if (win_chance > 55) {
+                                        selectedCell = {r: n.r, c: n.c};
+                                        engageBattle(n.r, n.c);
+                                        foundAction = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
+                        if (foundAction) break;
                     }
-                    if (foundAction) break;
                 }
 
-                // 2. Otherwise expand if possible
+                // 5. Expand
                 if (!foundAction) {
                     for (let t of p.territory) {
                         let neighbors = [
@@ -1224,21 +1264,12 @@
                                     p.territory.push(c);
                                     p.units -= 1;
                                     foundAction = true;
+                                    logEvent(`AI claimed land at (${n.r}, ${n.c})`);
                                     break;
                                 }
                             }
                         }
                         if (foundAction) break;
-                    }
-                }
-
-                // 3. Build structures if economy allows
-                if (p.money >= 100000) {
-                    let candidates = p.territory.filter(c => !c.building);
-                    if (candidates.length > 0) {
-                        let randC = candidates[Math.floor(Math.random() * candidates.length)];
-                        randC.building = "Fort";
-                        p.money -= 100000;
                     }
                 }
 
