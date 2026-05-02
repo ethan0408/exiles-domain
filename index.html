@@ -164,6 +164,7 @@
             transition: all 0.2s ease;
             box-sizing: border-box;
             text-align: center;
+            border-radius: 4px;
         }
 
         .cell:hover {
@@ -173,21 +174,6 @@
 
         .cell.selected {
             border: 3px solid #facc15 !important;
-        }
-
-        /* Grid Shape Variants */
-        .square-grid {
-            border-radius: 4px;
-        }
-        
-        .hex-grid {
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            border-radius: 0;
-        }
-
-        .tri-grid {
-            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-            border-radius: 0;
         }
 
         .cell.ocean { background-color: #0c4a6e; }
@@ -366,8 +352,6 @@
             <label>Grid Type: 
                 <select id="set-grid-shape">
                     <option value="square-grid">Square</option>
-                    <option value="hex-grid">Hexagonal</option>
-                    <option value="tri-grid">Triangular</option>
                 </select>
             </label>
             <label>Starting Gold: <input type="number" id="set-gold" value="100000" step="5000"></label>
@@ -610,12 +594,8 @@
             document.getElementById('menu-screen').style.display = 'none';
             document.getElementById('game-container').style.display = 'flex';
             initBoard();
-            updateLanguageSwitchGuard();
+            updateLanguageStrings();
             setLanguage(currentLanguage);
-        }
-        
-        function LanguageSwitchGuard() {
-            // Guardrail to handle language string setup
         }
 
         function returnToMenu() {
@@ -1227,9 +1207,10 @@
                         for (let n of neighbors) {
                             if (n.r >= 0 && n.r < BOARD_ROWS && n.c >= 0 && n.c < BOARD_COLS) {
                                 let c = board[n.r][n.c];
-                                if (c.owner === enemy.color) {
+                                let enemyPlayer = (p.color === "p1") ? player2 : player1;
+                                if (c.owner === enemyPlayer.color) {
                                     let p_force = p.units;
-                                    let o_force = enemy.units + (c.troops || 0);
+                                    let o_force = enemyPlayer.units + (c.troops || 0);
                                     let win_chance = (p_force * p_force) / ((p_force * p_force) + (o_force * o_force)) * 100;
                                     
                                     if (win_chance > 55) {
