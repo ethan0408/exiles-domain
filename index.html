@@ -44,8 +44,8 @@
             padding: 40px;
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            width: 400px;
-            margin-top: 100px;
+            width: 420px;
+            margin-top: 50px;
             text-align: center;
         }
 
@@ -56,9 +56,9 @@
 
         #menu-screen button {
             width: 100%;
-            margin: 8px 0;
-            padding: 12px;
-            font-size: 16px;
+            margin: 6px 0;
+            padding: 10px;
+            font-size: 15px;
             background-color: var(--info-color);
             color: var(--text-main);
             border: none;
@@ -70,6 +70,33 @@
         #menu-screen button:hover {
             background-color: var(--accent-color);
             color: var(--bg-color);
+        }
+
+        .settings-box {
+            width: 100%;
+            background-color: #334155;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        .settings-box label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            color: var(--text-sub);
+        }
+
+        .settings-box input, .settings-box select {
+            background-color: #1e293b;
+            color: var(--text-main);
+            border: 1px solid #475569;
+            padding: 4px 8px;
+            border-radius: 4px;
+            width: 120px;
         }
 
         .lang-container {
@@ -112,12 +139,11 @@
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            overflow: auto;
         }
 
         .board {
             display: grid;
-            grid-template-columns: repeat(10, 55px);
-            grid-template-rows: repeat(9, 55px);
             gap: 4px;
             background-color: #334155;
             padding: 4px;
@@ -125,17 +151,19 @@
         }
 
         .cell {
-            background-color: #64748b;
+            width: 55px;
+            height: 55px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 8px;
+            font-size: 7.5px;
             font-weight: bold;
             color: var(--text-main);
             cursor: pointer;
-            border-radius: 4px;
             transition: all 0.2s ease;
+            box-sizing: border-box;
+            text-align: center;
         }
 
         .cell:hover {
@@ -145,7 +173,21 @@
 
         .cell.selected {
             border: 3px solid #facc15 !important;
-            box-sizing: border-box;
+        }
+
+        /* Grid Shape Variants */
+        .square-grid {
+            border-radius: 4px;
+        }
+        
+        .hex-grid {
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            border-radius: 0;
+        }
+
+        .tri-grid {
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            border-radius: 0;
         }
 
         .cell.ocean { background-color: #0c4a6e; }
@@ -157,19 +199,17 @@
 
         .cell.p1 {
             border: 3px solid var(--p1-color);
-            box-sizing: border-box;
         }
 
         .cell.p2 {
             border: 3px solid var(--p2-color);
-            box-sizing: border-box;
         }
 
         .cell.fogged {
             background-color: #1e293b;
             color: #334155;
             cursor: not-allowed;
-            border: none;
+            border: none !important;
         }
 
         .stats-box {
@@ -319,6 +359,29 @@
             <button onclick="setLanguage('en')">English</button>
             <button onclick="setLanguage('zh')">中文</button>
         </div>
+
+        <div class="settings-box">
+            <label>Grid Size (Rows): <input type="number" id="set-rows" value="9" min="5" max="12"></label>
+            <label>Grid Size (Cols): <input type="number" id="set-cols" value="10" min="5" max="12"></label>
+            <label>Grid Type: 
+                <select id="set-grid-shape">
+                    <option value="square-grid">Square</option>
+                    <option value="hex-grid">Hexagonal</option>
+                    <option value="tri-grid">Triangular</option>
+                </select>
+            </label>
+            <label>Starting Gold: <input type="number" id="set-gold" value="100000" step="5000"></label>
+            <label>Starting Population: <input type="number" id="set-pop" value="1000" min="500" max="5000" step="100"></label>
+            <label>Starting Morale: <input type="number" id="set-hap" value="80" min="50" max="100"></label>
+            <label>Starting Units: <input type="number" id="set-units" value="10" min="1" max="50"></label>
+            <label>Fog of War:
+                <select id="set-fog">
+                    <option value="on">On</option>
+                    <option value="off">Off</option>
+                </select>
+            </label>
+        </div>
+
         <button id="btn-vs-friend" onclick="playMode('friend')">Play vs Friend</button>
         <button id="btn-vs-ai" onclick="playMode('ai')">Play vs AI</button>
         <button id="btn-how-to" onclick="showHowToPlay()">How to Play</button>
@@ -383,14 +446,22 @@
     </div>
 
     <script>
-        const BOARD_ROWS = 9;
-        const BOARD_COLS = 10;
+        let BOARD_ROWS = 9;
+        let BOARD_COLS = 10;
         let board = [];
         let player1, player2, activePlayer, selectedCell;
         let playModeType = 'friend';
         let currentLanguage = 'en';
         let isProcessingTurn = false;
         let hasClaimedThisTurn = false;
+        let customSettings = {
+            money: 100000,
+            population: 1000,
+            happiness: 80,
+            units: 10,
+            gridShape: "square-grid",
+            fog: "on"
+        };
 
         const dict = {
             'en': {
@@ -518,7 +589,24 @@
         }
 
         function playMode(mode) {
+            let rInput = parseInt(document.getElementById('set-rows').value) || 9;
+            let cInput = parseInt(document.getElementById('set-cols').value) || 10;
+            
+            if (rInput * cInput > 144) {
+                alert("Size too large! For performance reasons, total grid area cannot exceed 144 cells.");
+                return;
+            }
+
+            BOARD_ROWS = rInput;
+            BOARD_COLS = cInput;
             playModeType = mode;
+            customSettings.money = parseInt(document.getElementById('set-gold').value) || 100000;
+            customSettings.population = parseInt(document.getElementById('set-pop').value) || 1000;
+            customSettings.happiness = parseInt(document.getElementById('set-hap').value) || 80;
+            customSettings.units = parseInt(document.getElementById('set-units').value) || 10;
+            customSettings.gridShape = document.getElementById('set-grid-shape').value;
+            customSettings.fog = document.getElementById('set-fog').value;
+
             document.getElementById('menu-screen').style.display = 'none';
             document.getElementById('game-container').style.display = 'flex';
             initBoard();
@@ -575,10 +663,10 @@
                 id: 1,
                 name: "Player 1",
                 color: "p1",
-                money: 100000,
-                population: 1000,
-                happiness: 80.0,
-                units: 10,
+                money: customSettings.money,
+                population: customSettings.population,
+                happiness: customSettings.happiness,
+                units: customSettings.units,
                 territory: [],
                 capital: { r: 0, c: 0 }
             };
@@ -586,12 +674,12 @@
                 id: 2,
                 name: "Player 2",
                 color: "p2",
-                money: 100000,
-                population: 1000,
-                happiness: 80.0,
-                units: 10,
+                money: customSettings.money,
+                population: customSettings.population,
+                happiness: customSettings.happiness,
+                units: customSettings.units,
                 territory: [],
-                capital: { r: 8, c: 9 }
+                capital: { r: BOARD_ROWS - 1, c: BOARD_COLS - 1 }
             };
             activePlayer = player1;
             selectedCell = null;
@@ -637,7 +725,7 @@
             p1Cap.troops = 1;
             player1.territory = [p1Cap];
 
-            let p2Cap = board[8][9];
+            let p2Cap = board[BOARD_ROWS - 1][BOARD_COLS - 1];
             p2Cap.owner = "p2";
             p2Cap.troops = 1;
             player2.territory = [p2Cap];
@@ -656,7 +744,7 @@
         }
 
         function isCellVisible(r, c) {
-            // A cell is visible if the active player owns it or it's adjacent to an owned cell
+            if (customSettings.fog === "off") return true;
             let cell = board[r][c];
             if (cell.owner === activePlayer.color) return true;
 
@@ -671,16 +759,21 @@
         function renderBoard() {
             const grid = document.getElementById("board-grid");
             grid.innerHTML = "";
+
+            grid.style.gridTemplateColumns = `repeat(${BOARD_COLS}, 55px)`;
+            grid.style.gridTemplateRows = `repeat(${BOARD_ROWS}, 55px)`;
+            grid.className = `board ${customSettings.gridShape}`;
+
             for (let r = 0; r < BOARD_ROWS; r++) {
                 for (let c = 0; c < BOARD_COLS; c++) {
                     let cellDiv = document.createElement("div");
                     let cell = board[r][c];
 
                     if (!isCellVisible(r, c)) {
-                        cellDiv.classList.add("cell", "fogged");
+                        cellDiv.className = `cell fogged ${customSettings.gridShape}`;
                         cellDiv.innerHTML = `???`;
                     } else {
-                        cellDiv.classList.add("cell", cell.landscape);
+                        cellDiv.className = `cell ${cell.landscape} ${customSettings.gridShape}`;
                         if (cell.owner === "p1") cellDiv.classList.add("p1");
                         if (cell.owner === "p2") cellDiv.classList.add("p2");
                         
@@ -1095,9 +1188,8 @@
                     for (let n of neighbors) {
                         if (n.r >= 0 && n.r < BOARD_ROWS && n.c >= 0 && n.c < BOARD_COLS) {
                             let c = board[n.r][n.c];
-                            let enemy = player1;
+                            let enemy = (p.color === "p1") ? player2 : player1;
                             if (c.owner === enemy.color) {
-                                // Simulate attack decision
                                 let p_force = p.units;
                                 let o_force = enemy.units + (c.troops || 0);
                                 let win_chance = (p_force * p_force) / ((p_force * p_force) + (o_force * o_force)) * 100;
@@ -1155,7 +1247,7 @@
             }, 1500);
         }
 
-        // Run setup
+        // Initialize to English
         setLanguage('en');
     </script>
 </body>
