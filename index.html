@@ -465,9 +465,9 @@
             document.getElementById('btn-vs-ai').innerText = dict[lang]['vs_ai'];
             document.getElementById('btn-how-to').innerText = dict[lang]['how_to'];
             document.getElementById('modal-title').innerText = dict[lang]['modal_title'];
-
+            
             if (lang === 'zh') {
-                document.getElementById('modal-text').innerHTML =
+                document.getElementById('modal-text').innerHTML = 
 `<strong>流放者领地：完整玩法与核心规则说明</strong><br><br>
 <strong>1. 基础资源与属性：</strong><br>
 - 黄金：回合结束时，您所有的领地会提供固定的利润（每个领地+$10k）。山脉上的矿场能够提供高额的 $200k 额外资金。<br>
@@ -488,7 +488,7 @@
 - 目标：将对方的领地完全消灭即可赢得游戏。<br>
 - 任何一项指标（人口<500，满意度<50%）未达标，都会导致帝国崩溃。`;
             } else {
-                document.getElementById('modal-text').innerHTML =
+                document.getElementById('modal-text').innerHTML = 
 `<strong>Exile's Domain: Detailed Rulebook & Gameplay Guide</strong><br><br>
 <strong>1. Core Concepts & Resources:</strong><br>
 - Gold: The currency used to purchase units or build infrastructure. You gain $10,000 for each territory you own at the end of your turn, plus extra from mines.<br>
@@ -624,7 +624,7 @@ Win chance scales nonlinearly based on the relative force ratio between the atta
                 }
                 board.push(row);
             }
-
+            
             let p1Cap = board[0][0];
             p1Cap.owner = "p1";
             p1Cap.troops = 1;
@@ -657,7 +657,7 @@ Win chance scales nonlinearly based on the relative force ratio between the atta
                     cellDiv.classList.add("cell", board[r][c].landscape);
                     if (board[r][c].owner === "p1") cellDiv.classList.add("p1");
                     if (board[r][c].owner === "p2") cellDiv.classList.add("p2");
-
+                    
                     if (selectedCell && selectedCell.r === r && selectedCell.c === c) {
                         cellDiv.classList.add("selected");
                     }
@@ -778,7 +778,7 @@ Win chance scales nonlinearly based on the relative force ratio between the atta
             let win_chance = (final_p_force * final_p_force) / ((final_p_force * final_p_force) + (final_o_force * final_o_force)) * 100;
             if (win_chance < 5) win_chance = 5;
             if (win_chance > 95) win_chance = 95;
-
+            
             let roll = Math.floor(Math.random() * 100) + 1;
 
             if (roll <= win_chance) {
@@ -786,11 +786,11 @@ Win chance scales nonlinearly based on the relative force ratio between the atta
                 activePlayer.population = Math.max(0, activePlayer.population - 60);
 
                 enemy.territory = enemy.territory.filter(e => !(e.r === cell.r && e.c === cell.c));
-
+                
                 cell.owner = activePlayer.color;
-                cell.troops = 1;
+                cell.troops = 1; 
                 activePlayer.territory.push(cell);
-
+                
                 activePlayer.happiness += 2;
                 enemy.happiness -= 5;
                 activePlayer.money += 25000;
@@ -805,6 +805,13 @@ Win chance scales nonlinearly based on the relative force ratio between the atta
             }
             updateStats();
             renderBoard();
+        }
+
+        function checkWin(player, enemy) {
+            if (enemy.territory.length === 0) {
+                alert(`${player.name} ` + dict[currentLanguage]['win_msg']);
+                initBoard();
+            }
         }
 
         function deployTroop() {
@@ -898,6 +905,46 @@ Win chance scales nonlinearly based on the relative force ratio between the atta
             renderBoard();
         }
 
+        function enforceConnectivity(player) {
+            if (player.territory.length === 0) return;
+            
+            let visited = new Set();
+            let q = [player.capital];
+            visited.add(`${player.capital.r},${player.capital.c}`);
+
+            while (q.length > 0) {
+                let curr = q.shift();
+                let neighbors = [
+                    {r: curr.r+1, c: curr.c},
+                    {r: curr.r-1, c: curr.c},
+                    {r: curr.r, c: curr.c+1},
+                    {r: curr.r, c: curr.c-1}
+                ];
+
+                for (let n of neighbors) {
+                    if (n.r >= 0 && n.r < BOARD_ROWS && n.c >= 0 && n.c < BOARD_COLS) {
+                        let cell = board[n.r][n.c];
+                        if (cell.owner === player.color && !visited.has(`${n.r},${n.c}`)) {
+                            visited.add(`${n.r},${n.c}`);
+                            q.push(n);
+                        }
+                    }
+                }
+            }
+
+            let newTerritory = [];
+            for (let t of player.territory) {
+                if (visited.has(`${t.r},${t.c}`)) {
+                    newTerritory.push(t);
+                } else {
+                    t.owner = null;
+                    t.troops = 0;
+                    t.building = null;
+                }
+            }
+            player.territory = newTerritory;
+        }
+
         function withdrawTroop() {
             if (isProcessingTurn) return;
             if (!selectedCell) {
@@ -924,6 +971,94 @@ Win chance scales nonlinearly based on the relative force ratio between the atta
             } else {
                 logEvent("No troops on this tile to withdraw.");
             }
+        }
+
+        function endTurn() {
+            if (isProcessingTurn) return;
+            isProcessingTurn = true;
+
+            try {
+                let land_income = activePlayer.territory.length * 10000;
+
+                activePlayer.territory.forEach(c => {
+                    if (c.building === "Mine") {
+                        land_income += 200000;
+                    }
+                });
+
+                activePlayer.money += land_income;
+                
+                let pop_growth = Math.floor(activePlayer.population * 0.05);
+                let pop_death = Math.floor(activePlayer.population * 0.02);
+                activePlayer.population = activePlayer.population + pop_growth - pop_death;
+
+                if (activePlayer.population < 0) activePlayer.population = 0;
+
+                enforceConnectivity(activePlayer);
+
+                if (activePlayer.happiness < 50.0) {
+                    alert(`${activePlayer.name} ` + dict[currentLanguage]['hap_collapse']);
+                    initBoard();
+                    return;
+                }
+
+                if (activePlayer.population < 500) {
+                    alert(`${activePlayer.name} ` + dict[currentLanguage]['pop_collapse']);
+                    initBoard();
+                    return;
+                }
+
+                if (playModeType === 'friend') {
+                    activePlayer = (activePlayer.id === 1) ? player2 : player1;
+                } else {
+                    if (activePlayer.id === 1) {
+                        activePlayer = player2;
+                        updateStats();
+                        renderBoard();
+                        executeAITurn();
+                        return; // Early return so isProcessingTurn is reset in AITurn
+                    } else {
+                        activePlayer = player1;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                isProcessingTurn = false;
+                updateStats();
+                renderBoard();
+                logEvent(`Turn ended. Switched to ${activePlayer.name}.`);
+            }
+        }
+
+        function executeAITurn() {
+            logEvent("AI is thinking...");
+            setTimeout(() => {
+                let p = activePlayer;
+                if (p.money >= 100000 && p.territory.length > 0) {
+                    let rand = p.territory[Math.floor(Math.random() * p.territory.length)];
+                    rand.building = "Fort";
+                    p.money -= 100000;
+                }
+
+                if (p.units > 0) {
+                    let origin = p.territory[Math.floor(Math.random() * p.territory.length)];
+                    let target_r = origin.r + (Math.random() > 0.5 ? 1 : -1);
+                    let target_c = origin.c;
+
+                    if (target_r >= 0 && target_r < BOARD_ROWS && target_c >= 0 && target_c < BOARD_COLS) {
+                        let c = board[target_r][target_c];
+                        if (!c.owner) {
+                            c.owner = p.color;
+                            c.troops += 1;
+                            p.territory.push(c);
+                        }
+                    }
+                }
+                
+                isProcessingTurn = false;
+                endTurn();
+            }, 1500);
         }
 
         // Run setup
