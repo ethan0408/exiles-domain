@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exile's Domain - The Board Game</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --p1-color: #3b82f6;
+            --p2-color: #ef4444;
+            --accent-color: #10b981;
+            --info-color: #0284c7;
+            --warning-color: #d97706;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            color: var(--accent-color);
+        }
+
+        /* Menu Screen */
+        #menu-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            width: 400px;
+            margin-top: 100px;
+            text-align: center;
+        }
+
+        #menu-screen h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        #menu-screen button {
+            width: 100%;
+            margin: 8px 0;
+            padding: 12px;
+            font-size: 16px;
+            background-color: var(--info-color);
+            color: var(--text-main);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #menu-screen button:hover {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        .lang-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .lang-container button {
+            background-color: #334155;
+            padding: 6px 12px;
+            font-size: 12px;
+            width: auto;
+        }
+
+        /* Game Container */
+        .container {
+            display: none;
+            flex-direction: row;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .sidebar {
+            flex: 1;
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .board-container {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(10, 55px);
+            grid-template-rows: repeat(9, 55px);
+            gap: 4px;
+            background-color: #334155;
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .cell {
+            background-color: #64748b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: bold;
+            color: var(--text-main);
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .cell:hover {
+            transform: scale(0.95);
+            filter: brightness(1.1);
+        }
+
+        .cell.selected {
+            border: 3px solid #facc15 !important;
+            box-sizing: border-box;
+        }
+
+        .cell.ocean { background-color: #0c4a6e; }
+        .cell.plains { background-color: #166534; }
+        .cell.desert { background-color: #854d0e; }
+        .cell.mountain { background-color: #475569; }
+        .cell.hills { background-color: #3f6212; }
+        .cell.oasis { background-color: #0f766e; }
+
+        .cell.p1 {
+            border: 3px solid var(--p1-color);
+            box-sizing: border-box;
+        }
+
+        .cell.p2 {
+            border: 3px solid var(--p2-color);
+            box-sizing: border-box;
+        }
+
+        .stats-box {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #334155;
+            border-radius: 8px;
+        }
+
+        .stats-box h3 {
+            margin-top: 0;
+            color: var(--accent-color);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            color: var(--text-main);
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        button.end-turn {
+            background-color: #dc2626;
+            width: 32%;
+            margin-top: 10px;
+        }
+
+        button.end-turn:hover {
+            background-color: #991b1b;
+        }
+
+        button.reset-btn {
+            background-color: var(--warning-color);
+            width: 32%;
+            margin-top: 10px;
+        }
+
+        button.reset-btn:hover {
+            background-color: #b45309;
+        }
+
+        button.menu-btn {
+            background-color: #0284c7;
+            width: 32%;
+            margin-top: 10px;
+        }
+
+        button.menu-btn:hover {
+            background-color: #0369a1;
+        }
+
+        .action-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .logs {
+            margin-top: 15px;
+            background-color: #0f172a;
+            padding: 10px;
+            height: 100px;
+            overflow-y: scroll;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        .legend {
+            display: flex;
+            gap: 10px;
+            font-size: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        /* Modal Overlays */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            width: 500px;
+            max-width: 80%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            text-align: left;
+        }
+
+        .modal-content h2 {
+            color: var(--accent-color);
+        }
+
+        .modal-content button {
+            margin-top: 20px;
+            background-color: #0284c7;
+            padding: 10px 16px;
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="menu-screen">
+        <h1 id="menu-title">Exile's Domain</h1>
+        <div class="lang-container">
+            <button onclick="setLanguage('en')">English</button>
+            <button onclick="setLanguage('zh')">中文</button>
+        </div>
+        <button id="btn-vs-friend" onclick="playMode('friend')">Play vs Friend</button>
+        <button id="btn-vs-ai" onclick="playMode('ai')">Play vs AI</button>
+        <button id="btn-how-to" onclick="showHowToPlay()">How to Play</button>
+    </div>
+
+    <div class="container" id="game-container">
+        <div class="sidebar">
+            <div class="stats-box">
+                <h3 id="current-player-tag">Player 1 Turn</h3>
+                <p><strong><span id="label-gold">Gold</span>:</strong> <span id="p-gold">100,000</span></p>
+                <p><strong><span id="label-pop">Population</span>:</strong> <span id="p-pop">1,000</span></p>
+                <p><strong><span id="label-hap">Happiness</span>:</strong> <span id="p-hap">80.0%</span></p>
+                <p><strong><span id="label-units">Units</span>:</strong> <span id="p-units">10</span></p>
+                <p><strong><span id="label-terr">Territory</span>:</strong> <span id="p-terr">1</span></p>
+            </div>
+
+            <div class="stats-box">
+                <h3>Actions & Build</h3>
+                <div class="controls">
+                    <button id="btn-buy-unit" onclick="buyUnit()">Buy Unit ($1k)</button>
+                    <button id="btn-deploy-troop" onclick="deployTroop()" style="background-color: var(--accent-color); color: white;">Deploy Troop</button>
+                    <button id="btn-withdraw-troop" onclick="withdrawTroop()" style="background-color: var(--info-color)">Withdraw Troop</button>
+                    <button id="btn-execute" onclick="executeAction()" style="background-color: var(--accent-color); color: white; grid-column: span 2;">Execute Action</button>
+                    <button id="btn-build-town" onclick="buildBuilding('Town')">Build Town ($500k)</button>
+                    <button id="btn-build-fort" onclick="buildBuilding('Fort')">Build Fort ($100k)</button>
+                    <button id="btn-build-city" onclick="buildBuilding('City')">Build City ($1M)</button>
+                    <button id="btn-build-mine" onclick="buildBuilding('Mine')">Build Mine ($50k on Mountain)</button>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <button class="end-turn" id="btn-end-turn" onclick="endTurn()">End Turn</button>
+                <button class="menu-btn" id="btn-menu" onclick="returnToMenu()">Menu</button>
+                <button class="reset-btn" id="btn-reset" onclick="resetGame()">Reset</button>
+            </div>
+
+            <div class="logs" id="game-logs">
+                Game initialized. Welcome to Exile's Domain!
+            </div>
+
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color" style="background:#0c4a6e"></div><span class="legend-ocean">Ocean</span></div>
+                <div class="legend-item"><div class="legend-color" style="background:#166534"></div><span class="legend-plains">Plains</span></div>
+                <div class="legend-item"><div class="legend-color" style="background:#854d0e"></div><span class="legend-desert">Desert</span></div>
+                <div class="legend-item"><div class="legend-color" style="background:#475569"></div><span class="legend-mountain">Mountain</span></div>
+                <div class="legend-item"><div class="legend-color" style="background:#3f6212"></div><span class="legend-hills">Hills</span></div>
+                <div class="legend-item"><div class="legend-color" style="background:#0f766e"></div><span class="legend-oasis">Oasis</span></div>
+            </div>
+        </div>
+
+        <div class="board-container">
+            <div class="board" id="board-grid"></div>
+        </div>
+    </div>
+
+    <div id="instructions-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">How to Play</h2>
+            <div id="modal-text" style="line-height: 1.5; white-space: pre-wrap;">Manual text loaded.</div>
+            <button onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const BOARD_ROWS = 9;
+        const BOARD_COLS = 10;
+        let board = [];
+        let player1, player2, activePlayer, selectedCell;
+        let playModeType = 'friend';
+        let currentLanguage = 'en';
+        let isProcessingTurn = false;
+
+        const dict = {
+            'en': {
+                title: "Exile's Domain",
+                vs_friend: "Play vs Friend",
+                vs_ai: "Play vs AI",
+                how_to: "How to Play",
+                curr_turn: "Turn",
+                gold: "Gold",
+                pop: "Population",
+                hap: "Happiness",
+                units: "Units",
+                terr: "Territory",
+                actions: "Actions & Build",
+                buy: "Buy Unit ($1k)",
+                deploy: "Deploy Troop",
+                withdraw: "Withdraw Troop",
+                execute: "Execute Action",
+                build_town: "Build Town ($500k)",
+                build_fort: "Build Fort ($100k)",
+                build_city: "Build City ($1M)",
+                build_mine: "Build Mine ($50k on Mountain)",
+                end_turn: "End Turn",
+                reset: "Reset",
+                menu: "Menu",
+                welcome: "Game initialized. Welcome to Exile's Domain!",
+                ocean: "Ocean",
+                plains: "Plains",
+                desert: "Desert",
+                mountain: "Mountain",
+                hills: "Hills",
+                oasis: "Oasis",
+                modal_title: "How to Play Exile's Domain",
+                close: "Close",
+                pop_collapse: "collapsed due to population failure!",
+                hap_collapse: "collapsed due to low morale!",
+                win_msg: "has conquered the board!"
+            },
+            'zh': {
+                title: "流放者领地",
+                vs_friend: "双人对战",
+                vs_ai: "对抗人工智能 (AI)",
+                how_to: "玩法说明",
+                curr_turn: "回合",
+                gold: "黄金",
+                pop: "人口",
+                hap: "满意度",
+                units: "军队",
+                terr: "领地",
+                actions: "行动与建造",
+                buy: "购买军队 ($1k)",
+                deploy: "部署军队",
+                withdraw: "撤回军队",
+                execute: "执行操作",
+                build_town: "建造城镇 ($500k)",
+                build_fort: "建造要塞 ($100k)",
+                build_city: "建造城市 ($1M)",
+                build_mine: "在山上开采矿场 ($50k)",
+                end_turn: "结束回合",
+                reset: "重置",
+                menu: "主菜单",
+                welcome: "游戏初始化成功，欢迎来到流放者领地！",
+                ocean: "海洋",
+                plains: "平原",
+                desert: "沙漠",
+                mountain: "山脉",
+                hills: "丘陵",
+                oasis: "绿洲",
+                modal_title: "流放者领地：玩法规则",
+                close: "关闭",
+                pop_collapse: "由于人口崩溃而失败！",
+                hap_collapse: "由于满意度低于50%而失败！",
+                win_msg: "成功征服了全图！"
+            }
+        };
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            document.getElementById('menu-title').innerText = dict[lang]['title'];
+            document.getElementById('btn-vs-friend').innerText = dict[lang]['vs_friend'];
+            document.getElementById('btn-vs-ai').innerText = dict[lang]['vs_ai'];
+            document.getElementById('btn-how-to').innerText = dict[lang]['how_to'];
+            document.getElementById('modal-title').innerText = dict[lang]['modal_title'];
+
+            if (lang === 'zh') {
+                document.getElementById('modal-text').innerHTML =
+`<strong>流放者领地：完整玩法与核心规则说明</strong><br><br>
+<strong>1. 基础资源与属性：</strong><br>
+- 黄金：回合结束时，您所有的领地会提供固定的利润（每个领地+$10k）。山脉上的矿场能够提供高额的 $200k 额外资金。<br>
+- 人口：人口在每个回合结束时自然增长5%，自然衰退率为2%。若帝国人口降至500人以下，国家将发生崩溃并导致失败。<br>
+- 满意度（士气）：必需保持在50%以上。强行征召军队会减少满意度，而在山区建造矿场也会使民众士气下降。<br>
+- 军队：您可部署闲置的军队进行扩张或者攻占其他领地。<br><br>
+<strong>2. 地形与环境 hazards：</strong><br>
+- 平原/丘陵：适合正常发展，安全无害。<br>
+- 海洋/绿洲：具有安全的生态环境。<br>
+- 沙漠/山脉：属于危险地形！在此处扩张有35%的几率折损一个单位，且山脉地形会使您的部队攻击力受损（-2攻击力）。<br><br>
+<strong>3. 规则与建造系统：</strong><br>
+- 扩张：遵循“连续领地原则”。您只能扩张至与您现有领地相邻（上下左右）的网格，断开的区域会自动崩溃。<br>
+- 消耗：占领新土地会额外消耗20点人口。<br>
+- 建筑物：城镇增加满意度，要塞增加防御力。矿场提供金币但也大幅降低人民满意度。<br><br>
+<strong>4. 战斗算法调整：</strong><br>
+- 战斗胜负几率计算中包含部队数量差、满意度以及经济储备因子。<br><br>
+<strong>5. 获胜与失败条件：</strong><br>
+- 目标：将对方的领地完全消灭即可赢得游戏。<br>
+- 任何一项指标（人口<500，满意度<50%）未达标，都会导致帝国崩溃。`;
+            } else {
+                document.getElementById('modal-text').innerHTML =
+`<strong>Exile's Domain: Detailed Rulebook & Gameplay Guide</strong><br><br>
+<strong>1. Core Concepts & Resources:</strong><br>
+- Gold: The currency used to purchase units or build infrastructure. You gain $10,000 for each territory you own at the end of your turn, plus extra from mines.<br>
+- Population: Grows by 5% and declines by 2% naturally each turn. If it falls under 500, your empire collapses.<br>
+- Happiness: Must be kept at 50% or higher. Drops when drafting units or building mines.<br>
+- Units: Unassigned soldiers used to expand or attack.<br><br>
+<strong>2. Terrain & Landscapes:</strong><br>
+- Plains/Hills: Normal settlement, safe for all operations.<br>
+- Ocean/Oasis: Harbors positive or neutral conditions.<br>
+- Desert/Mountain: Hazardous! There is a 35% chance to lose 1 unit during initial expansion. Mountains also reduce attack force by 2.<br><br>
+<strong>3. Turn Actions & Strategies:</strong><br>
+- Claiming territory: You can only claim tiles that are directly adjacent (up, down, left, or right) to your existing territory. This action costs 20 population. If an action breaks the line connection to your capital, the disconnected front collapses.<br>
+- Deploy Troop: Move soldiers from your reserve pool onto your occupied territory.<br>
+- Building: Build structures like Forts to boost defense, Towns to boost happiness, or Mines on mountains for high income.<br><br>
+<strong>4. Upgraded Battle Equation:</strong><br>
+Win chance scales nonlinearly based on the relative force ratio between the attacker and the defender, modified by your empire's Happiness and Gold reserves.<br><br>
+<strong>5. Victory & Collapse Rules:</strong><br>
+- Defeat all of the opponent's territories to win the match.<br>
+- Defeat is triggered if the population falls below 500 or happiness drops below 50%.`;
+            }
+        }
+
+        function playMode(mode) {
+            playModeType = mode;
+            document.getElementById('menu-screen').style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
+            initBoard();
+            updateLanguageStrings();
+            setLanguage(currentLanguage);
+        }
+
+        function returnToMenu() {
+            let confirmReturn = confirm("Are you sure you want to return to the Main Menu? Current game progress will be lost.");
+            if (confirmReturn) {
+                document.getElementById('game-container').style.display = 'none';
+                document.getElementById('menu-screen').style.display = 'flex';
+            }
+        }
+
+        function updateLanguageStrings() {
+            let l = currentLanguage;
+            document.getElementById('label-gold').innerText = dict[l]['gold'];
+            document.getElementById('label-pop').innerText = dict[l]['pop'];
+            document.getElementById('label-hap').innerText = dict[l]['hap'];
+            document.getElementById('label-units').innerText = dict[l]['units'];
+            document.getElementById('label-terr').innerText = dict[l]['terr'];
+
+            document.getElementById('btn-buy-unit').innerText = dict[l]['buy'];
+            document.getElementById('btn-deploy-troop').innerText = dict[l]['deploy'];
+            document.getElementById('btn-withdraw-troop').innerText = dict[l]['withdraw'];
+            document.getElementById('btn-execute').innerText = dict[l]['execute'];
+            document.getElementById('btn-build-town').innerText = dict[l]['build_town'];
+            document.getElementById('btn-build-fort').innerText = dict[l]['build_fort'];
+            document.getElementById('btn-build-city').innerText = dict[l]['build_city'];
+            document.getElementById('btn-build-mine').innerText = dict[l]['build_mine'];
+
+            document.getElementById('btn-end-turn').innerText = dict[l]['end_turn'];
+            document.getElementById('btn-reset').innerText = dict[l]['reset'];
+            document.getElementById('btn-menu').innerText = dict[l]['menu'];
+            document.querySelector('.legend-ocean').innerText = dict[l]['ocean'];
+            document.querySelector('.legend-plains').innerText = dict[l]['plains'];
+            document.querySelector('.legend-desert').innerText = dict[l]['desert'];
+            document.querySelector('.legend-mountain').innerText = dict[l]['mountain'];
+            document.querySelector('.legend-hills').innerText = dict[l]['hills'];
+            document.querySelector('.legend-oasis').innerText = dict[l]['oasis'];
+        }
+
+        function showHowToPlay() {
+            document.getElementById('instructions-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('instructions-modal').style.display = 'none';
+        }
+
+        function initializePlayers() {
+            player1 = {
+                id: 1,
+                name: "Player 1",
+                color: "p1",
+                money: 100000,
+                population: 1000,
+                happiness: 80.0,
+                units: 10,
+                territory: [],
+                capital: { r: 0, c: 0 }
+            };
+            player2 = {
+                id: 2,
+                name: "Player 2",
+                color: "p2",
+                money: 100000,
+                population: 1000,
+                happiness: 80.0,
+                units: 10,
+                territory: [],
+                capital: { r: 8, c: 9 }
+            };
+            activePlayer = player1;
+            selectedCell = null;
+        }
+
+        function getLandscape() {
+            let d1 = Math.floor(Math.random() * 6) + 1;
+            let d2 = Math.floor(Math.random() * 6) + 1;
+            if (d1 <= 2 && d2 <= 3) return "ocean";
+            if (d1 >= 3 && d1 <= 4 && d2 <= 3) return "plains";
+            if (d1 >= 5 && d1 <= 6 && d2 <= 3) return "desert";
+            if (d1 <= 2 && d2 >= 4) return "mountain";
+            if (d1 >= 3 && d1 <= 4 && d2 >= 4) return "hills";
+            if (d1 >= 5 && d1 <= 6 && d2 >= 4) return "oasis";
+            return "plains";
+        }
+
+        class Cell {
+            constructor(r, c) {
+                this.r = r;
+                this.c = c;
+                this.landscape = getLandscape();
+                this.owner = null;
+                this.building = null;
+                this.troops = 0;
+            }
+        }
+
+        function initBoard() {
+            initializePlayers();
+            board = [];
+            for (let r = 0; r < BOARD_ROWS; r++) {
+                let row = [];
+                for (let c = 0; c < BOARD_COLS; c++) {
+                    row.push(new Cell(r, c));
+                }
+                board.push(row);
+            }
+
+            let p1Cap = board[0][0];
+            p1Cap.owner = "p1";
+            p1Cap.troops = 1;
+            player1.territory = [p1Cap];
+
+            let p2Cap = board[8][9];
+            p2Cap.owner = "p2";
+            p2Cap.troops = 1;
+            player2.territory = [p2Cap];
+
+            renderBoard();
+            updateStats();
+            logEvent(dict[currentLanguage]['welcome']);
+            updateLanguageStrings();
+        }
+
+        function resetGame() {
+            let confirmed = confirm("Are you sure you want to reset the game? Progress will be lost.");
+            if (confirmed) {
+                initBoard();
+            }
+        }
+
+        function renderBoard() {
+            const grid = document.getElementById("board-grid");
+            grid.innerHTML = "";
+            for (let r = 0; r < BOARD_ROWS; r++) {
+                for (let c = 0; c < BOARD_COLS; c++) {
+                    let cellDiv = document.createElement("div");
+                    cellDiv.classList.add("cell", board[r][c].landscape);
+                    if (board[r][c].owner === "p1") cellDiv.classList.add("p1");
+                    if (board[r][c].owner === "p2") cellDiv.classList.add("p2");
+
+                    if (selectedCell && selectedCell.r === r && selectedCell.c === c) {
+                        cellDiv.classList.add("selected");
+                    }
+
+                    let bldg = board[r][c].building ? `[${board[r][c].building}]` : '';
+                    cellDiv.innerHTML = `${r},${c}<br>${board[r][c].landscape.substring(0,4)}<br>${bldg}<br>U:${board[r][c].troops}`;
+                    cellDiv.onclick = () => handleCellClick(r, c);
+                    grid.appendChild(cellDiv);
+                }
+            }
+        }
+
+        function updateStats() {
+            document.getElementById("current-player-tag").innerText = `${activePlayer.name}'s Turn`;
+            document.getElementById("p-gold").innerText = activePlayer.money.toLocaleString();
+            document.getElementById("p-pop").innerText = activePlayer.population.toLocaleString();
+            document.getElementById("p-hap").innerText = `${activePlayer.happiness.toFixed(1)}%`;
+            document.getElementById("p-units").innerText = activePlayer.units;
+            document.getElementById("p-terr").innerText = activePlayer.territory.length;
+        }
+
+        function logEvent(message) {
+            const logBox = document.getElementById("game-logs");
+            logBox.innerHTML = `> ${message}<br>` + logBox.innerHTML;
+        }
+
+        function handleCellClick(r, c) {
+            selectedCell = { r, c };
+            renderBoard();
+            logEvent(`Selected cell (${r}, ${c}).`);
+        }
+
+        function executeAction() {
+            if (isProcessingTurn) return;
+            if (!selectedCell) {
+                logEvent("No cell selected. Click a cell first.");
+                alert("Please select a cell on the board first.");
+                return;
+            }
+            let r = selectedCell.r;
+            let c = selectedCell.c;
+            let cell = board[r][c];
+
+            if (cell.owner === activePlayer.color) {
+                logEvent("You own this cell. Use Deploy Troop to add units.");
+                return;
+            }
+
+            let isAdjacent = false;
+            for (let i = 0; i < activePlayer.territory.length; i++) {
+                let t = activePlayer.territory[i];
+                if (Math.abs(t.r - r) + Math.abs(t.c - c) === 1) {
+                    isAdjacent = true;
+                    break;
+                }
+            }
+
+            if (!isAdjacent) {
+                logEvent("Must interact only with cells adjacent to your territory.");
+                alert("You can only expand to cells adjacent to your territory.");
+                return;
+            }
+
+            if (!cell.owner) {
+                if (activePlayer.units > 0) {
+                    activePlayer.population = Math.max(0, activePlayer.population - 20);
+
+                    let hazardRoll = Math.floor(Math.random() * 100) + 1;
+                    if (cell.landscape === "desert" || cell.landscape === "mountain") {
+                        if (hazardRoll <= 35) {
+                            activePlayer.units = Math.max(0, activePlayer.units - 1);
+                            logEvent(`Hazard encountered at (${r}, ${c}), 1 unit lost.`);
+                        }
+                    }
+
+                    cell.owner = activePlayer.color;
+                    cell.troops += 1;
+                    activePlayer.territory.push(cell);
+                    activePlayer.units -= 1;
+                    updateStats();
+                    renderBoard();
+                    logEvent(`Claimed land at (${r}, ${c})`);
+                } else {
+                    logEvent("Not enough unassigned units!");
+                }
+            } else {
+                engageBattle(r, c);
+            }
+        }
+
+        function engageBattle(r, c) {
+            let cell = board[r][c];
+            let enemy = (activePlayer.color === "p1") ? player2 : player1;
+
+            logEvent(`Attacking (${r}, ${c}) held by ${enemy.name}...`);
+
+            let p_force = activePlayer.units;
+            let o_force = enemy.units + (cell.troops || 0);
+
+            if (cell.building === "Fort") {
+                o_force += 5;
+            }
+            if (cell.landscape === "mountain") {
+                p_force -= 2;
+            }
+
+            let p_hap_factor = activePlayer.happiness / 80.0;
+            let o_hap_factor = enemy.happiness / 80.0;
+            let p_econ_factor = 1 + Math.min(0.5, activePlayer.money / 1000000);
+            let o_econ_factor = 1 + Math.min(0.5, enemy.money / 1000000);
+
+            let final_p_force = p_force * p_hap_factor * p_econ_factor;
+            let final_o_force = o_force * o_hap_factor * o_econ_factor;
+
+            final_p_force = Math.max(0.1, final_p_force);
+            final_o_force = Math.max(0.1, final_o_force);
+
+            let win_chance = (final_p_force * final_p_force) / ((final_p_force * final_p_force) + (final_o_force * final_o_force)) * 100;
+            if (win_chance < 5) win_chance = 5;
+            if (win_chance > 95) win_chance = 95;
+
+            let roll = Math.floor(Math.random() * 100) + 1;
+
+            if (roll <= win_chance) {
+                logEvent(`VICTORY! Conquered land at (${r},${c}).`);
+                activePlayer.population = Math.max(0, activePlayer.population - 60);
+
+                enemy.territory = enemy.territory.filter(e => !(e.r === cell.r && e.c === cell.c));
+
+                cell.owner = activePlayer.color;
+                cell.troops = 1;
+                activePlayer.territory.push(cell);
+
+                activePlayer.happiness += 2;
+                enemy.happiness -= 5;
+                activePlayer.money += 25000;
+
+                checkWin(activePlayer, enemy);
+            } else {
+                logEvent(`DEFEAT! Lost troops in battle.`);
+                activePlayer.units = Math.max(0, activePlayer.units - 1);
+                activePlayer.population = Math.max(0, activePlayer.population - 30);
+                activePlayer.happiness -= 5;
+                activePlayer.money -= 1000;
+            }
+            updateStats();
+            renderBoard();
+        }
+
+        function deployTroop() {
+            if (isProcessingTurn) return;
+            if (!selectedCell) {
+                alert("Please select a territory cell on the board to deploy a troop.");
+                return;
+            }
+            let cell = board[selectedCell.r][selectedCell.c];
+
+            if (cell.owner !== activePlayer.color) {
+                alert("You must own the selected cell to place unassigned units.");
+                return;
+            }
+
+            if (activePlayer.units > 0) {
+                activePlayer.units -= 1;
+                cell.troops += 1;
+                logEvent(`Deployed unit to (${selectedCell.r}, ${selectedCell.c}). Total troops here: ${cell.troops}`);
+                updateStats();
+                renderBoard();
+            } else {
+                logEvent("No unassigned units in reserve. Buy more first.");
+            }
+        }
+
+        function buyUnit() {
+            if (isProcessingTurn) return;
+            let maxUnits = Math.floor(activePlayer.population / 10);
+            if (activePlayer.units >= maxUnits) {
+                alert("Population limit reached: not everyone can fight!");
+                return;
+            }
+
+            if (activePlayer.money >= 1000 && activePlayer.population > 50) {
+                activePlayer.money -= 1000;
+                activePlayer.units += 1;
+                activePlayer.population -= 40;
+                activePlayer.happiness -= 2;
+                updateStats();
+                logEvent("Purchased 1 troop unit. Population drawn to military, morale dropped.");
+            } else if (activePlayer.population <= 50) {
+                alert("Population is too low to recruit soldiers!");
+            } else {
+                alert("Not enough money! Cost: $1,000.");
+            }
+        }
+
+        function buildBuilding(type) {
+            if (isProcessingTurn) return;
+            if (!selectedCell) {
+                alert("Please select a cell first on the grid to build on.");
+                return;
+            }
+            let cell = board[selectedCell.r][selectedCell.c];
+            if (cell.owner !== activePlayer.color) {
+                alert("You must own the selected cell to build.");
+                return;
+            }
+
+            let cost = 0;
+            if (type === "Town") cost = 500000;
+            else if (type === "Fort") cost = 100000;
+            else if (type === "City") cost = 1000000;
+            else if (type === "Mine") cost = 50000;
+
+            if (activePlayer.money < cost) {
+                alert(`Insufficient funds! Cost: $${cost.toLocaleString()}`);
+                return;
+            }
+
+            if (type === "Mine" && cell.landscape !== "mountain") {
+                alert("Mines can only be built on mountains!");
+                return;
+            }
+
+            activePlayer.money -= cost;
+            cell.building = type;
+
+            if (type === "Mine") {
+                activePlayer.happiness -= 5;
+                logEvent(`Built ${type} at (${selectedCell.r}, ${selectedCell.c}). Morale decreased.`);
+            } else if (type === "Town") {
+                activePlayer.happiness += 5;
+                logEvent(`Built ${type} at (${selectedCell.r}, ${selectedCell.c}). Morale increased.`);
+            } else {
+                logEvent(`Built ${type} at (${selectedCell.r}, ${selectedCell.c}).`);
+            }
+
+            updateStats();
+            renderBoard();
+        }
+
+        function withdrawTroop() {
+            if (isProcessingTurn) return;
+            if (!selectedCell) {
+                alert("Select a territory first to withdraw a troop.");
+                return;
+            }
+            let cell = board[selectedCell.r][selectedCell.c];
+
+            if (cell.owner !== activePlayer.color) {
+                alert("You must own the selected cell.");
+                return;
+            }
+
+            if (cell.troops > 0) {
+                cell.troops -= 1;
+                activePlayer.units += 1;
+                logEvent(`Withdrew 1 unit from (${selectedCell.r}, ${selectedCell.c}).`);
+                updateStats();
+                renderBoard();
+
+                enforceConnectivity(activePlayer);
+                updateStats();
+                renderBoard();
+            } else {
+                logEvent("No troops on this tile to withdraw.");
+            }
+        }
+
+        // Run setup
+        setLanguage('en');
+    </script>
+</body>
+</html>
