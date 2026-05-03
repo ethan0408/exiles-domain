@@ -84,6 +84,7 @@
         }
 
         .menu-option {
+            width: 100%;
             display: flex;
             flex-direction: column;
             gap: 0.35rem;
@@ -159,6 +160,7 @@
             left: 3px;
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            pointer-events: none;
         }
 
         .toggle-switch.active::after {
@@ -187,6 +189,16 @@
 
         .start-btn:active {
             transform: translateY(0);
+        }
+
+        .secondary-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
         }
 
         /* Game Screen */
@@ -425,7 +437,6 @@
             z-index: 20;
         }
 
-        /* Ownership indicator */
         .ownership-bar {
             position: absolute;
             bottom: 0;
@@ -439,7 +450,6 @@
         .ownership-bar.p3 { background: #10b981; }
         .ownership-bar.p4 { background: #f59e0b; }
 
-        /* Building icons */
         .building-icon {
             position: absolute;
             top: 3px;
@@ -460,7 +470,6 @@
         .silo-icon { color: #ef4444; }
         .mds-icon { color: #38bdf8; }
 
-        /* Troop count */
         .troop-count {
             position: absolute;
             bottom: 4px;
@@ -474,7 +483,6 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* Disaster overlays */
         .disaster-overlay {
             position: absolute;
             top: 0;
@@ -510,7 +518,6 @@
             50% { opacity: 0.85; }
         }
 
-        /* Capital marker */
         .capital-marker {
             position: absolute;
             top: 50%;
@@ -521,7 +528,6 @@
             text-shadow: 0 4px 12px rgba(0,0,0,0.8);
         }
 
-        /* Named Features */
         .named-feature {
             position: absolute;
             bottom: -16px;
@@ -538,7 +544,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
 
-        /* Event Log */
         .event-log {
             background: var(--bg-panel);
             padding: 1.25rem;
@@ -561,7 +566,6 @@
             border-bottom: none;
         }
 
-        /* Tooltip */
         .tooltip {
             position: absolute;
             background: rgba(15, 23, 42, 0.95);
@@ -578,7 +582,6 @@
             box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7);
         }
 
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -666,21 +669,16 @@
             color: var(--text-main);
             border-color: rgba(255,255,255,0.2);
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
     </style>
 </head>
 <body>
     <div id="menu-screen">
-        <h1>⚔️ EXILE'S DOMAIN ⚔️</h1>
-        <p>A Strategic War Game of Conquest and Survival</p>
+        <h1 id="ui-title">⚔️ EXILE'S DOMAIN ⚔️</h1>
+        <p id="ui-subtitle">A Strategic War Game of Conquest and Survival</p>
 
         <div class="menu-options">
             <div class="menu-option">
-                <label for="player-count">Number of Players:</label>
+                <label id="ui-lbl-players" for="player-count">Number of Players:</label>
                 <select id="player-count">
                     <option value="2">2 Players</option>
                     <option value="3">3 Players</option>
@@ -689,7 +687,7 @@
             </div>
 
             <div class="menu-option">
-                <label for="board-size">Board Size:</label>
+                <label id="ui-lbl-board" for="board-size">Board Size:</label>
                 <select id="board-size">
                     <option value="small">Small (12×15)</option>
                     <option value="medium" selected>Medium (15×18)</option>
@@ -698,7 +696,7 @@
             </div>
 
             <div class="menu-option">
-                <label for="game-mode">Game Mode:</label>
+                <label id="ui-lbl-mode" for="game-mode">Game Mode:</label>
                 <select id="game-mode">
                     <option value="pvai" selected>Player vs AI Opponents</option>
                     <option value="pass">Pass & Play (All Human)</option>
@@ -706,42 +704,51 @@
             </div>
 
             <div class="menu-option">
-                <label for="start-gold">Starting Gold:</label>
+                <label id="ui-lbl-gold" for="start-gold">Starting Gold:</label>
                 <input type="number" id="start-gold" value="200000" step="50000">
             </div>
 
             <div class="menu-option">
-                <label for="start-pop">Starting Population:</label>
+                <label id="ui-lbl-pop" for="start-pop">Starting Population:</label>
                 <input type="number" id="start-pop" value="5000" step="1000">
             </div>
 
+            <div class="menu-option">
+                <label id="ui-lbl-lang" for="language-select">Language / 语言:</label>
+                <select id="language-select" onchange="switchLanguage()">
+                    <option value="en" selected>English</option>
+                    <option value="zh">中文 (Chinese)</option>
+                </select>
+            </div>
+
             <div class="toggle-option">
-                <label>Capital Only Start:</label>
+                <label id="ui-lbl-capital">Capital Only Start:</label>
                 <div class="toggle-switch" id="capital-toggle"></div>
             </div>
 
             <div class="toggle-option">
-                <label>Fog of War:</label>
+                <label id="ui-lbl-fog">Fog of War:</label>
                 <div class="toggle-switch" id="fog-toggle"></div>
             </div>
 
             <div class="toggle-option">
-                <label>Grid Borders:</label>
+                <label id="ui-lbl-borders">Grid Borders:</label>
                 <div class="toggle-switch active" id="border-toggle"></div>
             </div>
 
             <div class="toggle-option">
-                <label>Music Active:</label>
+                <label id="ui-lbl-music">Music Active:</label>
                 <div class="toggle-switch" id="music-toggle"></div>
             </div>
 
-            <button class="start-btn" onclick="startGame()">START GAME</button>
+            <button id="ui-btn-start" class="start-btn" onclick="startGame()">START GAME</button>
+            <button id="ui-btn-how" class="start-btn secondary-btn" onclick="openInstructions()">❓ HOW TO PLAY</button>
         </div>
     </div>
 
     <div id="game-screen">
         <div class="game-header">
-            <div class="game-title">⚔️ EXILE'S DOMAIN</div>
+            <div id="ui-game-title" class="game-title">⚔️ EXILE'S DOMAIN</div>
             <div class="turn-info" id="turn-info">Turn 1 - Player 1's Turn</div>
             <div class="disaster-countdown" id="disaster-countdown">⚠️ Disaster in 10 turns</div>
         </div>
@@ -765,7 +772,7 @@
                 <button class="action-btn" onclick="openDiplomacy()">🤝 Diplomacy</button>
                 <button class="action-btn" onclick="returnToMenu()">🏠 Menu</button>
                 <button class="action-btn" id="btn-execute" onclick="executeAction()">🎯 Execute</button>
-                <button class="action-btn end-turn-btn" onclick="endTurn()">⏭️ End Turn</button>
+                <button class="action-btn end-turn-btn" id="btn-end-turn" onclick="endTurn()">⏭️ End Turn</button>
             </div>
         </div>
 
@@ -780,9 +787,27 @@
 
     <div class="modal" id="diplomacy-modal">
         <div class="modal-content">
-            <h2 class="modal-title">🤝 Diplomacy</h2>
+            <h2 class="modal-title" id="ui-diplo-title">🤝 Diplomacy</h2>
             <div class="diplomacy-grid" id="diplomacy-grid"></div>
-            <button class="close-modal" onclick="closeDiplomacy()">Close</button>
+            <button class="close-modal" id="ui-diplo-close" onclick="closeDiplomacy()">Close</button>
+        </div>
+    </div>
+
+    <div class="modal" id="instructions-modal">
+        <div class="modal-content">
+            <h2 class="modal-title" id="ui-inst-title">❓ How to Play</h2>
+            <p id="ui-inst-body">
+                <strong>Exile's Domain</strong> is a strategic war game of conquest and survival.
+                <br/><br/>
+                <strong>Controls & Actions:</strong>
+                <br/>
+                • <strong>Claim</strong>: Expand and claim territories (costs 100 troops, limited to 3 claims/turn).<br/>
+                • <strong>Attack</strong>: Invade adjacent enemy territories. Win Chance depends on terrain multipliers, troop numbers, and economic factors.<br/>
+                • <strong>Economy</strong>: Earn gold every turn based on territory counts. Mines generate +$15,000 but decrease happiness by 4%.<br/>
+                • <strong>Buildings</strong>: Build cities (increases population), forts, mines, or defensive systems (MDS) to intercept enemy missiles.<br/>
+                • <strong>Silos & Missiles</strong>: Build a Silo and spend $250,000 to launch missiles at enemy territories. The MDS can intercept them.
+            </p>
+            <button class="close-modal" id="ui-inst-close" onclick="closeInstructions()">Close</button>
         </div>
     </div>
 
@@ -834,49 +859,178 @@
         };
 
         let isProcessingTurn = false;
+        let currentLang = 'en';
         let customSettings = {
             happinessThreshold: 30
         };
 
         const melody = [
-            { f: 261.6, d: 0.5 }, { f: 293.7, d: 0.5 }, { f: 329.6, d: 0.5 },
-            { f: 349.2, d: 0.5 }, { f: 392.0, d: 0.5 }, { f: 440.0, d: 0.5 },
-            { f: 493.9, d: 0.5 }, { f: 523.3, d: 1.0 }
+            { f: 261.6, d: 0.3, t: 'sine', b: 130.8 },
+            { f: 311.1, d: 0.3, t: 'sawtooth', b: 155.6 },
+            { f: 392.0, d: 0.6, t: 'sine', b: 196.0 },
+            { f: 349.2, d: 0.3, t: 'sawtooth', b: 174.6 }
         ];
 
         const TERRAIN_NAMES = {
             mountain: ['Shadow', 'Whispering', 'Echoing', 'Dread', 'Frozen', 'Shattered'],
             desert: ['Burning', 'Silent', 'Golden', 'Dry', 'Searing', 'Barren'],
             ocean: ['Endless', 'Dark', 'Shining', 'Restless', 'Fierce', 'Blue'],
-            tundra: ['Cold', 'White', 'Silent', 'Frosty', 'Dead', 'Bright']
+            tundra: ['Cold', 'White', 'Silent', 'Frosty', 'Dead', 'Bright'],
+            plains: ['Green', 'Golden', 'Broad', 'Rolling', 'Sorrow', 'Windy'],
+            hills: ['Mist', 'Windy', 'Rocky', 'Green', 'Dusk', 'Silent'],
+            oasis: ['Crystal', 'Hidden', 'Emerald', 'Clear', 'Verdant', 'Glimmering']
         };
 
         const TERRAIN_SUFFIXES = {
             mountain: ['Peaks', 'Crag', 'Ridges', 'Summit', 'Hills', 'Spires'],
             desert: ['Dunes', 'Sands', 'Wasteland', 'Expanse', 'Depths', 'Flats'],
             ocean: ['Trench', 'Abyss', 'Sea', 'Depths', 'Currents', 'Bays'],
-            tundra: ['Tundra', 'Glacier', 'Flats', 'Wastes', 'Plains', 'Ice']
+            tundra: ['Tundra', 'Glacier', 'Flats', 'Wastes', 'Plains', 'Ice'],
+            plains: ['Plains', 'Meadow', 'Fields', 'Grassland', 'Expanse', 'Valley'],
+            hills: ['Hills', 'Slopes', 'Mound', 'Rise', 'Knoll', 'Ridge'],
+            oasis: ['Spring', 'Pool', 'Oasis', 'Haven', 'Glade', 'Retreat']
         };
 
-        function returnToMenu() {
-            stopMusic();
-            document.getElementById('game-screen').style.display = 'none';
-            document.getElementById('menu-screen').style.display = 'flex';
-        }
+        const localization = {
+            en: {
+                title: "⚔️ EXILE'S DOMAIN ⚔️",
+                subtitle: "A Strategic War Game of Conquest and Survival",
+                players: "Number of Players:",
+                boardSize: "Board Size:",
+                gameMode: "Game Mode:",
+                startGold: "Starting Gold:",
+                startPop: "Starting Population:",
+                language: "Language / 语言:",
+                capital: "Capital Only Start:",
+                fog: "Fog of War:",
+                borders: "Grid Borders:",
+                music: "Music Active:",
+                startBtn: "START GAME",
+                howBtn: "❓ HOW TO PLAY",
+                gameTitle: "⚔️ EXILE'S DOMAIN",
+                diploTitle: "🤝 Diplomacy",
+                diploClose: "Close",
+                instTitle: "❓ How to Play",
+                instBody: `<strong>Exile's Domain</strong> is a strategic war game of conquest and survival.
+                <br/><br/>
+                <strong>Controls & Actions:</strong>
+                <br/>
+                • <strong>Claim</strong>: Expand and claim territories (costs 100 troops, limited to 3 claims/turn).<br/>
+                • <strong>Attack</strong>: Invade adjacent enemy territories. Win Chance depends on terrain multipliers, troop numbers, and economic factors.<br/>
+                • <strong>Economy</strong>: Earn gold every turn based on territory counts. Mines generate +$15,000 but decrease happiness by 4%.<br/>
+                • <strong>Buildings</strong>: Build cities (increases population), forts, mines, or defensive systems (MDS) to intercept enemy missiles.<br/>
+                • <strong>Silos & Missiles</strong>: Build a Silo and spend $250,000 to launch missiles at enemy territories. The MDS can intercept them.`,
+                instClose: "Close",
+                claim: "Claim",
+                attack: "Attack",
+                buyTroops: "Buy Troops",
+                fort: "Fort",
+                town: "Town",
+                city: "City",
+                mine: "Mine",
+                silo: "Silo",
+                mds: "MDS",
+                withdraw: "Withdraw",
+                deploy: "Deploy",
+                launch: "Launch",
+                diplomacy: "Diplomacy",
+                menu: "Menu",
+                execute: "Execute",
+                endTurn: "End Turn"
+            },
+            zh: {
+                title: "⚔️ 流放之地 ⚔️",
+                subtitle: "集征服与生存于一体的战略战争游戏",
+                players: "玩家人数：",
+                boardSize: "棋盘大小：",
+                gameMode: "游戏模式：",
+                startGold: "初始资金：",
+                startPop: "初始人口：",
+                language: "Language / 语言：",
+                capital: "仅从首都开始：",
+                fog: "战争迷雾：",
+                borders: "显示网格：",
+                music: "背景音乐：",
+                startBtn: "开始游戏",
+                howBtn: "❓ 玩法说明",
+                gameTitle: "⚔️ 流放之地",
+                diploTitle: "🤝 外交关系",
+                diploClose: "关闭",
+                instTitle: "❓ 玩法说明",
+                instBody: `<strong>流放之地</strong>是一款充满征服与生存元素的战略战争游戏。
+                <br/><br/>
+                <strong>控制与行动：</strong>
+                <br/>
+                • <strong>占领</strong>：消耗100名士兵扩张领土（每回合限3次）。<br/>
+                • <strong>攻击</strong>：攻击相邻的敌方领土。胜率取决于地形修正、兵力和经济因素。<br/>
+                • <strong>经济</strong>：每回合根据领土获得金币。矿场提供额外收入，但会略微降低民众满意度。<br/>
+                • <strong>建筑</strong>：建造城市、城镇、要塞或防御系统（MDS）来拦截导弹袭击。<br/>
+                • <strong>发射井</strong>：消耗25万金币发射导弹打击敌人，注意敌方的导弹防御系统可能将之拦截。`,
+                instClose: "关闭",
+                claim: "占领",
+                attack: "攻击",
+                buyTroops: "购买军队",
+                fort: "要塞",
+                town: "城镇",
+                city: "城市",
+                mine: "矿场",
+                silo: "导弹井",
+                mds: "防御系统",
+                withdraw: "撤军",
+                deploy: "部署",
+                launch: "发射",
+                diplomacy: "外交",
+                menu: "菜单",
+                execute: "执行",
+                endTurn: "结束回合"
+            }
+        };
 
-        function startGame() {
-            initializeGame();
-            document.getElementById('menu-screen').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'block';
-            renderGame();
-            if (gameState.musicEnabled) {
-                playMusic();
+        function switchLanguage() {
+            const select = document.getElementById('language-select');
+            currentLang = select.value;
+            const t = localization[currentLang];
+
+            document.getElementById('ui-title').innerHTML = t.title;
+            document.getElementById('ui-subtitle').innerHTML = t.subtitle;
+            document.getElementById('ui-lbl-players').innerHTML = t.players;
+            document.getElementById('ui-lbl-board').innerHTML = t.boardSize;
+            document.getElementById('ui-lbl-mode').innerHTML = t.gameMode;
+            document.getElementById('ui-lbl-gold').innerHTML = t.startGold;
+            document.getElementById('ui-lbl-pop').innerHTML = t.startPop;
+            document.getElementById('ui-lbl-lang').innerHTML = t.language;
+            document.getElementById('ui-lbl-capital').innerHTML = t.capital;
+            document.getElementById('ui-lbl-fog').innerHTML = t.fog;
+            document.getElementById('ui-lbl-borders').innerHTML = t.borders;
+            document.getElementById('ui-lbl-music').innerHTML = t.music;
+            document.getElementById('ui-btn-start').innerHTML = t.startBtn;
+            document.getElementById('ui-btn-how').innerHTML = t.howBtn;
+            document.getElementById('ui-game-title').innerHTML = t.gameTitle;
+            document.getElementById('ui-diplo-title').innerHTML = t.diploTitle;
+            document.getElementById('ui-diplo-close').innerHTML = t.diploClose;
+            document.getElementById('ui-inst-title').innerHTML = t.instTitle;
+            document.getElementById('ui-inst-body').innerHTML = t.instBody;
+            document.getElementById('ui-inst-close').innerHTML = t.instClose;
+
+            document.getElementById('btn-claim').innerHTML = "🏳️ " + t.claim;
+            document.getElementById('btn-attack').innerHTML = "⚔️ " + t.attack;
+            document.getElementById('btn-fort').innerHTML = "🏰 " + t.fort;
+            document.getElementById('btn-town').innerHTML = "🏘️ " + t.town;
+            document.getElementById('btn-city').innerHTML = "🏙️ " + t.city;
+            document.getElementById('btn-mine').innerHTML = "⛏️ " + t.mine;
+            document.getElementById('btn-silo').innerHTML = "🚀 " + t.silo;
+            document.getElementById('btn-mds').innerHTML = "🛡️ " + t.mds;
+            document.getElementById('btn-withdraw').innerHTML = "➖ " + t.withdraw;
+            document.getElementById('btn-deploy').innerHTML = "➕ " + t.deploy;
+            document.getElementById('btn-launch').innerHTML = "🚀 " + t.launch;
+            document.getElementById('btn-execute').innerHTML = "🎯 " + t.execute;
+            document.getElementById('btn-end-turn').innerHTML = "⏭️ " + t.endTurn;
+
+            if (document.getElementById('game-screen').style.display === 'block') {
+                renderGame();
             }
         }
 
-        // ==========================================
-        // AUDIO & MUSIC
-        // ==========================================
         let audioCtx = null;
         let musicInterval = null;
         let currentNote = 0;
@@ -893,35 +1047,73 @@
                 if (musicInterval) {
                     clearInterval(musicInterval);
                 }
+
                 musicInterval = setInterval(() => {
                     if (!gameState.musicEnabled) {
                         clearInterval(musicInterval);
                         return;
                     }
+
                     const note = melody[currentNote];
+                    const now = audioCtx.currentTime;
+
                     let osc = audioCtx.createOscillator();
                     let gainNode = audioCtx.createGain();
                     let filter = audioCtx.createBiquadFilter();
 
-                    osc.type = 'triangle';
+                    osc.type = note.t;
                     osc.frequency.value = note.f;
                     filter.type = 'lowpass';
-                    filter.frequency.value = 400;
+                    filter.frequency.value = 600;
 
-                    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-                    gainNode.gain.linearRampToValueAtTime(0.012, audioCtx.currentTime + 0.1);
-                    gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + note.d);
+                    gainNode.gain.setValueAtTime(0, now);
+                    gainNode.gain.linearRampToValueAtTime(0.08, now + 0.08);
+                    gainNode.gain.linearRampToValueAtTime(0, now + note.d);
 
                     osc.connect(filter);
                     filter.connect(gainNode);
                     gainNode.connect(audioCtx.destination);
                     osc.start();
-                    osc.stop(audioCtx.currentTime + note.d);
+                    osc.stop(now + note.d);
+
+                    // Bassline
+                    let bassOsc = audioCtx.createOscillator();
+                    let bassGain = audioCtx.createGain();
+
+                    bassOsc.type = 'triangle';
+                    bassOsc.frequency.value = note.b;
+
+                    bassGain.gain.setValueAtTime(0, now);
+                    bassGain.gain.linearRampToValueAtTime(0.05, now + 0.05);
+                    bassGain.gain.linearRampToValueAtTime(0, now + note.d + 0.1);
+
+                    bassOsc.connect(bassGain);
+                    bassGain.connect(audioCtx.destination);
+                    bassOsc.start();
+                    bassOsc.stop(now + note.d + 0.1);
+
+                    if (currentNote % 2 === 0) {
+                        let kickOsc = audioCtx.createOscillator();
+                        let kickGain = audioCtx.createGain();
+
+                        kickOsc.type = 'sine';
+                        kickOsc.frequency.setValueAtTime(150, now);
+                        kickOsc.frequency.exponentialRampToValueAtTime(40, now + 0.12);
+
+                        kickGain.gain.setValueAtTime(0, now);
+                        kickGain.gain.linearRampToValueAtTime(0.18, now + 0.01);
+                        kickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+                        kickOsc.connect(kickGain);
+                        kickGain.connect(audioCtx.destination);
+                        kickOsc.start();
+                        kickOsc.stop(now + 0.16);
+                    }
 
                     currentNote = (currentNote + 1) % melody.length;
-                }, 800);
+                }, 650);
             } catch (e) {
-                console.log('Music system initializing...');
+                console.log('Music system starting up...');
             }
         }
 
@@ -933,40 +1125,61 @@
             }
         }
 
-        document.getElementById('border-toggle').addEventListener('click', function() {
-            this.classList.toggle('active');
-            gameState.showBorders = this.classList.contains('active');
-            renderBoard();
-        });
-
-        document.getElementById('music-toggle').addEventListener('click', function() {
-            this.classList.toggle('active');
-            gameState.musicEnabled = this.classList.contains('active');
-            if (gameState.musicEnabled) {
-                playMusic();
-            } else {
-                stopMusic();
+        const toggles = ['border-toggle', 'music-toggle', 'fog-toggle', 'capital-toggle'];
+        toggles.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    if (id === 'border-toggle') {
+                        gameState.showBorders = this.classList.contains('active');
+                        renderBoard();
+                    } else if (id === 'music-toggle') {
+                        gameState.musicEnabled = this.classList.contains('active');
+                        if (gameState.musicEnabled) {
+                            playMusic();
+                        } else {
+                            stopMusic();
+                        }
+                    } else if (id === 'fog-toggle') {
+                        gameState.fogEnabled = this.classList.contains('active');
+                        renderBoard();
+                    }
+                });
             }
         });
 
-        document.getElementById('fog-toggle').addEventListener('click', function() {
-            this.classList.toggle('active');
-            gameState.fogEnabled = this.classList.contains('active');
-            renderBoard();
-        });
+        function openInstructions() {
+            document.getElementById('instructions-modal').style.display = 'flex';
+        }
 
-        document.getElementById('capital-toggle').addEventListener('click', function() {
-            this.classList.toggle('active');
-        });
+        function closeInstructions() {
+            document.getElementById('instructions-modal').style.display = 'none';
+        }
 
-        // ==========================================
-        // UTILS & HELPERS
-        // ==========================================
-        function roll(n) {
-            return Math.ceil(Math.random() * n);
+        function returnToMenu() {
+            stopMusic();
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('menu-screen').style.display = 'flex';
+        }
+
+        function startGame() {
+            initializeGame();
+            document.getElementById('menu-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+
+            gameState.fogEnabled = document.getElementById('fog-toggle').classList.contains('active');
+            gameState.showBorders = document.getElementById('border-toggle').classList.contains('active');
+            gameState.musicEnabled = document.getElementById('music-toggle').classList.contains('active');
+
+            if (gameState.musicEnabled) {
+                playMusic();
+            }
+            renderGame();
         }
 
         function logEvent(message) {
+            if (gameState.players[gameState.currentPlayer] && gameState.players[gameState.currentPlayer].isAI) return;
             const log = document.getElementById('event-log');
             const p = document.createElement('p');
             p.textContent = `[Turn ${gameState.turn}] ${message}`;
@@ -996,14 +1209,6 @@
             });
         }
 
-        function updateStats() {
-            renderPlayerCards();
-            renderBoard();
-        }
-
-        // ==========================================
-        // INITIALIZATION
-        // ==========================================
         function initializePlayers(numPlayers) {
             const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b'];
             const names = ['Player 1', 'Player 2', 'Player 3', 'Player 4'];
@@ -1031,118 +1236,6 @@
                     gameState.diplomacy[`${i}_${j}`] = 'war';
                 }
             }
-        }
-
-        function getCapitalPositions(numPlayers) {
-            const rows = gameState.boardRows;
-            const cols = gameState.boardCols;
-            if (numPlayers === 2) return [[0, 0], [rows - 1, cols - 1]];
-            if (numPlayers === 3) return [[0, 0], [rows - 1, cols - 1], [0, cols - 1]];
-            return [[0, 0], [rows - 1, cols - 1], [0, cols - 1], [rows - 1, 0]];
-        }
-
-        function isAdjacentToOwned(r, c, player) {
-            const rows = gameState.boardRows;
-            const cols = gameState.boardCols;
-            const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-            for (let [dr, dc] of directions) {
-                const nr = r + dr;
-                const nc = c + dc;
-                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-                    if (gameState.ownership[nr * cols + nc] === player) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        function generateTerrain() {
-            const rows = gameState.boardRows;
-            const cols = gameState.boardCols;
-            const grid = [];
-            for (let r = 0; r < rows; r++) {
-                grid.push(new Array(cols).fill('plains'));
-            }
-
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    const d1 = roll(6);
-                    const d2 = roll(6);
-                    if (d1 <= 2 && d2 <= 3) grid[r][c] = 'ocean';
-                    else if (d1 <= 4 && d2 <= 3) grid[r][c] = 'plains';
-                    else if (d1 >= 5 && d2 <= 3) grid[r][c] = 'desert';
-                    else if (d1 <= 2 && d2 >= 4) grid[r][c] = 'mountain';
-                    else if (d1 <= 4 && d2 >= 4) grid[r][c] = 'hills';
-                    else grid[r][c] = 'oasis';
-                }
-            }
-            return grid;
-        }
-
-        function generateNamedFeatures(grid) {
-            gameState.namedFeatures = [];
-            const rows = grid.length;
-            const cols = grid[0].length;
-            const visited = new Set();
-            const featureTypes = ['mountain', 'desert', 'ocean', 'tundra'];
-
-            featureTypes.forEach(terrainType => {
-                for (let r = 0; r < rows; r++) {
-                    for (let c = 0; c < cols; c++) {
-                        if (grid[r][c] === terrainType && !visited.has(`${r},${c}`)) {
-                            const region = floodFill(grid, r, c, terrainType, visited);
-                            if (region.length >= 8) {
-                                const name = generateFeatureName(terrainType);
-                                const center = findRegionCenter(region);
-                                gameState.namedFeatures.push({
-                                    name: name,
-                                    row: center.r,
-                                    col: center.c,
-                                    type: terrainType
-                                });
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function floodFill(grid, r, c, targetTerrain, visited) {
-            const region = [];
-            const queue = [[r, c]];
-            while (queue.length > 0) {
-                const [cr, cc] = queue.shift();
-                const key = `${cr},${cc}`;
-                if (visited.has(key)) continue;
-                if (cr < 0 || cr >= grid.length || cc < 0 || cc >= grid[0].length) continue;
-                if (grid[cr][cc] !== targetTerrain) continue;
-                visited.add(key);
-                region.push({r: cr, c: cc});
-                queue.push([cr-1, cc], [cr+1, cc], [cr, cc-1], [cr, cc+1]);
-            }
-            return region;
-        }
-
-        function findRegionCenter(region) {
-            const avgR = region.reduce((sum, p) => sum + p.r, 0) / region.length;
-            const avgC = region.reduce((sum, p) => sum + p.c, 0) / region.length;
-            let closest = region[0];
-            let minDist = Infinity;
-            region.forEach(p => {
-                const dist = Math.sqrt((p.r - avgR) ** 2 + (p.c - avgC) ** 2);
-                if (dist < minDist) {
-                    minDist = dist;
-                    closest = p;
-                }
-            });
-            return closest;
-        }
-
-        function generateFeatureName(type) {
-            const names = TERRAIN_NAMES[type];
-            const suffixes = TERRAIN_SUFFIXES[type];
-            return names[Math.floor(Math.random() * names.length)] + " " + suffixes[Math.floor(Math.random() * names.length)];
         }
 
         function initializeGame() {
@@ -1237,294 +1330,558 @@
                     }
                 }
             }
+        }
 
-            const log = document.getElementById('event-log');
-            if (log) {
-                log.innerHTML = '<p>🌍 World generated with random bases and starting lands. Ready for action!</p>';
+        function generateTerrain() {
+            const rows = gameState.boardRows;
+            const cols = gameState.boardCols;
+            let matrix = Array(rows).fill(null).map(() => Array(cols).fill('ocean'));
+
+            const centerX = Math.floor(cols / 2);
+            const centerY = Math.floor(rows / 2);
+            const maxRadius = Math.min(rows, cols) * 0.45;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    let dx = c - centerX;
+                    let dy = r - centerY;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < maxRadius * (0.8 + Math.random() * 0.4)) {
+                        matrix[r][c] = 'plains';
+                    } else {
+                        matrix[r][c] = 'ocean';
+                    }
+                }
+            }
+
+            const mountainRangeRowStart = Math.floor(rows * 0.3);
+            const mountainRangeRowEnd = Math.floor(rows * 0.7);
+            const mountainCol = Math.floor(cols / 2);
+            for (let r = mountainRangeRowStart; r <= mountainRangeRowEnd; r++) {
+                for (let c = mountainCol - 1; c <= mountainCol + 1; c++) {
+                    if (r >= 0 && r < rows && c >= 0 && c < cols) {
+                        matrix[r][c] = 'mountain';
+                        if (Math.random() < 0.4) {
+                            if (c > 0) matrix[r][c - 1] = 'hills';
+                            if (c < cols - 1) matrix[r][c + 1] = 'hills';
+                        }
+                    }
+                }
+            }
+
+            for (let r = 0; r < Math.floor(rows * 0.2); r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (matrix[r][c] !== 'ocean') {
+                        matrix[r][c] = 'tundra';
+                    }
+                }
+            }
+            for (let r = Math.floor(rows * 0.8); r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (matrix[r][c] !== 'ocean') {
+                        matrix[r][c] = 'tundra';
+                    }
+                }
+            }
+
+            const desertStartCol = Math.floor(cols * 0.6);
+            for (let r = Math.floor(rows * 0.3); r < Math.floor(rows * 0.7); r++) {
+                for (let c = desertStartCol; c < cols; c++) {
+                    if (matrix[r][c] !== 'ocean' && matrix[r][c] !== 'mountain') {
+                        matrix[r][c] = Math.random() < 0.15 ? 'oasis' : 'desert';
+                    }
+                }
+            }
+
+            for (let i = 0; i < 2; i++) {
+                let lakeR = Math.floor(Math.random() * (rows - 4)) + 2;
+                let lakeC = Math.floor(Math.random() * (cols - 4)) + 2;
+                matrix[lakeR][lakeC] = 'ocean';
+                matrix[lakeR + 1][lakeC] = 'ocean';
+                matrix[lakeR][lakeC + 1] = 'ocean';
+            }
+
+            return matrix;
+        }
+
+        function generateNamedFeatures(terrain) {
+            gameState.namedFeatures = [];
+            const availableTerrains = Object.keys(TERRAIN_NAMES);
+
+            for (let i = 0; i < 6; i++) {
+                const r = Math.floor(Math.random() * gameState.boardRows);
+                const c = Math.floor(Math.random() * gameState.boardCols);
+                const t = terrain[r][c];
+
+                if (Object.keys(TERRAIN_NAMES).includes(t)) {
+                    const names = TERRAIN_NAMES[t];
+                    const suffixes = TERRAIN_SUFFIXES[t];
+                    const name = `${names[Math.floor(Math.random() * names.length)]} ${suffixes[Math.floor(Math.random() * suffixes.length)]}`;
+
+                    if (!gameState.namedFeatures.some(f => f.row === r && f.col === c)) {
+                        gameState.namedFeatures.push({ row: r, col: c, name });
+                    }
+                }
             }
         }
 
-        // ==========================================
-        // GAMEPLAY WORKFLOW
-        // ==========================================
-        function buyTroopsDirectly() {
-            const player = gameState.players[gameState.currentPlayer];
-            if (player.gold < gameState.TROOP_COST) {
-                logEvent(`Not enough gold! Needed $${gameState.TROOP_COST.toLocaleString()}`);
-                return;
+        function getCapitalPositions(numPlayers) {
+            const rows = gameState.boardRows;
+            const cols = gameState.boardCols;
+            if (numPlayers === 2) {
+                return [
+                    [Math.floor(rows / 2), Math.floor(cols / 3)],
+                    [Math.floor(rows / 2), Math.floor(2 * cols / 3)]
+                ];
+            } else if (numPlayers === 3) {
+                return [
+                    [Math.floor(rows / 3), Math.floor(cols / 3)],
+                    [Math.floor(2 * rows / 3), Math.floor(cols / 2)],
+                    [Math.floor(rows / 2), Math.floor(2 * cols / 3)]
+                ];
+            } else {
+                return [
+                    [Math.floor(rows / 4), Math.floor(cols / 4)],
+                    [Math.floor(rows / 4), Math.floor(3 * cols / 4)],
+                    [Math.floor(3 * rows / 4), Math.floor(cols / 4)],
+                    [Math.floor(3 * rows / 4), Math.floor(3 * cols / 4)]
+                ];
             }
+        }
 
-            player.gold -= gameState.TROOP_COST;
-            player.troops += 100;
+        function getWarCount(playerIdx) {
+            let count = 0;
+            for (let key in gameState.diplomacy) {
+                if (key.startsWith(`${playerIdx}_`) || key.endsWith(`_${playerIdx}`)) {
+                    if (gameState.diplomacy[key] === 'war') {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
 
-            const capitals = getCapitalPositions(gameState.numPlayers);
-            const capitalPos = capitals[gameState.currentPlayer];
-            const capitalIdx = capitalPos[0] * gameState.boardCols + capitalPos[1];
-            gameState.troops[capitalIdx] += 100;
+        function isAdjacentToOwned(r, c, playerIdx) {
+            const neighbors = [
+                [r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]
+            ];
+            for (const [nr, nc] of neighbors) {
+                if (nr >= 0 && nr < gameState.boardRows && nc >= 0 && nc < gameState.boardCols) {
+                    const idx = nr * gameState.boardCols + nc;
+                    if (gameState.ownership[idx] === playerIdx) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
 
-            logEvent(`${player.name} raised 100 troops.`);
-            updateStats();
+        function getBuildingChar(building) {
+            switch (building) {
+                case 'city': return 'C';
+                case 'town': return 'T';
+                case 'fort': return 'F';
+                case 'mine': return 'M';
+                case 'silo': return 'S';
+                case 'mds': return 'D';
+                case 'vaccine': return 'V';
+                default: return '';
+            }
+        }
+
+        function getDisasterChar(type) {
+            switch (type) {
+                case 'mud': return '🟫';
+                case 'flood': return '🌊';
+                case 'crack': return '⚡';
+                case 'magma': return '🌋';
+                case 'snow': return '❄️';
+                case 'plague': return '🦠';
+                case 'radiation': return '☢️';
+                default: return '';
+            }
         }
 
         function handleCellClick(r, c) {
-            let cells = document.querySelectorAll('.cell');
-            cells.forEach(el => el.classList.remove('selected'));
-            let currentCell = document.querySelector(`[data-row='${r}'][data-col='${c}']`);
-            if (currentCell) {
-                currentCell.classList.add('selected');
+            logEvent(`Selected tile: (${r}, ${c})`);
+        }
+
+        function handleClaim(idx, prevOwner, newOwner) {
+            if (gameState.claimsThisTurn >= gameState.maxClaimsPerTurn) {
+                alert("Cannot make more claims this turn!");
+                return;
+            }
+
+            const r = Math.floor(idx / gameState.boardCols);
+            const c = idx % gameState.boardCols;
+            let sourceIdx = -1;
+            const neighbors = [
+                [r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]
+            ];
+
+            for (const [nr, nc] of neighbors) {
+                if (nr >= 0 && nr < gameState.boardRows && nc >= 0 && nc < gameState.boardCols) {
+                    const checkIdx = nr * gameState.boardCols + nc;
+                    if (gameState.ownership[checkIdx] === newOwner && gameState.troops[checkIdx] >= gameState.TROOP_CLAIM) {
+                        sourceIdx = checkIdx;
+                        break;
+                    }
+                }
+            }
+
+            if (sourceIdx === -1) {
+                alert("You need an adjacent territory with at least 100 troops to claim this territory!");
+                return;
+            }
+
+            if (gameState.ownership[idx] !== -1) {
+                alert("Can only claim an unclaimed territory!");
+                return;
+            }
+
+            gameState.ownership[idx] = newOwner;
+            gameState.troops[sourceIdx] -= gameState.TROOP_CLAIM;
+            gameState.troops[idx] = Math.floor(gameState.TROOP_CLAIM / 2);
+            gameState.claimsThisTurn++;
+            logEvent(`Player ${newOwner + 1} claimed territory ${idx}.`);
+            renderGame();
+        }
+
+        function aiClaim(targetIdx, playerIdx) {
+            if (gameState.claimsThisTurn >= gameState.maxClaimsPerTurn) return false;
+
+            const r = Math.floor(targetIdx / gameState.boardCols);
+            const c = targetIdx % gameState.boardCols;
+            let sourceIdx = -1;
+            const neighbors = [
+                [r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]
+            ];
+
+            for (const [nr, nc] of neighbors) {
+                if (nr >= 0 && nr < gameState.boardRows && nc >= 0 && nc < gameState.boardCols) {
+                    const checkIdx = nr * gameState.boardCols + nc;
+                    if (gameState.ownership[checkIdx] === playerIdx && gameState.troops[checkIdx] >= gameState.TROOP_CLAIM) {
+                        sourceIdx = checkIdx;
+                        break;
+                    }
+                }
+            }
+
+            if (sourceIdx !== -1) {
+                gameState.ownership[targetIdx] = playerIdx;
+                gameState.troops[sourceIdx] -= gameState.TROOP_CLAIM;
+                gameState.troops[targetIdx] = Math.floor(gameState.TROOP_CLAIM / 2);
+                gameState.claimsThisTurn++;
+                logEvent(`Player ${playerIdx + 1} (AI) claimed territory ${targetIdx}.`);
+                return true;
+            }
+            return false;
+        }
+
+        function buyTroopsDirectly() {
+            const p = gameState.players[gameState.currentPlayer];
+            if (p.gold >= gameState.TROOP_COST) {
+                p.gold -= gameState.TROOP_COST;
+                p.troops += 100;
+                logEvent(`${p.name} bought 100 troops.`);
+                renderGame();
+            } else {
+                alert("Not enough gold to buy troops!");
+            }
+        }
+
+        function handleAttack(targetIdx, defenderIdx, attackerIdx) {
+            const p_attacker = gameState.players[attackerIdx];
+            if (p_attacker.troops < 50) {
+                alert("Not enough troops to attack!");
+                return;
+            }
+
+            gameState.troops[targetIdx] = Math.max(0, gameState.troops[targetIdx] - 20);
+            p_attacker.troops -= 20;
+            if (gameState.troops[targetIdx] <= 0) {
+                gameState.ownership[targetIdx] = attackerIdx;
+                gameState.troops[targetIdx] = 20;
+                logEvent(`${p_attacker.name} conquered territory ${targetIdx}!`);
+            } else {
+                logEvent(`${p_attacker.name} attacked territory ${targetIdx} but failed to capture it.`);
+            }
+            renderGame();
+        }
+
+        function handleBuildStructure(idx, ownerIdx, playerIdx, type, r, c) {
+            if (ownerIdx !== playerIdx) {
+                alert("You can only build structures on your own territory!");
+                return;
+            }
+
+            const p = gameState.players[playerIdx];
+            const cost = gameState.BUILDING_COSTS[type];
+            if (p.gold >= cost) {
+                p.gold -= cost;
+                gameState.buildings[idx] = type;
+                logEvent(`${p.name} built a ${type} at (${r}, ${c}).`);
+                renderGame();
+            } else {
+                alert(`Not enough gold to build a ${type}`);
+            }
+        }
+
+        function triggerDisaster() {
+            const rows = gameState.boardRows;
+            const cols = gameState.boardCols;
+            const disasterTypes = ['mud', 'flood', 'crack', 'magma', 'snow', 'radiation'];
+            const randomType = disasterTypes[Math.floor(Math.random() * disasterTypes.length)];
+
+            let attempts = 0;
+            let placed = false;
+
+            while (!placed && attempts < 100) {
+                attempts++;
+                const startR = Math.floor(Math.random() * (rows - 1));
+                const startC = Math.floor(Math.random() * (cols - 1));
+
+                // Verify chunk doesn't contain a capital
+                let hasCapital = false;
+                for (let r = startR; r <= startR + 1; r++) {
+                    for (let c = startC; c <= startC + 1; c++) {
+                        const idx = r * cols + c;
+                        if (gameState.buildings[idx] === 'city') {
+                            hasCapital = true;
+                            break;
+                        }
+                    }
+                    if (hasCapital) break;
+                }
+
+                if (!hasCapital) {
+                    for (let r = startR; r <= startR + 1; r++) {
+                        for (let c = startC; c <= startC + 1; c++) {
+                            const idx = r * cols + c;
+                            gameState.disasters[idx] = { type: randomType, turns: 3 };
+                        }
+                    }
+                    logEvent(`⚠️ A 2x2 ${randomType} disaster struck starting at (${startR}, ${startC})!`);
+                    placed = true;
+                }
+            }
+
+            if (!placed) {
+                logEvent(`⚠️ Natural disaster failed to strike (avoided the capitals).`);
+            } else {
+                renderBoard();
+            }
+        }
+
+        function applyDisasterEffects() {
+            for (let i = 0; i < gameState.ownership.length; i++) {
+                if (gameState.disasters[i]) {
+                    const disaster = gameState.disasters[i];
+                    const owner = gameState.ownership[i];
+
+                    if (owner >= 0) {
+                        const p = gameState.players[owner];
+
+                        if (disaster.type === 'mud' || disaster.type === 'flood') {
+                            gameState.troops[i] = Math.max(0, gameState.troops[i] - 50);
+                            logEvent(`⚠️ Disaster at tile ${i} damages army! (-50 troops)`);
+                        } else if (disaster.type === 'magma' || disaster.type === 'radiation') {
+                            if (gameState.buildings[i]) {
+                                if (gameState.buildings[i] === 'city') {
+                                    logEvent(`🛡️ Disaster at tile ${i} rolled through the outskirts of the capital. No structural damage.`);
+                                } else {
+                                    gameState.buildings[i] = null;
+                                    logEvent(`⚠️ Disaster at tile ${i} destroyed the structure!`);
+                                }
+                            }
+                        } else if (['snow', 'crack'].includes(disaster.type)) {
+                            p.happiness = Math.max(0, p.happiness - 10);
+                            logEvent(`⚠️ Disaster at tile ${i} affects citizens! (-10% Happiness)`);
+                        }
+                    }
+
+                    disaster.turns--;
+                    if (disaster.turns <= 0) {
+                        if (gameState.buildings[i] === 'city') {
+                            logEvent(`The crisis passes at tile ${i}. The capital holds firm!`);
+                        } else {
+                            gameState.ownership[i] = -1;
+                            gameState.buildings[i] = null;
+                            gameState.troops[i] = 0;
+                            logEvent(`⚠️ The crisis passes at tile ${i}. The territory is restored to the wasteland.`);
+                        }
+                        gameState.disasters[i] = null;
+                    }
+                }
             }
         }
 
         function executeAction() {
-            let selectedElement = document.querySelector('.cell.selected');
-            if (!selectedElement) {
-                alert("Please select a target cell on the map first.");
+            const selectedCell = document.querySelector('.cell.selected');
+            if (!selectedCell) {
+                alert("Please select a territory on the board first.");
                 return;
             }
 
-            let r = parseInt(selectedElement.dataset.row);
-            let c = parseInt(selectedElement.dataset.col);
+            const r = parseInt(selectedCell.dataset.row, 10);
+            const c = parseInt(selectedCell.dataset.col, 10);
+            const idx = r * gameState.boardCols + c;
+            const playerIdx = gameState.currentPlayer;
 
-            let idx = r * gameState.boardCols + c;
-            let owner = gameState.ownership[idx];
-            let action = gameState.selectedAction;
-
-            if (gameState.terrain[r][c] === 'ocean' && action !== 'attack' && action !== 'claim' && action !== 'launch') {
-                logEvent('Action cannot be performed on ocean terrain.');
-                return;
-            }
-
-            if (action === 'claim') {
-                handleClaim(idx, owner, gameState.currentPlayer);
-            } else if (action === 'attack') {
-                handleAttack(idx, owner, gameState.currentPlayer);
-            } else if (action === 'launch') {
-                handleLaunch(idx, owner, gameState.currentPlayer);
-            } else if (action === 'withdraw') {
-                handleWithdraw(idx, owner, gameState.currentPlayer);
-            } else if (action === 'deploy') {
-                handleDeploy(idx, owner, gameState.currentPlayer);
-            } else {
-                handleBuildStructure(idx, owner, gameState.currentPlayer, action, r, c);
-            }
-
-            renderGame();
-        }
-
-        function handleClaim(idx, owner, currentPlayer) {
-            if (gameState.claimsThisTurn >= gameState.maxClaimsPerTurn) {
-                logEvent(`⛔ Claim limit reached! You can only claim ${gameState.maxClaimsPerTurn} territories per turn.`);
-                return;
-            }
-            if (owner === currentPlayer) {
-                logEvent('You own this territory already.');
-                return;
-            }
-            if (owner >= 0) {
-                logEvent('Action invalid: tile is occupied.');
-                return;
-            }
-
-            const r = Math.floor(idx / gameState.boardCols);
-            const c = idx % gameState.boardCols;
-
-            if (!isAdjacentToOwned(r, c, currentPlayer)) {
-                logEvent('Action invalid: the territory must be adjacent to your existing lands.');
-                return;
-            }
-
-            const player = gameState.players[currentPlayer];
-            if (player.troops < gameState.TROOP_CLAIM) {
-                logEvent(`Not enough troops! Need ${gameState.TROOP_CLAIM}, have ${player.troops}.`);
-                return;
-            }
-
-            player.troops -= gameState.TROOP_CLAIM;
-            gameState.ownership[idx] = currentPlayer;
-            gameState.troops[idx] = gameState.TROOP_CLAIM;
-            gameState.claimsThisTurn++;
-            logEvent(`${player.name} claimed new territory (${gameState.claimsThisTurn}/${gameState.maxClaimsPerTurn}).`);
-        }
-
-        function handleAttack(idx, owner, currentPlayer) {
-            if (owner === -1 || owner === currentPlayer) {
-                logEvent('Invalid target or no enemy here.');
-                return;
-            }
-
-            const r = Math.floor(idx / gameState.boardCols);
-            const c = idx % gameState.boardCols;
-
-            if (!isAdjacentToOwned(r, c, currentPlayer)) {
-                logEvent('Action invalid: target territory must be adjacent to your existing lands.');
-                return;
-            }
-
-            const attacker = gameState.players[currentPlayer];
-            const defender = gameState.players[owner];
-
-            if (attacker.troops < 100) {
-                logEvent('Need at least 100 troops to attack.');
-                return;
-            }
-
-            const terrain = gameState.terrain[r][c];
-            const terrainMult = gameState.TERRAIN_MULTIPLIERS[terrain] || 1;
-            const terrainPenalty = terrainMult > 1 ? 20 : 0;
-
-            const P_base = attacker.troops;
-            const happinessFactor = attacker.happiness / 100;
-            const economicFactor = Math.max(0.5, attacker.gold / 200000);
-            const P_final = (P_base - terrainPenalty) * happinessFactor * economicFactor;
-
-            const O_base = gameState.troops[idx];
-            const building = gameState.buildings[idx];
-            const buildingBonus = building ? 50 : 0;
-
-            const defenderHappinessFactor = defender.happiness / 100;
-            const defenderEconomicFactor = Math.max(0.5, defender.gold / 200000);
-            const O_final = (O_base + buildingBonus) * defenderHappinessFactor * defenderEconomicFactor;
-
-            const p2 = P_final * P_final;
-            const o2 = O_final * O_final;
-            let winChance = 50;
-            if (p2 + o2 > 0) {
-                winChance = (p2 / (p2 + o2)) * 100;
-            }
-
-            if (Math.random() * 100 < winChance) {
-                const casualties = Math.floor(O_base * 0.5);
-                attacker.troops -= Math.floor(casualties * 0.4);
-                gameState.ownership[idx] = currentPlayer;
-                gameState.troops[idx] = Math.max(0, Math.floor(P_base - casualties));
-                attacker.happiness = Math.min(100, attacker.happiness + 12);
-                defender.happiness = Math.max(10, defender.happiness - 8);
-                logEvent(`${attacker.name} captured territory from ${defender.name}! (Win Chance: ${winChance.toFixed(1)}%)`);
-            } else {
-                const casualties = Math.floor(P_base * 0.2);
-                attacker.troops -= casualties;
-                gameState.troops[idx] = Math.max(0, O_base - Math.floor(casualties * 0.2));
-                attacker.happiness = Math.max(10, attacker.happiness - 10);
-                defender.happiness = Math.min(100, defender.happiness + 8);
-                logEvent(`Attack repelled by ${defender.name}! Attacker took casualties. (Win Chance: ${winChance.toFixed(1)}%)`);
-            }
-            updateStats();
-        }
-
-        function handleWithdraw(idx, owner, currentPlayer) {
-            if (owner !== currentPlayer) {
-                logEvent('You can only withdraw troops from territories you control.');
-                return;
-            }
-            if (gameState.troops[idx] < 25) {
-                logEvent('Not enough troops on this tile to withdraw (minimum 25 needed).');
-                return;
-            }
-            const player = gameState.players[currentPlayer];
-            gameState.troops[idx] -= 25;
-            player.troops += 25;
-            logEvent(`${player.name} withdrew 25 troops from tile.`);
-            updateStats();
-        }
-
-        function handleDeploy(idx, owner, currentPlayer) {
-            if (owner !== currentPlayer) {
-                logEvent('You can only deploy troops to territories you control.');
-                return;
-            }
-            const player = gameState.players[currentPlayer];
-            if (player.troops < 25) {
-                logEvent('Not enough troops in your reserve army (minimum 25 needed).');
-                return;
-            }
-            player.troops -= 25;
-            gameState.troops[idx] += 25;
-            logEvent(`${player.name} deployed 25 troops to tile.`);
-            updateStats();
-        }
-
-        function handleLaunch(targetIdx, targetOwner, currentPlayer) {
-            let siloIdx = -1;
-            for (let i = 0; i < gameState.buildings.length; i++) {
-                if (gameState.buildings[i] === 'silo' && gameState.ownership[i] === currentPlayer) {
-                    siloIdx = i;
+            switch (gameState.selectedAction) {
+                case 'claim':
+                    handleClaim(idx, gameState.ownership[idx], playerIdx);
                     break;
-                }
+                case 'attack':
+                    let attacked = false;
+                    const neighbors = [
+                        [r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]
+                    ];
+                    for (const [nr, nc] of neighbors) {
+                        if (nr >= 0 && nr < gameState.boardRows && nc >= 0 && nc < gameState.boardCols) {
+                            const targetIdx = nr * gameState.boardCols + nc;
+                            if (gameState.ownership[targetIdx] !== -1 && gameState.ownership[targetIdx] !== playerIdx) {
+                                handleAttack(targetIdx, gameState.ownership[targetIdx], playerIdx);
+                                attacked = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!attacked) {
+                        alert("No adjacent enemy territory to attack!");
+                    }
+                    break;
+                case 'fort':
+                case 'town':
+                case 'city':
+                case 'mine':
+                case 'silo':
+                case 'mds':
+                    handleBuildStructure(idx, gameState.ownership[idx], playerIdx, gameState.selectedAction, r, c);
+                    break;
+                case 'withdraw':
+                    if (gameState.ownership[idx] === playerIdx) {
+                        if (gameState.troops[idx] > 50) {
+                            gameState.troops[idx] -= 50;
+                            gameState.players[playerIdx].troops += 50;
+                            logEvent(`Withdrew 50 troops from (${r}, ${c}).`);
+                            renderGame();
+                        } else {
+                            alert("Not enough troops to withdraw!");
+                        }
+                    } else {
+                        alert("You don't own this territory!");
+                    }
+                    break;
+                case 'deploy':
+                    if (gameState.ownership[idx] === playerIdx) {
+                        if (gameState.players[playerIdx].troops >= 50) {
+                            gameState.players[playerIdx].troops -= 50;
+                            gameState.troops[idx] += 50;
+                            logEvent(`Deployed 50 troops to (${r}, ${c}).`);
+                            renderGame();
+                        } else {
+                            alert("Not enough troops in reserve!");
+                        }
+                    } else {
+                        alert("You don't own this territory!");
+                    }
+                    break;
+                case 'launch':
+                    if (gameState.buildings[idx] === 'silo') {
+                        let targets = [];
+                        for (let i = 0; i < gameState.ownership.length; i++) {
+                            if (gameState.ownership[i] !== -1 && gameState.ownership[i] !== playerIdx) {
+                                targets.push(i);
+                            }
+                        }
+                        if (targets.length > 0) {
+                            let targetIdx = targets[Math.floor(Math.random() * targets.length)];
+                            let p = gameState.players[playerIdx];
+                            if (p.gold >= 250000) {
+                                p.gold -= 250000;
+
+                                const targetR = Math.floor(targetIdx / gameState.boardCols);
+                                const targetC = targetIdx % gameState.boardCols;
+                                let intercepted = false;
+
+                                for (let r = targetR - 1; r <= targetR + 1; r++) {
+                                    for (let c = targetC - 1; c <= targetC + 1; c++) {
+                                        if (r >= 0 && r < gameState.boardRows && c >= 0 && c < gameState.boardCols) {
+                                            const checkIdx = r * gameState.boardCols + c;
+                                            if (gameState.buildings[checkIdx] === 'mds') {
+                                                intercepted = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (intercepted) {
+                                    logEvent(`🚀 Missile launched by Player ${playerIdx + 1} at tile ${targetIdx} but was intercepted by MDS!`);
+                                } else {
+                                    gameState.troops[targetIdx] = Math.max(0, gameState.troops[targetIdx] - 150);
+                                    if (gameState.buildings[targetIdx]) {
+                                        gameState.buildings[targetIdx] = null;
+                                        logEvent(`🚀 Missile hit! Structure at tile ${targetIdx} destroyed.`);
+                                    } else {
+                                        logEvent(`🚀 Missile hit! Tile ${targetIdx} took 150 damage.`);
+                                    }
+                                }
+                                renderGame();
+                            } else {
+                                alert("Not enough gold to launch a missile ($250,000 required)!");
+                            }
+                        } else {
+                            alert("No enemy targets to launch a missile at!");
+                        }
+                    } else {
+                        alert("Select a tile containing your Silo to launch!");
+                    }
+                    break;
+                default:
+                    alert("Unsupported action selected or action not implemented yet!");
+                    break;
             }
-
-            if (siloIdx === -1) {
-                logEvent('You do not have a silo installed anywhere. Build one first!');
-                return;
-            }
-
-            if (gameState.ownership[targetIdx] === currentPlayer) {
-                logEvent('You cannot launch a missile at your own territory.');
-                return;
-            }
-
-            const missileCost = 250000;
-            const player = gameState.players[currentPlayer];
-
-            if (player.gold < missileCost) {
-                logEvent(`Insufficient funds! A missile launch costs $${missileCost.toLocaleString()}.`);
-                return;
-            }
-
-            if (gameState.buildings[targetIdx] === 'mds') {
-                player.gold -= missileCost;
-                gameState.buildings[siloIdx] = null; // Silo is expended
-                logEvent('🛡️ Target Intercepted: Enemy MDS destroyed your incoming missile.');
-                updateStats();
-                renderBoard();
-                return;
-            }
-
-            player.gold -= missileCost;
-            gameState.buildings[siloIdx] = null;
-
-            if (gameState.troops[targetIdx] > 0) {
-                const casualties = Math.min(gameState.troops[targetIdx], 300);
-                gameState.troops[targetIdx] -= casualties;
-                logEvent(`🚀 Missile launched! Dealt ${casualties} damage to enemy troops at (${Math.floor(targetIdx / gameState.boardCols)}, ${targetIdx % gameState.boardCols}).`);
-            } else {
-                logEvent('🚀 Missile launched on empty territory.');
-            }
-
-            gameState.disasters[targetIdx] = { type: 'radiation', turns: 2 };
-            updateStats();
-            renderBoard();
         }
 
-        function handleBuildStructure(idx, owner, currentPlayer, structureType, r, c) {
-            if (owner !== currentPlayer) {
-                logEvent('You must own the target property to build on it.');
-                return;
+        function openDiplomacy() {
+            const grid = document.getElementById('diplomacy-grid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < gameState.numPlayers; i++) {
+                if (i === gameState.currentPlayer) continue;
+                const row = document.createElement('div');
+                row.className = 'diplomacy-row';
+
+                const key = gameState.currentPlayer < i ? `${gameState.currentPlayer}_${i}` : `${i}_${gameState.currentPlayer}`;
+                const currentStatus = gameState.diplomacy[key] || 'war';
+
+                row.innerHTML = `
+                    <div><strong>Player ${i + 1}</strong> (Current Status: ${currentStatus.toUpperCase()})</div>
+                    <div class="diplomacy-buttons">
+                        <button class="diplo-btn war" onclick="setDiplomacy(${gameState.currentPlayer}, ${i}, 'war')">War</button>
+                        <button class="diplo-btn peace" onclick="setDiplomacy(${gameState.currentPlayer}, ${i}, 'peace')">Peace</button>
+                        <button class="diplo-btn ally" onclick="setDiplomacy(${gameState.currentPlayer}, ${i}, 'ally')">Alliance</button>
+                    </div>
+                `;
+                grid.appendChild(row);
             }
 
-            const player = gameState.players[currentPlayer];
-            const cost = gameState.BUILDING_COSTS[structureType];
+            document.getElementById('diplomacy-modal').style.display = 'flex';
+        }
 
-            if (!cost) {
-                logEvent('Building definition not supported in this version.');
-                return;
-            }
+        function closeDiplomacy() {
+            document.getElementById('diplomacy-modal').style.display = 'none';
+        }
 
-            if (player.gold < cost) {
-                logEvent(`Insufficient funds! Need $${cost.toLocaleString()}`);
-                return;
-            }
-
-            player.gold -= cost;
-            gameState.buildings[idx] = structureType;
-
-            if (structureType === 'town') {
-                player.happiness = Math.min(100, player.happiness + 8);
-            } else if (structureType === 'city') {
-                player.population += 2000;
-            }
-
-            logEvent(`Installed ${structureType.toUpperCase()} on property. Funds adjusted.`);
-            updateStats();
+        function setDiplomacy(p1, p2, status) {
+            const key = p1 < p2 ? `${p1}_${p2}` : `${p2}_${p1}`;
+            gameState.diplomacy[key] = status;
+            logEvent(`Diplomatic status with Player ${p2 + 1} set to ${status}.`);
+            openDiplomacy();
+            renderGame();
         }
 
         function endTurn() {
@@ -1532,17 +1889,25 @@
             isProcessingTurn = true;
 
             let p = gameState.players[gameState.currentPlayer];
-
-            applyDisasterEffects(gameState.currentPlayer);
+            applyDisasterEffects();
 
             let minesCount = 0;
+            let citiesCount = 0;
+            let townsCount = 0;
+
             for (let i = 0; i < gameState.ownership.length; i++) {
-                if (gameState.ownership[i] === gameState.currentPlayer && gameState.buildings[i] === 'mine') {
-                    minesCount++;
+                if (gameState.ownership[i] === gameState.currentPlayer) {
+                    if (gameState.buildings[i] === 'mine') {
+                        minesCount++;
+                    } else if (gameState.buildings[i] === 'city') {
+                        citiesCount++;
+                    } else if (gameState.buildings[i] === 'town') {
+                        townsCount++;
+                    }
                 }
             }
 
-            p.happiness = Math.min(100, Math.max(10, 100 - (getWarCount(gameState.currentPlayer) * 10) - (minesCount * 4)));
+            p.happiness = Math.min(100, Math.max(10, 100 - (getWarCount(gameState.currentPlayer) * 10) - (minesCount * 4) + (citiesCount * 5) + (townsCount * 2)));
 
             if (Math.random() < 0.3) {
                 let afflictedIndex = Math.floor(Math.random() * gameState.numPlayers);
@@ -1611,7 +1976,7 @@
                     for (let c = 0; c < gameState.boardCols; c++) {
                         let idx = r * gameState.boardCols + c;
                         if (gameState.ownership[idx] === -1 && isAdjacentToOwned(r, c, playerIdx)) {
-                            handleClaim(idx, -1, playerIdx);
+                            aiClaim(idx, playerIdx);
                             if (gameState.claimsThisTurn >= gameState.maxClaimsPerTurn) break;
                         }
                     }
@@ -1627,135 +1992,9 @@
                     break;
                 }
             }
-
             endTurn();
         }
 
-        function getWarCount(playerIdx) {
-            let wars = 0;
-            for (let j = 0; j < gameState.numPlayers; j++) {
-                if (j !== playerIdx) {
-                    if (gameState.diplomacy[getDiplomacyKey(playerIdx, j)] === 'war') wars++;
-                }
-            }
-            return wars;
-        }
-
-        function applyDisasterEffects(playerIdx) {
-            for (let i = 0; i < gameState.ownership.length; i++) {
-                if (gameState.ownership[i] === playerIdx && gameState.disasters[i]) {
-                    const disaster = gameState.disasters[i];
-                    const p = gameState.players[playerIdx];
-
-                    if (disaster.type === 'mud' || disaster.type === 'flood') {
-                        gameState.troops[i] = Math.max(0, gameState.troops[i] - 50);
-                        logEvent(`⚠️ Disaster at tile ${i} damages your army! (-50 troops)`);
-                    } else if (disaster.type === 'magma' || disaster.type === 'radiation') {
-                        if (gameState.buildings[i]) {
-                            gameState.buildings[i] = null;
-                            logEvent(`⚠️ Disaster at tile ${i} destroyed the structure!`);
-                        }
-                    } else if (['snow', 'crack'].includes(disaster.type)) {
-                        p.happiness = Math.max(0, p.happiness - 10);
-                        logEvent(`⚠️ Disaster at tile ${i} affects citizens! (-10% Happiness)`);
-                    }
-
-                    disaster.turns--;
-                    if (disaster.turns <= 0) {
-                        gameState.disasters[i] = null;
-                    }
-                }
-            }
-        }
-
-        function triggerDisaster() {
-            logEvent('⚠️ Disaster triggered across the board.');
-            const totalCells = gameState.boardRows * gameState.boardCols;
-            const randomIndex = Math.floor(Math.random() * totalCells);
-            const disasterTypes = ['mud', 'flood', 'crack', 'magma', 'snow', 'radiation'];
-            const randomType = disasterTypes[Math.floor(Math.random() * disasterTypes.length)];
-
-            gameState.disasters[randomIndex] = { type: randomType, turns: 3 };
-            logEvent(`A ${randomType} disaster struck territory (${Math.floor(randomIndex / gameState.boardCols)}, ${randomIndex % gameState.boardCols})!`);
-            renderBoard();
-        }
-
-        // ==========================================
-        // DIPLOMACY ENGINE
-        // ==========================================
-        function getDiplomacyKey(p1, p2) {
-            const min = Math.min(p1, p2);
-            const max = Math.max(p1, p2);
-            return `${min}_${max}`;
-        }
-
-        function openDiplomacy() {
-            const modal = document.getElementById('diplomacy-modal');
-            const grid = document.getElementById('diplomacy-grid');
-            grid.innerHTML = '';
-
-            const currentPlayer = gameState.currentPlayer;
-
-            gameState.players.forEach((player, idx) => {
-                if (idx === currentPlayer) return;
-
-                const key = getDiplomacyKey(currentPlayer, idx);
-                const status = gameState.diplomacy[key] || 'war';
-
-                const row = document.createElement('div');
-                row.className = 'diplomacy-row';
-                row.innerHTML = `
-                    <div style="margin-bottom: 0.5rem;">
-                        <strong>${player.name}</strong>
-                        <div style="font-size: 0.85rem; color: ${
-                            status === 'war' ? '#fca5a5' : status === 'peace' ? '#93c5fd' : '#6ee7b7'
-                        }">
-                            Current: ${status.toUpperCase()}
-                        </div>
-                    </div>
-                    <div class="diplomacy-buttons">
-                        <button class="diplo-btn war" onclick="changeDiplomacy(${idx}, 'war')">War</button>
-                        <button class="diplo-btn peace" onclick="changeDiplomacy(${idx}, 'peace')">Peace</button>
-                        <button class="diplo-btn ally" onclick="changeDiplomacy(${idx}, 'ally')">Alliance</button>
-                    </div>
-                `;
-
-                grid.appendChild(row);
-            });
-
-            modal.style.display = 'flex';
-        }
-
-        function closeDiplomacy() {
-            document.getElementById('diplomacy-modal').style.display = 'none';
-        }
-
-        function changeDiplomacy(otherPlayer, newStatus) {
-            const currentPlayer = gameState.currentPlayer;
-            const key = getDiplomacyKey(currentPlayer, otherPlayer);
-
-            if (newStatus === 'war') {
-                gameState.diplomacy[key] = 'war';
-                closeDiplomacy();
-                renderGame();
-                logEvent(`Signed WAR treaty with Player ${otherPlayer + 1}`);
-                return;
-            }
-
-            if (Math.random() < 0.5) {
-                gameState.diplomacy[key] = newStatus;
-                logEvent(`Signed ${newStatus.toUpperCase()} treaty with Player ${otherPlayer + 1}`);
-            } else {
-                logEvent(`⚠️ Player ${otherPlayer + 1} rejected the ${newStatus.toUpperCase()} offer.`);
-            }
-
-            closeDiplomacy();
-            renderGame();
-        }
-
-        // ==========================================
-        // TOOLTIP ENGINE & RENDERING
-        // ==========================================
         function showTooltip(e, r, c) {
             const tooltip = document.getElementById('tooltip');
             const idx = r * gameState.boardCols + c;
@@ -1797,7 +2036,6 @@
 
         function isCellVisible(r, c, playerIdx) {
             if (!gameState.fogEnabled) return true;
-
             const idx = r * gameState.boardCols + c;
             if (gameState.ownership[idx] === playerIdx) return true;
             return isAdjacentToOwned(r, c, playerIdx);
@@ -1906,7 +2144,7 @@
                         const feature = gameState.namedFeatures.find(f => f.row === r && f.col === c);
                         if (feature) {
                             const nameEl = document.createElement('div');
-                            nameEl.className = 'named-feature';
+                            nameEl.className = `named-feature`;
                             nameEl.textContent = feature.name;
                             cell.appendChild(nameEl);
                         }
@@ -1924,32 +2162,6 @@
                 }
             }
         }
-
-        function getBuildingChar(type) {
-            switch (type) {
-                case 'city': return '🏙️';
-                case 'town': return '🏘️';
-                case 'fort': return '🏰';
-                case 'mine': return '⛏️';
-                case 'silo': return '🚀';
-                case 'mds': return '🛡️';
-                default: return '';
-            }
-        }
-
-        function getDisasterChar(type) {
-            switch (type) {
-                case 'mud': return '🍂';
-                case 'flood': return '🌊';
-                case 'crack': return '⚡';
-                case 'magma': return '🌋';
-                case 'snow': return '❄️';
-                case 'radiation': return '☢️';
-                default: return '';
-            }
-        }
-
-        returnToMenu();
     </script>
 </body>
 </html>
