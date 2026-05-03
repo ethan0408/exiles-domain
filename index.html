@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exile's Domain - Strategic War Game</title>
     <style>
+        :root {
+            --bg-main: #0a0e17;
+            --bg-panel: rgba(18, 24, 38, 0.75);
+            --bg-element: rgba(30, 41, 59, 0.4);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-active: rgba(99, 102, 241, 0.5);
+            --accent-primary: #6366f1;
+            --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,72 +28,92 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
             overflow-x: hidden;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            padding: 24px;
         }
 
-        /* Menu Screen */
+        /* Glassmorphic Container */
         #menu-screen {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 2rem;
-            max-width: 500px;
+            padding: 3rem 2.5rem;
+            max-width: 480px;
             width: 100%;
-            background: rgba(0,0,0,0.3);
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            margin-top: 30px;
+            background: var(--bg-panel);
+            border-radius: 16px;
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            margin-top: 40px;
+            animation: fadeIn 0.4s ease-out;
         }
 
         #menu-screen h1 {
-            font-size: 3rem;
+            font-size: 2.5rem;
+            font-weight: 800;
             margin-bottom: 0.5rem;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
-            letter-spacing: 2px;
+            letter-spacing: -0.025em;
             text-align: center;
+            background: linear-gradient(to right, #818cf8, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         #menu-screen p {
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
             text-align: center;
+            font-weight: 400;
         }
 
         .menu-options {
             width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
         }
 
         .menu-option {
-            margin-bottom: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
         }
 
         .menu-option label {
-            display: block;
-            margin-bottom: 0.4rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            font-size: 0.95rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .menu-option select,
         .menu-option input {
             width: 100%;
-            padding: 0.5rem;
-            border-radius: 6px;
-            border: 1px solid #475569;
-            font-size: 1rem;
-            background-color: #1e293b;
-            color: #f8fafc;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 0.95rem;
+            background-color: var(--bg-element);
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .menu-option select:focus,
+        .menu-option input:focus {
+            border-color: var(--border-active);
+            background-color: rgba(30, 41, 59, 0.6);
         }
 
         .toggle-option {
@@ -85,71 +121,89 @@
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            margin-bottom: 1.2rem;
+            padding: 0.25rem 0;
+        }
+
+        .toggle-option label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .toggle-switch {
             position: relative;
-            width: 60px;
-            height: 30px;
-            background: #555;
-            border-radius: 15px;
+            width: 52px;
+            height: 28px;
+            background: #1e293b;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
         .toggle-switch.active {
-            background: #4CAF50;
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
         }
 
         .toggle-switch::after {
             content: '';
             position: absolute;
-            width: 26px;
-            height: 26px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
-            background: white;
-            top: 2px;
-            left: 2px;
-            transition: left 0.3s;
+            background: var(--text-main);
+            top: 3px;
+            left: 3px;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
 
         .toggle-switch.active::after {
-            left: 32px;
+            left: 27px;
         }
 
         .start-btn {
             width: 100%;
-            padding: 0.8rem;
-            font-size: 1.3rem;
-            font-weight: bold;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 0.85rem;
+            font-size: 1rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
             border: none;
             border-radius: 8px;
             color: white;
             cursor: pointer;
-            margin-top: 1rem;
-            transition: transform 0.2s, filter 0.2s;
+            margin-top: 0.75rem;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s;
         }
 
         .start-btn:hover {
-            filter: brightness(1.15);
-            transform: scale(1.02);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .start-btn:active {
+            transform: translateY(0);
         }
 
         /* Game Screen */
         #game-screen {
             display: none;
-            padding: 1rem;
+            padding: 1.5rem 1rem;
             max-width: 1300px;
             width: 100%;
+            animation: fadeIn 0.4s ease-out;
         }
 
         .game-header {
-            background: rgba(0,0,0,0.4);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
+            background: var(--bg-panel);
+            padding: 1.25rem 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.25rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -158,23 +212,35 @@
         }
 
         .game-title {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            background: linear-gradient(to right, #f8fafc, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .turn-info {
-            font-size: 1rem;
-            background: rgba(255,255,255,0.1);
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+            padding: 0.4rem 0.85rem;
+            border-radius: 20px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .disaster-countdown {
-            font-size: 0.9rem;
-            color: #ff6b6b;
-            background: rgba(255,107,107,0.2);
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fca5a5;
+            background: rgba(220, 38, 38, 0.15);
+            padding: 0.4rem 0.85rem;
+            border-radius: 20px;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            letter-spacing: 0.02em;
         }
 
         /* Player Stats */
@@ -182,104 +248,122 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
         }
 
         .player-card {
-            background: rgba(0,0,0,0.4);
-            padding: 1rem;
-            border-radius: 8px;
+            background: var(--bg-panel);
+            padding: 1.15rem 1.35rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
             border-left: 5px solid;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
-        .player-card.p1 { border-left-color: #e74c3c; }
-        .player-card.p2 { border-left-color: #3498db; }
-        .player-card.p3 { border-left-color: #2ecc71; }
-        .player-card.p4 { border-left-color: #f39c12; }
+        .player-card.p1 { border-left-color: #ef4444; }
+        .player-card.p2 { border-left-color: #3b82f6; }
+        .player-card.p3 { border-left-color: #10b981; }
+        .player-card.p4 { border-left-color: #f59e0b; }
 
         .player-name {
-            font-size: 1rem;
-            font-weight: bold;
-            margin-bottom: 0.4rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.65rem;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .player-stat {
             display: flex;
             justify-content: space-between;
-            font-size: 0.8rem;
-            margin-bottom: 0.2rem;
+            font-size: 0.85rem;
+            margin-bottom: 0.35rem;
+            color: var(--text-muted);
         }
 
         .player-stat-value {
-            font-weight: bold;
+            font-weight: 600;
+            color: var(--text-main);
         }
 
         /* Action Panel */
         .action-panel {
-            background: rgba(0,0,0,0.4);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
+            background: var(--bg-panel);
+            padding: 1.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.25rem;
         }
 
         .action-buttons {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
-            gap: 0.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 0.65rem;
         }
 
         .action-btn {
             padding: 0.65rem 0.4rem;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.1);
-            color: white;
+            border: 1px solid var(--border-color);
+            background: var(--bg-element);
+            color: var(--text-main);
             border-radius: 6px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
         }
 
         .action-btn:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.04);
+            transform: translateY(-1px);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
         }
 
         .action-btn.active {
-            background: rgba(255,255,255,0.3);
-            border-color: #4CAF50;
-            box-shadow: 0 0 8px rgba(76,175,80,0.5);
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--accent-primary);
+            color: #a5b4fc;
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
         }
 
         .action-btn.disabled {
             opacity: 0.3;
             cursor: not-allowed;
+            transform: none;
         }
 
         .end-turn-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            font-weight: bold;
+            background: var(--accent-gradient);
+            border: none !important;
+            color: white !important;
         }
 
         /* Game Board */
         .game-board-container {
-            background: rgba(0,0,0,0.4);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
+            background: var(--bg-panel);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.25rem;
             overflow-x: auto;
         }
 
         .game-board {
             display: grid;
             gap: 1px;
-            background: #2c3e50;
-            border: 2px solid #34495e;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
             margin: 0 auto;
             width: fit-content;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
         }
 
         .game-board.no-borders {
@@ -292,33 +376,54 @@
             height: 50px;
             position: relative;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 8.5px;
-            border: 1px solid rgba(0,0,0,0.3);
+            font-size: 9px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
         }
 
         .game-board.no-borders .cell {
             border: none;
         }
 
-        .cell:hover {
-            filter: brightness(1.2);
-            transform: scale(1.05);
-            z-index: 10;
+        .cell.fogged {
+            background: #090d16;
+            color: #334155;
+            pointer-events: auto;
         }
 
-        /* Terrain Colors */
-        .ocean { background: #3498db; color: #1a5490; }
-        .plains { background: #2ecc71; color: #1e7e34; }
-        .desert { background: #f39c12; color: #8e5e0a; }
-        .mountain { background: #7f8c8d; color: #2c3e50; }
-        .hills { background: #95a5a6; color: #34495e; }
-        .oasis { background: #1abc9c; color: #0e6655; }
-        .tundra { background: #ecf0f1; color: #7f8c8d; }
+        .cell.fogged > * {
+            display: none;
+        }
+
+        .cell.fogged::after {
+            content: '🌫️';
+            font-size: 1.2rem;
+            opacity: 0.35;
+        }
+
+        .cell:hover {
+            filter: brightness(1.15);
+            transform: scale(1.05);
+            z-index: 10;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.1);
+        }
+
+        .ocean { background: rgba(56, 189, 248, 0.25); color: #bae6fd; }
+        .plains { background: rgba(34, 197, 94, 0.2); color: #bbf7d0; }
+        .desert { background: rgba(245, 158, 11, 0.2); color: #fde68a; }
+        .mountain { background: rgba(100, 116, 139, 0.3); color: #cbd5e1; }
+        .hills { background: rgba(148, 163, 184, 0.2); color: #e2e8f0; }
+        .oasis { background: rgba(20, 184, 166, 0.2); color: #99f6e4; }
+        .tundra { background: rgba(241, 245, 249, 0.15); color: #f8fafc; }
+
+        .selected {
+            outline: 2px solid var(--accent-primary);
+            z-index: 20;
+        }
 
         /* Ownership indicator */
         .ownership-bar {
@@ -326,45 +431,47 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 4px;
+            height: 3.5px;
         }
 
-        .ownership-bar.p1 { background: #e74c3c; }
-        .ownership-bar.p2 { background: #3498db; }
-        .ownership-bar.p3 { background: #2ecc71; }
-        .ownership-bar.p4 { background: #f39c12; }
+        .ownership-bar.p1 { background: #ef4444; }
+        .ownership-bar.p2 { background: #3b82f6; }
+        .ownership-bar.p3 { background: #10b981; }
+        .ownership-bar.p4 { background: #f59e0b; }
 
         /* Building icons */
         .building-icon {
             position: absolute;
-            top: 2px;
-            right: 2px;
-            font-size: 7px;
-            background: rgba(0,0,0,0.6);
+            top: 3px;
+            right: 3px;
+            font-size: 7.5px;
+            background: rgba(15, 23, 42, 0.7);
             padding: 2px 3px;
-            border-radius: 3px;
+            border-radius: 4px;
             font-weight: bold;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .city-icon { color: #f1c40f; }
-        .town-icon { color: #e67e22; }
-        .fort-icon { color: #95a5a6; }
-        .mine-icon { color: #9b59b6; }
-        .silo-icon { color: #e74c3c; }
-        .mds-icon { color: #3498db; }
-        .vaccine-icon { color: #2ecc71; }
+        .city-icon { color: #f59e0b; }
+        .town-icon { color: #f97316; }
+        .fort-icon { color: #64748b; }
+        .mine-icon { color: #c084fc; }
+        .silo-icon { color: #ef4444; }
+        .mds-icon { color: #38bdf8; }
 
         /* Troop count */
         .troop-count {
             position: absolute;
             bottom: 4px;
-            left: 2px;
-            font-size: 0.6rem;
-            background: rgba(0,0,0,0.7);
-            padding: 1px 3px;
-            border-radius: 2px;
-            font-weight: bold;
-            color: white;
+            left: 3px;
+            font-size: 0.65rem;
+            background: rgba(15, 23, 42, 0.8);
+            padding: 1.5px 3.5px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         /* Disaster overlays */
@@ -377,29 +484,30 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             pointer-events: none;
+            backdrop-filter: brightness(0.7);
         }
 
-        .mud-overlay { background: rgba(101,67,33,0.7); }
-        .flood-overlay { background: rgba(52,152,219,0.7); }
+        .mud-overlay { background: rgba(101,67,33,0.5); }
+        .flood-overlay { background: rgba(56,189,248,0.4); }
         .crack-overlay {
-            background: linear-gradient(45deg, transparent 40%, #2c3e50 40%, #2c3e50 60%, transparent 60%);
+            background: linear-gradient(45deg, transparent 40%, rgba(15,23,42,0.8) 40%, rgba(15,23,42,0.8) 60%, transparent 60%);
         }
-        .magma-overlay { background: rgba(231,76,60,0.8); }
-        .snow-overlay { background: rgba(236,240,241,0.7); }
+        .magma-overlay { background: rgba(239, 68, 68, 0.4); }
+        .snow-overlay { background: rgba(255,255,255,0.2); }
         .plague-overlay {
-            background: rgba(39,174,96,0.5);
-            font-size: 1rem;
+            background: rgba(16, 185, 129, 0.3);
+            font-size: 0.85rem;
         }
         .radiation-overlay {
-            background: rgba(155,89,182,0.7);
+            background: rgba(168, 85, 247, 0.4);
             animation: pulse 2s infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 0.9; }
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.85; }
         }
 
         /* Capital marker */
@@ -408,41 +516,45 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.8);
         }
 
         /* Named Features */
         .named-feature {
             position: absolute;
-            bottom: -18px;
+            bottom: -16px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 0.6rem;
-            background: rgba(0,0,0,0.8);
-            padding: 1px 4px;
-            border-radius: 2px;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 1.5px 5px;
+            border-radius: 4px;
             white-space: nowrap;
-            color: #f1c40f;
+            color: #f59e0b;
+            border: 1px solid var(--border-color);
             pointer-events: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
 
         /* Event Log */
         .event-log {
-            background: rgba(0,0,0,0.4);
-            padding: 1rem;
-            border-radius: 8px;
-            max-height: 150px;
+            background: var(--bg-panel);
+            padding: 1.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            max-height: 140px;
             overflow-y: auto;
-            font-size: 0.9rem;
-            font-family: monospace;
+            font-size: 0.82rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         }
 
         .event-log p {
-            margin-bottom: 0.3rem;
-            padding-bottom: 0.3rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 0.45rem;
+            padding-bottom: 0.45rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: #cbd5e1;
         }
 
         .event-log p:last-child {
@@ -452,18 +564,21 @@
         /* Tooltip */
         .tooltip {
             position: absolute;
-            background: rgba(0,0,0,0.9);
-            color: white;
-            padding: 0.5rem;
-            border-radius: 4px;
+            background: rgba(15, 23, 42, 0.95);
+            color: var(--text-main);
+            padding: 0.65rem 0.85rem;
+            border-radius: 8px;
             font-size: 0.8rem;
             pointer-events: none;
             z-index: 1000;
-            white-space: nowrap;
+            white-space: pre-line;
             display: none;
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7);
         }
 
-        /* Diplomacy Modal */
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -471,24 +586,31 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(10, 14, 23, 0.85);
+            backdrop-filter: blur(12px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
         }
 
         .modal-content {
-            background: #2c3e50;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
             padding: 2rem;
-            border-radius: 12px;
-            max-width: 600px;
+            border-radius: 16px;
+            max-width: 580px;
+            width: 90%;
             max-height: 80vh;
             overflow-y: auto;
+            box-shadow: 0 30px 60px -12px rgba(0,0,0,0.7);
         }
 
         .modal-title {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin-bottom: 1.25rem;
+            letter-spacing: -0.01em;
+            color: var(--text-main);
         }
 
         .diplomacy-grid {
@@ -497,57 +619,57 @@
         }
 
         .diplomacy-row {
-            background: rgba(0,0,0,0.3);
-            padding: 1rem;
-            border-radius: 6px;
+            background: var(--bg-element);
+            border: 1px solid var(--border-color);
+            padding: 1.15rem;
+            border-radius: 10px;
         }
 
         .diplomacy-buttons {
             display: flex;
             gap: 0.5rem;
-            margin-top: 0.5rem;
+            margin-top: 0.75rem;
         }
 
         .diplo-btn {
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 0.95rem;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            transition: filter 0.15s;
         }
 
-        .diplo-btn.war { background: #e74c3c; color: white; }
-        .diplo-btn.peace { background: #3498db; color: white; }
-        .diplo-btn.ally { background: #2ecc71; color: white; }
+        .diplo-btn:hover { filter: brightness(1.15); }
+
+        .diplo-btn.war { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .diplo-btn.peace { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .diplo-btn.ally { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
 
         .close-modal {
-            background: #95a5a6;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
+            background: var(--bg-element);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 0.65rem 1.25rem;
+            border-radius: 8px;
             cursor: pointer;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.15s;
         }
 
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+        .close-modal:hover {
+            color: var(--text-main);
+            border-color: rgba(255,255,255,0.2);
         }
 
-        ::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.2);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.3);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255,255,255,0.5);
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -575,6 +697,34 @@
                 </select>
             </div>
 
+            <div class="menu-option">
+                <label for="game-mode">Game Mode:</label>
+                <select id="game-mode">
+                    <option value="pvai" selected>Player vs AI Opponents</option>
+                    <option value="pass">Pass & Play (All Human)</option>
+                </select>
+            </div>
+
+            <div class="menu-option">
+                <label for="start-gold">Starting Gold:</label>
+                <input type="number" id="start-gold" value="200000" step="50000">
+            </div>
+
+            <div class="menu-option">
+                <label for="start-pop">Starting Population:</label>
+                <input type="number" id="start-pop" value="5000" step="1000">
+            </div>
+
+            <div class="toggle-option">
+                <label>Capital Only Start:</label>
+                <div class="toggle-switch" id="capital-toggle"></div>
+            </div>
+
+            <div class="toggle-option">
+                <label>Fog of War:</label>
+                <div class="toggle-switch" id="fog-toggle"></div>
+            </div>
+
             <div class="toggle-option">
                 <label>Grid Borders:</label>
                 <div class="toggle-switch active" id="border-toggle"></div>
@@ -600,23 +750,22 @@
 
         <div class="action-panel">
             <div class="action-buttons">
-                <button class="action-btn active" id="btn-claim" onclick="setAction('claim')">🏳️ CLAIM</button>
-                <button class="action-btn" id="btn-attack" onclick="setAction('attack')">⚔️ ATTACK</button>
-                <button class="action-btn" onclick="buyTroopsDirectly()">👥 BUY TROOPS</button>
-                <button class="action-btn" id="btn-fort" onclick="setAction('fort')">🏰 FORT</button>
-                <button class="action-btn" id="btn-town" onclick="setAction('town')">🏘️ TOWN</button>
-                <button class="action-btn" id="btn-city" onclick="setAction('city')">🏙️ CITY</button>
-                <button class="action-btn" id="btn-mine" onclick="setAction('mine')">⛏️ MINE</button>
-                <button class="action-btn" id="btn-silo" onclick="setAction('silo')">🚀 SILO</button>
+                <button class="action-btn active" id="btn-claim" onclick="setAction('claim')">🏳️ Claim</button>
+                <button class="action-btn" id="btn-attack" onclick="setAction('attack')">⚔️ Attack</button>
+                <button class="action-btn" onclick="buyTroopsDirectly()">👥 Buy Troops</button>
+                <button class="action-btn" id="btn-fort" onclick="setAction('fort')">🏰 Fort</button>
+                <button class="action-btn" id="btn-town" onclick="setAction('town')">🏘️ Town</button>
+                <button class="action-btn" id="btn-city" onclick="setAction('city')">🏙️ City</button>
+                <button class="action-btn" id="btn-mine" onclick="setAction('mine')">⛏️ Mine</button>
+                <button class="action-btn" id="btn-silo" onclick="setAction('silo')">🚀 Silo</button>
                 <button class="action-btn" id="btn-mds" onclick="setAction('mds')">🛡️ MDS</button>
-                <button class="action-btn" id="btn-vaccine" onclick="setAction('vaccine')">💉 VACCINE</button>
-                <button class="action-btn" id="btn-withdraw" onclick="setAction('withdraw')">➖ WITHDRAW</button>
-                <button class="action-btn" id="btn-deploy" onclick="setAction('deploy')">➕ DEPLOY</button>
-                <button class="action-btn" id="btn-launch" onclick="setAction('launch')">🚀 LAUNCH</button>
-                <button class="action-btn" onclick="openDiplomacy()">🤝 DIPLOMACY</button>
-                <button class="action-btn" onclick="returnToMenu()">🏠 MENU</button>
-                <button class="action-btn" id="btn-execute" onclick="executeAction()">🎯 EXECUTE</button>
-                <button class="action-btn end-turn-btn" onclick="endTurn()">⏭️ END TURN</button>
+                <button class="action-btn" id="btn-withdraw" onclick="setAction('withdraw')">➖ Withdraw</button>
+                <button class="action-btn" id="btn-deploy" onclick="setAction('deploy')">➕ Deploy</button>
+                <button class="action-btn" id="btn-launch" onclick="setAction('launch')">🚀 Launch</button>
+                <button class="action-btn" onclick="openDiplomacy()">🤝 Diplomacy</button>
+                <button class="action-btn" onclick="returnToMenu()">🏠 Menu</button>
+                <button class="action-btn" id="btn-execute" onclick="executeAction()">🎯 Execute</button>
+                <button class="action-btn end-turn-btn" onclick="endTurn()">⏭️ End Turn</button>
             </div>
         </div>
 
@@ -640,9 +789,6 @@
     <div class="tooltip" id="tooltip"></div>
 
     <script>
-        // ==========================================
-        // STATE INITIALIZATION
-        // ==========================================
         let gameState = {
             turn: 1,
             currentPlayer: 0,
@@ -651,6 +797,7 @@
             boardCols: 18,
             showBorders: true,
             musicEnabled: false,
+            fogEnabled: false,
             selectedAction: 'claim',
             terrain: [],
             ownership: [],
@@ -663,7 +810,7 @@
             INCOME_PER_TILE: 5000,
             TROOP_COST: 1000,
             TROOP_CLAIM: 100,
-            maxClaimsPerTurn: 2,
+            maxClaimsPerTurn: 3,
             claimsThisTurn: 0,
             BUILDING_COSTS: {
                 fort: 10000,
@@ -691,49 +838,134 @@
             happinessThreshold: 30
         };
 
+        const melody = [
+            { f: 261.6, d: 0.5 }, { f: 293.7, d: 0.5 }, { f: 329.6, d: 0.5 },
+            { f: 349.2, d: 0.5 }, { f: 392.0, d: 0.5 }, { f: 440.0, d: 0.5 },
+            { f: 493.9, d: 0.5 }, { f: 523.3, d: 1.0 }
+        ];
+
+        const TERRAIN_NAMES = {
+            mountain: ['Shadow', 'Whispering', 'Echoing', 'Dread', 'Frozen', 'Shattered'],
+            desert: ['Burning', 'Silent', 'Golden', 'Dry', 'Searing', 'Barren'],
+            ocean: ['Endless', 'Dark', 'Shining', 'Restless', 'Fierce', 'Blue'],
+            tundra: ['Cold', 'White', 'Silent', 'Frosty', 'Dead', 'Bright']
+        };
+
+        const TERRAIN_SUFFIXES = {
+            mountain: ['Peaks', 'Crag', 'Ridges', 'Summit', 'Hills', 'Spires'],
+            desert: ['Dunes', 'Sands', 'Wasteland', 'Expanse', 'Depths', 'Flats'],
+            ocean: ['Trench', 'Abyss', 'Sea', 'Depths', 'Currents', 'Bays'],
+            tundra: ['Tundra', 'Glacier', 'Flats', 'Wastes', 'Plains', 'Ice']
+        };
+
         function returnToMenu() {
             stopMusic();
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('menu-screen').style.display = 'flex';
         }
 
-        // Audio Management
+        function startGame() {
+            initializeGame();
+            document.getElementById('menu-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            renderGame();
+            if (gameState.musicEnabled) {
+                playMusic();
+            }
+        }
+
+        // ==========================================
+        // AUDIO & MUSIC
+        // ==========================================
         let audioCtx = null;
         let musicInterval = null;
         let currentNote = 0;
 
-        const melody = [
-            { f: 220.00, d: 0.6 }, // A3
-            { f: 261.63, d: 0.6 }, // C4
-            { f: 329.63, d: 0.4 }, // E4
-            { f: 392.00, d: 0.8 }, // G4
-            { f: 349.23, d: 0.4 }, // F4
-            { f: 329.63, d: 0.6 }, // E4
-            { f: 261.63, d: 1.2 }, // C4
-            { f: 220.00, d: 1.4 }  // A3
-        ];
+        function playMusic() {
+            if (!gameState.musicEnabled) return;
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                if (musicInterval) {
+                    clearInterval(musicInterval);
+                }
+                musicInterval = setInterval(() => {
+                    if (!gameState.musicEnabled) {
+                        clearInterval(musicInterval);
+                        return;
+                    }
+                    const note = melody[currentNote];
+                    let osc = audioCtx.createOscillator();
+                    let gainNode = audioCtx.createGain();
+                    let filter = audioCtx.createBiquadFilter();
 
-        const TERRAIN_NAMES = {
-            mountain: ['Iron', 'Frost', 'Thunder', 'Shadow', 'Golden', 'Crimson'],
-            desert: ['Scorched', 'Endless', 'Whispering', 'Crimson', 'Golden', 'Ashen'],
-            ocean: ['Azure', 'Emerald', 'Sapphire', 'Storm', 'Calm', 'Deep'],
-            tundra: ['Frozen', 'Northern', 'Icy', 'Bitter', 'White']
-        };
+                    osc.type = 'triangle';
+                    osc.frequency.value = note.f;
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 400;
 
-        const TERRAIN_SUFFIXES = {
-            mountain: ['Mountains', 'Peaks', 'Range', 'Ridge'],
-            desert: ['Desert', 'Wastes', 'Dunes', 'Sands'],
-            ocean: ['Ocean', 'Sea', 'Waters'],
-            tundra: ['Tundra', 'Wastes', 'Reaches']
-        };
+                    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0.012, audioCtx.currentTime + 0.1);
+                    gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + note.d);
 
+                    osc.connect(filter);
+                    filter.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + note.d);
+
+                    currentNote = (currentNote + 1) % melody.length;
+                }, 800);
+            } catch (e) {
+                console.log('Music system initializing...');
+            }
+        }
+
+        function stopMusic() {
+            if (musicInterval) {
+                clearInterval(musicInterval);
+                musicInterval = null;
+                currentNote = 0;
+            }
+        }
+
+        document.getElementById('border-toggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+            gameState.showBorders = this.classList.contains('active');
+            renderBoard();
+        });
+
+        document.getElementById('music-toggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+            gameState.musicEnabled = this.classList.contains('active');
+            if (gameState.musicEnabled) {
+                playMusic();
+            } else {
+                stopMusic();
+            }
+        });
+
+        document.getElementById('fog-toggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+            gameState.fogEnabled = this.classList.contains('active');
+            renderBoard();
+        });
+
+        document.getElementById('capital-toggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+        });
+
+        // ==========================================
+        // UTILS & HELPERS
+        // ==========================================
         function roll(n) {
             return Math.ceil(Math.random() * n);
         }
 
-        // ==========================================
-        // UTILS
-        // ==========================================
         function logEvent(message) {
             const log = document.getElementById('event-log');
             const p = document.createElement('p');
@@ -766,25 +998,30 @@
 
         function updateStats() {
             renderPlayerCards();
+            renderBoard();
         }
 
         // ==========================================
         // INITIALIZATION
         // ==========================================
         function initializePlayers(numPlayers) {
-            const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'];
+            const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b'];
             const names = ['Player 1', 'Player 2', 'Player 3', 'Player 4'];
+            const startGold = parseInt(document.getElementById('start-gold').value) || 200000;
+            const startPop = parseInt(document.getElementById('start-pop').value) || 5000;
+            const gameMode = document.getElementById('game-mode').value;
+
             gameState.players = [];
             for (let i = 0; i < numPlayers; i++) {
                 gameState.players.push({
                     id: i,
                     name: names[i],
                     color: colors[i],
-                    gold: 200000,
+                    gold: startGold,
                     troops: 200,
-                    population: 5000,
+                    population: startPop,
                     happiness: 100,
-                    isAI: i === 1 && numPlayers === 1
+                    isAI: gameMode === 'pvai' && i > 0
                 });
             }
 
@@ -802,6 +1039,22 @@
             if (numPlayers === 2) return [[0, 0], [rows - 1, cols - 1]];
             if (numPlayers === 3) return [[0, 0], [rows - 1, cols - 1], [0, cols - 1]];
             return [[0, 0], [rows - 1, cols - 1], [0, cols - 1], [rows - 1, 0]];
+        }
+
+        function isAdjacentToOwned(r, c, player) {
+            const rows = gameState.boardRows;
+            const cols = gameState.boardCols;
+            const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            for (let [dr, dc] of directions) {
+                const nr = r + dr;
+                const nc = c + dc;
+                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                    if (gameState.ownership[nr * cols + nc] === player) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         function generateTerrain() {
@@ -889,11 +1142,26 @@
         function generateFeatureName(type) {
             const names = TERRAIN_NAMES[type];
             const suffixes = TERRAIN_SUFFIXES[type];
-            return names[Math.floor(Math.random() * names.length)] + " " + suffixes[Math.floor(Math.random() * suffixes.length)];
+            return names[Math.floor(Math.random() * names.length)] + " " + suffixes[Math.floor(Math.random() * names.length)];
         }
 
         function initializeGame() {
-            const numPlayers = gameState.numPlayers;
+            const numPlayers = parseInt(document.getElementById('player-count').value);
+            const boardSizeSelect = document.getElementById('board-size').value;
+            const startCapitalOnly = document.getElementById('capital-toggle').classList.contains('active');
+
+            if (boardSizeSelect === 'small') {
+                gameState.boardRows = 12;
+                gameState.boardCols = 15;
+            } else if (boardSizeSelect === 'large') {
+                gameState.boardRows = 18;
+                gameState.boardCols = 22;
+            } else {
+                gameState.boardRows = 15;
+                gameState.boardCols = 18;
+            }
+
+            gameState.numPlayers = numPlayers;
             const rows = gameState.boardRows;
             const cols = gameState.boardCols;
             const totalCells = rows * cols;
@@ -908,42 +1176,43 @@
             gameState.disasters = new Array(totalCells).fill(null);
             gameState.claimsThisTurn = 0;
 
-            // Generate proportionate start areas
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    let idx = r * cols + c;
-                    if (numPlayers === 2) {
-                        if (c < Math.floor(cols / 2)) {
-                            gameState.ownership[idx] = 0;
-                            gameState.troops[idx] = 50;
-                        } else {
-                            gameState.ownership[idx] = 1;
-                            gameState.troops[idx] = 50;
-                        }
-                    } else if (numPlayers === 3) {
-                        if (c < Math.floor(cols / 3)) {
-                            gameState.ownership[idx] = 0;
-                            gameState.troops[idx] = 50;
-                        } else if (c < Math.floor(2 * cols / 3)) {
-                            gameState.ownership[idx] = 1;
-                            gameState.troops[idx] = 50;
-                        } else {
-                            gameState.ownership[idx] = 2;
-                            gameState.troops[idx] = 50;
-                        }
-                    } else if (numPlayers === 4) {
-                        if (r < Math.floor(rows / 2) && c < Math.floor(cols / 2)) {
-                            gameState.ownership[idx] = 0;
-                            gameState.troops[idx] = 50;
-                        } else if (r < Math.floor(rows / 2) && c >= Math.floor(cols / 2)) {
-                            gameState.ownership[idx] = 1;
-                            gameState.troops[idx] = 50;
-                        } else if (r >= Math.floor(rows / 2) && c < Math.floor(cols / 2)) {
-                            gameState.ownership[idx] = 2;
-                            gameState.troops[idx] = 50;
-                        } else {
-                            gameState.ownership[idx] = 3;
-                            gameState.troops[idx] = 50;
+            if (!startCapitalOnly) {
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        let idx = r * cols + c;
+                        if (numPlayers === 2) {
+                            if (c < Math.floor(cols / 2)) {
+                                gameState.ownership[idx] = 0;
+                                gameState.troops[idx] = 50;
+                            } else {
+                                gameState.ownership[idx] = 1;
+                                gameState.troops[idx] = 50;
+                            }
+                        } else if (numPlayers === 3) {
+                            if (c < Math.floor(cols / 3)) {
+                                gameState.ownership[idx] = 0;
+                                gameState.troops[idx] = 50;
+                            } else if (c < Math.floor(2 * cols / 3)) {
+                                gameState.ownership[idx] = 1;
+                                gameState.troops[idx] = 50;
+                            } else {
+                                gameState.ownership[idx] = 2;
+                                gameState.troops[idx] = 50;
+                            }
+                        } else if (numPlayers === 4) {
+                            if (r < Math.floor(rows / 2) && c < Math.floor(cols / 2)) {
+                                gameState.ownership[idx] = 0;
+                                gameState.troops[idx] = 50;
+                            } else if (r < Math.floor(rows / 2) && c >= Math.floor(cols / 2)) {
+                                gameState.ownership[idx] = 1;
+                                gameState.troops[idx] = 50;
+                            } else if (r >= Math.floor(rows / 2) && c < Math.floor(cols / 2)) {
+                                gameState.ownership[idx] = 2;
+                                gameState.troops[idx] = 50;
+                            } else {
+                                gameState.ownership[idx] = 3;
+                                gameState.troops[idx] = 50;
+                            }
                         }
                     }
                 }
@@ -958,12 +1227,13 @@
                 gameState.troops[idx] = 200;
             });
 
-            // Randomly scatter a few bases
-            const buildingTypes = ['fort', 'town', 'mine'];
-            for (let i = 0; i < totalCells; i++) {
-                if (gameState.ownership[i] >= 0 && !gameState.buildings[i]) {
-                    if (Math.random() < 0.06) {
-                        gameState.buildings[i] = buildingTypes[Math.floor(Math.random() * buildingTypes.length)];
+            if (!startCapitalOnly) {
+                const buildingTypes = ['fort', 'town', 'mine'];
+                for (let i = 0; i < totalCells; i++) {
+                    if (gameState.ownership[i] >= 0 && !gameState.buildings[i]) {
+                        if (Math.random() < 0.06) {
+                            gameState.buildings[i] = buildingTypes[Math.floor(Math.random() * buildingTypes.length)];
+                        }
                     }
                 }
             }
@@ -973,243 +1243,6 @@
                 log.innerHTML = '<p>🌍 World generated with random bases and starting lands. Ready for action!</p>';
             }
         }
-
-        function startGame() {
-            gameState.numPlayers = parseInt(document.getElementById('player-count').value);
-            const boardSize = document.getElementById('board-size').value;
-
-            if (boardSize === 'small') {
-                gameState.boardRows = 10;
-                gameState.boardCols = 12;
-            } else if (boardSize === 'medium') {
-                gameState.boardRows = 12;
-                gameState.boardCols = 15;
-            } else {
-                gameState.boardRows = 15;
-                gameState.boardCols = 18;
-            }
-
-            initializeGame();
-            document.getElementById('menu-screen').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'block';
-
-            renderGame();
-            if (gameState.musicEnabled) {
-                playMusic();
-            }
-        }
-
-        function renderGame() {
-            renderPlayerCards();
-            renderBoard();
-            renderTurnInfo();
-            updateActionButtons();
-        }
-
-        function renderPlayerCards() {
-            const container = document.getElementById('players-grid');
-            container.innerHTML = '';
-
-            gameState.players.forEach((player, idx) => {
-                const ownedTiles = gameState.ownership.filter(o => o === idx).length;
-                const income = ownedTiles * gameState.INCOME_PER_TILE;
-
-                const card = document.createElement('div');
-                card.className = `player-card p${idx + 1}`;
-                if (idx === gameState.currentPlayer) {
-                    card.style.boxShadow = `0 0 15px ${player.color}`;
-                }
-
-                card.innerHTML = `
-                    <div class="player-name">${player.name}</div>
-                    <div class="player-stat"><span>💰 Gold:</span> <span class="player-stat-value">$${player.gold.toLocaleString()}</span></div>
-                    <div class="player-stat"><span>💵 Income:</span> <span class="player-stat-value">+$${income.toLocaleString()}/turn</span></div>
-                    <div class="player-stat"><span>👥 Army:</span> <span class="player-stat-value">${player.troops.toLocaleString()}</span></div>
-                    <div class="player-stat"><span>🏘️ Territories:</span> <span class="player-stat-value">${ownedTiles}</span></div>
-                    <div class="player-stat"><span>👨‍👩‍👧‍👦 Population:</span> <span class="player-stat-value">${player.population.toLocaleString()}</span></div>
-                    <div class="player-stat"><span>😊 Happiness:</span> <span class="player-stat-value" style="color: ${player.happiness > 30 ? '#2ecc71' : '#e74c3c'}">${player.happiness}%</span></div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function renderBoard() {
-            const boardElement = document.getElementById('game-board');
-            boardElement.innerHTML = '';
-            boardElement.style.gridTemplateColumns = `repeat(${gameState.boardCols}, 50px)`;
-
-            if (!gameState.showBorders) {
-                boardElement.classList.add('no-borders');
-            } else {
-                boardElement.classList.remove('no-borders');
-            }
-
-            for (let r = 0; r < gameState.boardRows; r++) {
-                for (let c = 0; c < gameState.boardCols; c++) {
-                    const idx = r * gameState.boardCols + c;
-                    const terrain = gameState.terrain[r][c];
-                    const owner = gameState.ownership[idx];
-                    const building = gameState.buildings[idx];
-                    const troops = gameState.troops[idx];
-                    const disaster = gameState.disasters[idx];
-
-                    const cell = document.createElement('div');
-                    cell.className = `cell ${terrain}`;
-                    cell.dataset.row = r;
-                    cell.dataset.col = c;
-
-                    const icons = {
-                        ocean: '🌊',
-                        plains: '🌾',
-                        desert: '🏜️',
-                        mountain: '⛰️',
-                        hills: '⛰',
-                        oasis: '🌴',
-                        tundra: '❄️'
-                    };
-                    cell.textContent = icons[terrain] || '';
-
-                    if (owner >= 0) {
-                        const bar = document.createElement('div');
-                        bar.className = `ownership-bar p${owner + 1}`;
-                        cell.appendChild(bar);
-                    }
-
-                    if (building) {
-                        const bIcon = document.createElement('div');
-                        bIcon.className = `building-icon ${building}-icon`;
-                        const bSymbols = {
-                            city: '🏙️', town: '🏘️', fort: '🏰', mine: '⛏️', silo: '🚀', mds: '🛡️', vaccine: '💉'
-                        };
-                        bIcon.textContent = bSymbols[building] || '';
-                        cell.appendChild(bIcon);
-                    }
-
-                    if (troops > 0 && owner >= 0) {
-                        const troopCount = document.createElement('div');
-                        troopCount.className = 'troop-count';
-                        troopCount.textContent = troops >= 1000 ? `${Math.round(troops/1000)}k` : troops;
-                        cell.appendChild(troopCount);
-                    }
-
-                    if (disaster) {
-                        const overlay = document.createElement('div');
-                        overlay.className = `disaster-overlay ${disaster.type}-overlay`;
-                        cell.appendChild(overlay);
-                    }
-
-                    const capitals = getCapitalPositions(gameState.numPlayers);
-                    const isCapital = capitals.some(([cr, cc]) => cr === r && cc === c);
-                    if (isCapital) {
-                        const marker = document.createElement('div');
-                        marker.className = 'capital-marker';
-                        marker.textContent = '⭐';
-                        cell.appendChild(marker);
-                    }
-
-                    const feature = gameState.namedFeatures.find(f => f.row === r && f.col === c);
-                    if (feature) {
-                        const label = document.createElement('div');
-                        label.className = 'named-feature';
-                        label.textContent = feature.name;
-                        cell.appendChild(label);
-                    }
-
-                    cell.addEventListener('click', (e) => handleCellClick(r, c));
-                    cell.addEventListener('mouseenter', (e) => showTooltip(e, r, c));
-                    cell.addEventListener('mouseleave', hideTooltip);
-
-                    boardElement.appendChild(cell);
-                }
-            }
-        }
-
-        function renderTurnInfo() {
-            const currentPlayerName = gameState.players[gameState.currentPlayer].name;
-            document.getElementById('turn-info').textContent = `Turn ${gameState.turn} - ${currentPlayerName}'s Turn`;
-
-            const turnsUntilDisaster = gameState.disasterTimer;
-            document.getElementById('disaster-countdown').textContent = `⚠️ Disaster in ${turnsUntilDisaster} turn${turnsUntilDisaster !== 1 ? 's' : ''}`;
-        }
-
-        // ==========================================
-        // AUDIO & MUSIC WORKFLOW
-        // ==========================================
-        function playMusic() {
-            if (!gameState.musicEnabled) return;
-
-            try {
-                if (!audioCtx) {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-
-                if (musicInterval) {
-                    clearInterval(musicInterval);
-                }
-
-                musicInterval = setInterval(() => {
-                    if (!gameState.musicEnabled) {
-                        clearInterval(musicInterval);
-                        return;
-                    }
-
-                    const note = melody[currentNote];
-
-                    let osc = audioCtx.createOscillator();
-                    let gainNode = audioCtx.createGain();
-                    let filter = audioCtx.createBiquadFilter();
-
-                    osc.type = 'triangle';
-                    osc.frequency.value = note.f;
-
-                    filter.type = 'lowpass';
-                    filter.frequency.value = 400;
-
-                    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-                    gainNode.gain.linearRampToValueAtTime(0.012, audioCtx.currentTime + 0.1);
-                    gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + note.d);
-
-                    osc.connect(filter);
-                    filter.connect(gainNode);
-                    gainNode.connect(audioCtx.destination);
-
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + note.d);
-
-                    currentNote = (currentNote + 1) % melody.length;
-                }, 800);
-            } catch (e) {
-                console.log('Audio device not supported or permitted yet by browser.');
-            }
-        }
-
-        function stopMusic() {
-            if (musicInterval) {
-                clearInterval(musicInterval);
-                musicInterval = null;
-                currentNote = 0;
-            }
-        }
-
-        document.getElementById('border-toggle').addEventListener('click', function() {
-            this.classList.toggle('active');
-            gameState.showBorders = this.classList.contains('active');
-            renderBoard();
-        });
-
-        document.getElementById('music-toggle').addEventListener('click', function() {
-            this.classList.toggle('active');
-            gameState.musicEnabled = this.classList.contains('active');
-            if (gameState.musicEnabled) {
-                playMusic();
-            } else {
-                stopMusic();
-            }
-        });
 
         // ==========================================
         // GAMEPLAY WORKFLOW
@@ -1231,7 +1264,6 @@
 
             logEvent(`${player.name} raised 100 troops.`);
             updateStats();
-            renderBoard();
         }
 
         function handleCellClick(r, c) {
@@ -1293,6 +1325,14 @@
                 return;
             }
 
+            const r = Math.floor(idx / gameState.boardCols);
+            const c = idx % gameState.boardCols;
+
+            if (!isAdjacentToOwned(r, c, currentPlayer)) {
+                logEvent('Action invalid: the territory must be adjacent to your existing lands.');
+                return;
+            }
+
             const player = gameState.players[currentPlayer];
             if (player.troops < gameState.TROOP_CLAIM) {
                 logEvent(`Not enough troops! Need ${gameState.TROOP_CLAIM}, have ${player.troops}.`);
@@ -1312,6 +1352,14 @@
                 return;
             }
 
+            const r = Math.floor(idx / gameState.boardCols);
+            const c = idx % gameState.boardCols;
+
+            if (!isAdjacentToOwned(r, c, currentPlayer)) {
+                logEvent('Action invalid: target territory must be adjacent to your existing lands.');
+                return;
+            }
+
             const attacker = gameState.players[currentPlayer];
             const defender = gameState.players[owner];
 
@@ -1320,25 +1368,45 @@
                 return;
             }
 
-            const attackerTroops = attacker.troops;
-            const defenderTroops = gameState.troops[idx];
+            const terrain = gameState.terrain[r][c];
+            const terrainMult = gameState.TERRAIN_MULTIPLIERS[terrain] || 1;
+            const terrainPenalty = terrainMult > 1 ? 20 : 0;
 
-            const attackPower = attackerTroops;
-            const defensePower = defenderTroops * 1.5;
+            const P_base = attacker.troops;
+            const happinessFactor = attacker.happiness / 100;
+            const economicFactor = Math.max(0.5, attacker.gold / 200000);
+            const P_final = (P_base - terrainPenalty) * happinessFactor * economicFactor;
 
-            if (attackPower > defensePower) {
-                const casualties = Math.floor(defenderTroops * 0.7);
-                attacker.troops -= casualties;
+            const O_base = gameState.troops[idx];
+            const building = gameState.buildings[idx];
+            const buildingBonus = building ? 50 : 0;
+
+            const defenderHappinessFactor = defender.happiness / 100;
+            const defenderEconomicFactor = Math.max(0.5, defender.gold / 200000);
+            const O_final = (O_base + buildingBonus) * defenderHappinessFactor * defenderEconomicFactor;
+
+            const p2 = P_final * P_final;
+            const o2 = O_final * O_final;
+            let winChance = 50;
+            if (p2 + o2 > 0) {
+                winChance = (p2 / (p2 + o2)) * 100;
+            }
+
+            if (Math.random() * 100 < winChance) {
+                const casualties = Math.floor(O_base * 0.5);
+                attacker.troops -= Math.floor(casualties * 0.4);
                 gameState.ownership[idx] = currentPlayer;
-                gameState.troops[idx] = Math.floor(attackerTroops - casualties);
-
-                logEvent(`${attacker.name} captured territory from ${defender.name}!`);
+                gameState.troops[idx] = Math.max(0, Math.floor(P_base - casualties));
+                attacker.happiness = Math.min(100, attacker.happiness + 12);
+                defender.happiness = Math.max(10, defender.happiness - 8);
+                logEvent(`${attacker.name} captured territory from ${defender.name}! (Win Chance: ${winChance.toFixed(1)}%)`);
             } else {
-                const casualties = Math.floor(attackerTroops * 0.3);
+                const casualties = Math.floor(P_base * 0.2);
                 attacker.troops -= casualties;
-                gameState.troops[idx] = Math.max(0, defenderTroops - Math.floor(casualties * 0.4));
-
-                logEvent('Attack repelled! Attacker took casualties.');
+                gameState.troops[idx] = Math.max(0, O_base - Math.floor(casualties * 0.2));
+                attacker.happiness = Math.max(10, attacker.happiness - 10);
+                defender.happiness = Math.min(100, defender.happiness + 8);
+                logEvent(`Attack repelled by ${defender.name}! Attacker took casualties. (Win Chance: ${winChance.toFixed(1)}%)`);
             }
             updateStats();
         }
@@ -1377,7 +1445,6 @@
 
         function handleLaunch(targetIdx, targetOwner, currentPlayer) {
             let siloIdx = -1;
-
             for (let i = 0; i < gameState.buildings.length; i++) {
                 if (gameState.buildings[i] === 'silo' && gameState.ownership[i] === currentPlayer) {
                     siloIdx = i;
@@ -1395,7 +1462,24 @@
                 return;
             }
 
-            // Silo is expended
+            const missileCost = 250000;
+            const player = gameState.players[currentPlayer];
+
+            if (player.gold < missileCost) {
+                logEvent(`Insufficient funds! A missile launch costs $${missileCost.toLocaleString()}.`);
+                return;
+            }
+
+            if (gameState.buildings[targetIdx] === 'mds') {
+                player.gold -= missileCost;
+                gameState.buildings[siloIdx] = null; // Silo is expended
+                logEvent('🛡️ Target Intercepted: Enemy MDS destroyed your incoming missile.');
+                updateStats();
+                renderBoard();
+                return;
+            }
+
+            player.gold -= missileCost;
             gameState.buildings[siloIdx] = null;
 
             if (gameState.troops[targetIdx] > 0) {
@@ -1432,6 +1516,13 @@
 
             player.gold -= cost;
             gameState.buildings[idx] = structureType;
+
+            if (structureType === 'town') {
+                player.happiness = Math.min(100, player.happiness + 8);
+            } else if (structureType === 'city') {
+                player.population += 2000;
+            }
+
             logEvent(`Installed ${structureType.toUpperCase()} on property. Funds adjusted.`);
             updateStats();
         }
@@ -1444,8 +1535,24 @@
 
             applyDisasterEffects(gameState.currentPlayer);
 
+            let minesCount = 0;
+            for (let i = 0; i < gameState.ownership.length; i++) {
+                if (gameState.ownership[i] === gameState.currentPlayer && gameState.buildings[i] === 'mine') {
+                    minesCount++;
+                }
+            }
+
+            p.happiness = Math.min(100, Math.max(10, 100 - (getWarCount(gameState.currentPlayer) * 10) - (minesCount * 4)));
+
+            if (Math.random() < 0.3) {
+                let afflictedIndex = Math.floor(Math.random() * gameState.numPlayers);
+                let afflictedPlayer = gameState.players[afflictedIndex];
+                afflictedPlayer.population = Math.floor(afflictedPlayer.population * 0.85);
+                logEvent(`🦠 An epidemic outbreak struck ${afflictedPlayer.name}! Population dropped.`);
+            }
+
             const ownedTiles = gameState.ownership.filter(o => o === gameState.currentPlayer).length;
-            const income = ownedTiles * gameState.INCOME_PER_TILE;
+            const income = (ownedTiles * gameState.INCOME_PER_TILE) + (minesCount * 15000);
             p.gold += income;
             p.population += 120;
 
@@ -1468,8 +1575,70 @@
             }
 
             gameState.claimsThisTurn = 0;
+
+            if (gameState.players[gameState.currentPlayer] && gameState.players[gameState.currentPlayer].isAI) {
+                setTimeout(executeAITurn, 600);
+            }
+
             isProcessingTurn = false;
             renderGame();
+        }
+
+        function executeAITurn() {
+            if (gameState.players[gameState.currentPlayer].isAI === false) return;
+            logEvent(`🤖 Processing Smart AI Turn for Player ${gameState.currentPlayer + 1}`);
+
+            const playerIdx = gameState.currentPlayer;
+            const p = gameState.players[playerIdx];
+
+            if (p.gold > gameState.TROOP_COST * 2 && p.troops < 500) {
+                buyTroopsDirectly();
+            }
+
+            for (let i = 0; i < gameState.ownership.length; i++) {
+                if (gameState.ownership[i] !== -1 && gameState.ownership[i] !== playerIdx) {
+                    const r = Math.floor(i / gameState.boardCols);
+                    const c = i % gameState.boardCols;
+                    if (isAdjacentToOwned(r, c, playerIdx) && Math.random() < 0.7) {
+                        handleAttack(i, gameState.ownership[i], playerIdx);
+                        break;
+                    }
+                }
+            }
+
+            if (gameState.claimsThisTurn < gameState.maxClaimsPerTurn) {
+                for (let r = 0; r < gameState.boardRows; r++) {
+                    for (let c = 0; c < gameState.boardCols; c++) {
+                        let idx = r * gameState.boardCols + c;
+                        if (gameState.ownership[idx] === -1 && isAdjacentToOwned(r, c, playerIdx)) {
+                            handleClaim(idx, -1, playerIdx);
+                            if (gameState.claimsThisTurn >= gameState.maxClaimsPerTurn) break;
+                        }
+                    }
+                }
+            }
+
+            for (let i = 0; i < gameState.ownership.length; i++) {
+                if (gameState.ownership[i] === playerIdx && !gameState.buildings[i] && p.gold > 50000) {
+                    const r = Math.floor(i / gameState.boardCols);
+                    const c = i % gameState.boardCols;
+                    const structures = ['fort', 'town', 'mine'];
+                    handleBuildStructure(i, playerIdx, playerIdx, structures[Math.floor(Math.random() * structures.length)], r, c);
+                    break;
+                }
+            }
+
+            endTurn();
+        }
+
+        function getWarCount(playerIdx) {
+            let wars = 0;
+            for (let j = 0; j < gameState.numPlayers; j++) {
+                if (j !== playerIdx) {
+                    if (gameState.diplomacy[getDiplomacyKey(playerIdx, j)] === 'war') wars++;
+                }
+            }
+            return wars;
         }
 
         function applyDisasterEffects(playerIdx) {
@@ -1486,7 +1655,7 @@
                             gameState.buildings[i] = null;
                             logEvent(`⚠️ Disaster at tile ${i} destroyed the structure!`);
                         }
-                    } else if (['snow', 'plague', 'crack'].includes(disaster.type)) {
+                    } else if (['snow', 'crack'].includes(disaster.type)) {
                         p.happiness = Math.max(0, p.happiness - 10);
                         logEvent(`⚠️ Disaster at tile ${i} affects citizens! (-10% Happiness)`);
                     }
@@ -1503,7 +1672,7 @@
             logEvent('⚠️ Disaster triggered across the board.');
             const totalCells = gameState.boardRows * gameState.boardCols;
             const randomIndex = Math.floor(Math.random() * totalCells);
-            const disasterTypes = ['mud', 'flood', 'crack', 'magma', 'snow', 'plague', 'radiation'];
+            const disasterTypes = ['mud', 'flood', 'crack', 'magma', 'snow', 'radiation'];
             const randomType = disasterTypes[Math.floor(Math.random() * disasterTypes.length)];
 
             gameState.disasters[randomIndex] = { type: randomType, turns: 3 };
@@ -1511,14 +1680,8 @@
             renderBoard();
         }
 
-        function updateDisasterTimers() {
-            gameState.disasters.forEach((d) => {
-                if (d && d.turns > 0) d.turns--;
-            });
-        }
-
         // ==========================================
-        // DIPLOMACY
+        // DIPLOMACY ENGINE
         // ==========================================
         function getDiplomacyKey(p1, p2) {
             const min = Math.min(p1, p2);
@@ -1544,8 +1707,8 @@
                 row.innerHTML = `
                     <div style="margin-bottom: 0.5rem;">
                         <strong>${player.name}</strong>
-                        <div style="font-size: 0.9rem; color: ${
-                            status === 'war' ? '#e74c3c' : status === 'peace' ? '#3498db' : '#2ecc71'
+                        <div style="font-size: 0.85rem; color: ${
+                            status === 'war' ? '#fca5a5' : status === 'peace' ? '#93c5fd' : '#6ee7b7'
                         }">
                             Current: ${status.toUpperCase()}
                         </div>
@@ -1591,11 +1754,16 @@
         }
 
         // ==========================================
-        // TOOLTIP ENGINE
+        // TOOLTIP ENGINE & RENDERING
         // ==========================================
         function showTooltip(e, r, c) {
             const tooltip = document.getElementById('tooltip');
             const idx = r * gameState.boardCols + c;
+
+            if (gameState.fogEnabled && !isCellVisible(r, c, gameState.currentPlayer)) {
+                return;
+            }
+
             const terrain = gameState.terrain[r][c];
             const owner = gameState.ownership[idx];
             const building = gameState.buildings[idx];
@@ -1619,12 +1787,166 @@
 
             tooltip.textContent = text;
             tooltip.style.display = 'block';
-            tooltip.style.left = (e.pageX + 10) + 'px';
-            tooltip.style.top = (e.pageY + 10) + 'px';
+            tooltip.style.left = (e.pageX + 12) + 'px';
+            tooltip.style.top = (e.pageY + 12) + 'px';
         }
 
         function hideTooltip() {
             document.getElementById('tooltip').style.display = 'none';
+        }
+
+        function isCellVisible(r, c, playerIdx) {
+            if (!gameState.fogEnabled) return true;
+
+            const idx = r * gameState.boardCols + c;
+            if (gameState.ownership[idx] === playerIdx) return true;
+            return isAdjacentToOwned(r, c, playerIdx);
+        }
+
+        function renderGame() {
+            renderPlayerCards();
+            renderBoard();
+            document.getElementById('turn-info').textContent = `Turn ${gameState.turn} - Player ${gameState.currentPlayer + 1}'s Turn`;
+            document.getElementById('disaster-countdown').textContent = `⚠️ Disaster in ${gameState.disasterTimer} turns`;
+        }
+
+        function renderPlayerCards() {
+            const grid = document.getElementById('players-grid');
+            grid.innerHTML = '';
+
+            gameState.players.forEach((p, idx) => {
+                const card = document.createElement('div');
+                card.className = `player-card p${idx + 1}`;
+                card.style.borderColor = p.color;
+
+                card.innerHTML = `
+                    <div class="player-name">
+                        <span>${p.name}</span>
+                        <span>${idx === gameState.currentPlayer ? '🟢 Active' : ''}</span>
+                    </div>
+                    <div class="player-stat"><span>Gold:</span> <span class="player-stat-value">$${p.gold.toLocaleString()}</span></div>
+                    <div class="player-stat"><span>Troops:</span> <span class="player-stat-value">${p.troops.toLocaleString()}</span></div>
+                    <div class="player-stat"><span>Population:</span> <span class="player-stat-value">${p.population.toLocaleString()}</span></div>
+                    <div class="player-stat"><span>Happiness:</span> <span class="player-stat-value">${p.happiness}%</span></div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('game-board');
+            board.innerHTML = '';
+
+            board.style.gridTemplateColumns = `repeat(${gameState.boardCols}, 50px)`;
+            board.style.gridTemplateRows = `repeat(${gameState.boardRows}, 50px)`;
+
+            if (gameState.showBorders) {
+                board.classList.remove('no-borders');
+            } else {
+                board.classList.add('no-borders');
+            }
+
+            for (let r = 0; r < gameState.boardRows; r++) {
+                for (let c = 0; c < gameState.boardCols; c++) {
+                    const idx = r * gameState.boardCols + c;
+                    const cell = document.createElement('div');
+                    const terrain = gameState.terrain[r][c];
+
+                    cell.className = `cell ${terrain}`;
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+
+                    if (gameState.ownership[idx] === gameState.currentPlayer && document.querySelector(`[data-row='${r}'][data-col='${c}']`)?.classList.contains('selected')) {
+                        cell.classList.add('selected');
+                    }
+
+                    const visible = isCellVisible(r, c, gameState.currentPlayer);
+
+                    if (!visible) {
+                        cell.classList.add('fogged');
+                    } else {
+                        const troops = gameState.troops[idx];
+                        if (troops > 0) {
+                            const troopCount = document.createElement('div');
+                            troopCount.className = 'troop-count';
+                            troopCount.textContent = troops;
+                            cell.appendChild(troopCount);
+                        }
+
+                        const building = gameState.buildings[idx];
+                        if (building) {
+                            const buildingIcon = document.createElement('div');
+                            buildingIcon.className = `building-icon ${building}-icon`;
+                            buildingIcon.textContent = getBuildingChar(building);
+                            cell.appendChild(buildingIcon);
+                        }
+
+                        const owner = gameState.ownership[idx];
+                        if (owner >= 0) {
+                            const bar = document.createElement('div');
+                            bar.className = `ownership-bar p${owner + 1}`;
+                            cell.appendChild(bar);
+
+                            if (building === 'city' && gameState.troops[idx] >= 200) {
+                                const marker = document.createElement('div');
+                                marker.className = 'capital-marker';
+                                marker.textContent = '👑';
+                                cell.appendChild(marker);
+                            }
+                        }
+
+                        const disaster = gameState.disasters[idx];
+                        if (disaster) {
+                            const overlay = document.createElement('div');
+                            overlay.className = `disaster-overlay ${disaster.type}-overlay`;
+                            overlay.textContent = getDisasterChar(disaster.type);
+                            cell.appendChild(overlay);
+                        }
+
+                        const feature = gameState.namedFeatures.find(f => f.row === r && f.col === c);
+                        if (feature) {
+                            const nameEl = document.createElement('div');
+                            nameEl.className = 'named-feature';
+                            nameEl.textContent = feature.name;
+                            cell.appendChild(nameEl);
+                        }
+                    }
+
+                    cell.addEventListener('click', () => {
+                        document.querySelectorAll('.cell').forEach(el => el.classList.remove('selected'));
+                        cell.classList.add('selected');
+                        handleCellClick(r, c);
+                    });
+                    cell.addEventListener('mousemove', (e) => showTooltip(e, r, c));
+                    cell.addEventListener('mouseleave', hideTooltip);
+
+                    board.appendChild(cell);
+                }
+            }
+        }
+
+        function getBuildingChar(type) {
+            switch (type) {
+                case 'city': return '🏙️';
+                case 'town': return '🏘️';
+                case 'fort': return '🏰';
+                case 'mine': return '⛏️';
+                case 'silo': return '🚀';
+                case 'mds': return '🛡️';
+                default: return '';
+            }
+        }
+
+        function getDisasterChar(type) {
+            switch (type) {
+                case 'mud': return '🍂';
+                case 'flood': return '🌊';
+                case 'crack': return '⚡';
+                case 'magma': return '🌋';
+                case 'snow': return '❄️';
+                case 'radiation': return '☢️';
+                default: return '';
+            }
         }
 
         returnToMenu();
