@@ -149,6 +149,10 @@
             border-color: var(--accent-primary);
         }
 
+        .toggle-switch.active::after {
+            left: 27px;
+        }
+
         .toggle-switch::after {
             content: '';
             position: absolute;
@@ -161,10 +165,6 @@
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
             pointer-events: none;
-        }
-
-        .toggle-switch.active::after {
-            left: 27px;
         }
 
         .start-btn {
@@ -432,7 +432,7 @@
         .oasis { background: rgba(20, 184, 166, 0.2); color: #99f6e4; }
         .tundra { background: rgba(241, 245, 249, 0.15); color: #f8fafc; }
 
-        .selected {
+        .cell.selected {
             outline: 2px solid var(--accent-primary);
             z-index: 20;
         }
@@ -837,6 +837,8 @@
             TROOP_CLAIM: 100,
             maxClaimsPerTurn: 3,
             claimsThisTurn: 0,
+            selectedRow: null,
+            selectedCol: null,
             BUILDING_COSTS: {
                 fort: 10000,
                 town: 100000,
@@ -989,6 +991,7 @@
         function switchLanguage() {
             const select = document.getElementById('language-select');
             currentLang = select.value;
+            currentLang = Lang;
             const t = localization[currentLang];
 
             document.getElementById('ui-title').innerHTML = t.title;
@@ -1268,6 +1271,8 @@
             gameState.troops = new Array(totalCells).fill(0);
             gameState.disasters = new Array(totalCells).fill(null);
             gameState.claimsThisTurn = 0;
+            gameState.selectedRow = null;
+            gameState.selectedCol = null;
 
             if (!startCapitalOnly) {
                 for (let r = 0; r < rows; r++) {
@@ -1407,8 +1412,6 @@
 
         function generateNamedFeatures(terrain) {
             gameState.namedFeatures = [];
-            const availableTerrains = Object.keys(TERRAIN_NAMES);
-
             for (let i = 0; i < 6; i++) {
                 const r = Math.floor(Math.random() * gameState.boardRows);
                 const c = Math.floor(Math.random() * gameState.boardCols);
@@ -1503,8 +1506,64 @@
             }
         }
 
+        function aiAttack(targetIdx, defenderIdx, attackerIdx) {
+            const p_attacker = gameState.players[attackerIdx];
+            if (p_attacker.troops < 50) return;
+            
+            gameState.troops[targetIdx] = Math.max(0, gameState.troops[targetIdx] - 20);
+            p_attacker.troops -= 20;
+            if (gameState.troops[targetIdx] <= 0) {
+                gameState.ownership[targetIdx] = attackerIdx;
+                gameState.troops[targetIdx] = 20;
+            }
+        }
+
+        function aiBuildStructure(idx, playerIdx, type) {
+            const p = gameState.players[playerIdx];
+            const cost = gameState.BUILDING_COSTS[type];
+            if (p.gold >= cost) {
+                p.gold -= cost;
+                gameState.buildings[idx] = type;
+            }
+        }
+
+        function processAIDiplomacy(playerIdx) {
+            for (let j = 0; j < gameState.numPlayers; j++) {
+                if (j === playerIdx) continue;
+
+                const key = playerIdx < j ? `${playerIdx}_${j}` : `${j}_${playerIdx}`;
+                const status = gameState.diplomacy[key] || 'war';
+
+                if (status === 'war') {
+                    if (gameState.players[playerIdx].troops < 80 && Math.random() < 0.4) {
+                        gameState.diplomacy[key] = 'peace';
+                        logEvent(`🤝 Player ${playerIdx + 1} (AI) seeks peace with Player ${j + 1}.`);
+                    }
+                } else if (status === 'peace') {
+                    const p = gameState.players[playerIdx];
+                    const otherP = gameState.players[j];
+
+                    if (p.troops > otherP.troops * 1.3 && Math.random() < 0.5) {
+                        gameState.diplomacy[key] = 'war';
+                        logEvent(`⚔️ Player ${playerIdx + 1} (AI) broke peace and declared War on Player ${j + 1}!`);
+                    } else if (p.gold > 300000 && Math.random() < 0.2) {
+                        gameState.diplomacy[key] = 'ally';
+                        logEvent(`🤝 Player ${playerIdx + 1} (AI) proposes an Alliance with Player ${j + 1}.`);
+                    }
+                } else if (status === 'ally') {
+                    if (Math.random() < 0.1) {
+                        gameState.diplomacy[key] = 'war';
+                        logEvent(`⚔️ Player ${playerIdx + 1} (AI) betrayed the alliance and declared War on Player ${j + 1}!`);
+                    }
+                }
+            }
+        }
+
         function handleCellClick(r, c) {
             logEvent(`Selected tile: (${r}, ${c})`);
+            gameState.selectedRow = r;
+            gameState.selectedCol = c;
+            renderGame();
         }
 
         function handleClaim(idx, prevOwner, newOwner) {
@@ -1519,7 +1578,7 @@
             const neighbors = [
                 [r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]
             ];
-
+            
             for (const [nr, nc] of neighbors) {
                 if (nr >= 0 && nr < gameState.boardRows && nc >= 0 && nc < gameState.boardCols) {
                     const checkIdx = nr * gameState.boardCols + nc;
@@ -1593,6 +1652,14 @@
 
         function handleAttack(targetIdx, defenderIdx, attackerIdx) {
             const p_attacker = gameState.players[attackerIdx];
+
+            const key = attackerIdx < defenderIdx ? `${attackerIdx}_${defenderIdx}` : `${defenderIdx}_${attackerIdx}`;
+            const status = gameState.diplomacy[key] || 'war';
+            if (status === 'ally' || status === 'peace') {
+                alert(`Cannot attack Player ${defenderIdx + 1}! You have an active ${status} agreement.`);
+                return;
+            }
+
             if (p_attacker.troops < 50) {
                 alert("Not enough troops to attack!");
                 return;
@@ -1629,6 +1696,7 @@
         }
 
         function triggerDisaster() {
+            logEvent('⚠️ Disaster triggered across the board.');
             const rows = gameState.boardRows;
             const cols = gameState.boardCols;
             const disasterTypes = ['mud', 'flood', 'crack', 'magma', 'snow', 'radiation'];
@@ -1637,12 +1705,11 @@
             let attempts = 0;
             let placed = false;
 
-            while (!placed && attempts < 100) {
+            while (!placed && attempts < 50) {
                 attempts++;
                 const startR = Math.floor(Math.random() * (rows - 1));
                 const startC = Math.floor(Math.random() * (cols - 1));
 
-                // Verify chunk doesn't contain a capital
                 let hasCapital = false;
                 for (let r = startR; r <= startR + 1; r++) {
                     for (let c = startC; c <= startC + 1; c++) {
@@ -1666,12 +1733,7 @@
                     placed = true;
                 }
             }
-
-            if (!placed) {
-                logEvent(`⚠️ Natural disaster failed to strike (avoided the capitals).`);
-            } else {
-                renderBoard();
-            }
+            renderBoard();
         }
 
         function applyDisasterEffects() {
@@ -1689,7 +1751,7 @@
                         } else if (disaster.type === 'magma' || disaster.type === 'radiation') {
                             if (gameState.buildings[i]) {
                                 if (gameState.buildings[i] === 'city') {
-                                    logEvent(`🛡️ Disaster at tile ${i} rolled through the outskirts of the capital. No structural damage.`);
+                                    logEvent(`🛡️ Disaster at tile ${i} threatened the capital, but it held firm!`);
                                 } else {
                                     gameState.buildings[i] = null;
                                     logEvent(`⚠️ Disaster at tile ${i} destroyed the structure!`);
@@ -1718,14 +1780,13 @@
         }
 
         function executeAction() {
-            const selectedCell = document.querySelector('.cell.selected');
-            if (!selectedCell) {
+            if (gameState.selectedRow === null || gameState.selectedCol === null) {
                 alert("Please select a territory on the board first.");
                 return;
             }
 
-            const r = parseInt(selectedCell.dataset.row, 10);
-            const c = parseInt(selectedCell.dataset.col, 10);
+            const r = gameState.selectedRow;
+            const c = gameState.selectedCol;
             const idx = r * gameState.boardCols + c;
             const playerIdx = gameState.currentPlayer;
 
@@ -1860,6 +1921,7 @@
 
                 row.innerHTML = `
                     <div><strong>Player ${i + 1}</strong> (Current Status: ${currentStatus.toUpperCase()})</div>
+                    <div><small style="color: var(--text-muted);">Peace Cost: $50,000 | Alliance Cost: $200,000</small></div>
                     <div class="diplomacy-buttons">
                         <button class="diplo-btn war" onclick="setDiplomacy(${gameState.currentPlayer}, ${i}, 'war')">War</button>
                         <button class="diplo-btn peace" onclick="setDiplomacy(${gameState.currentPlayer}, ${i}, 'peace')">Peace</button>
@@ -1878,8 +1940,52 @@
 
         function setDiplomacy(p1, p2, status) {
             const key = p1 < p2 ? `${p1}_${p2}` : `${p2}_${p1}`;
-            gameState.diplomacy[key] = status;
-            logEvent(`Diplomatic status with Player ${p2 + 1} set to ${status}.`);
+            const currentStatus = gameState.diplomacy[key] || 'war';
+
+            if (currentStatus === status) {
+                alert("Already in this diplomatic state!");
+                return;
+            }
+
+            const p = gameState.players[p1];
+            let cost = 0;
+            if (status === 'peace') cost = 50000;
+            if (status === 'ally') cost = 200000;
+
+            if (p.gold < cost) {
+                alert(`Not enough gold to propose ${status}! ($${cost.toLocaleString()} required)`);
+                return;
+            }
+
+            const otherPlayerIsAI = gameState.players[p2].isAI;
+
+            if (otherPlayerIsAI) {
+                let acceptanceChance = 0.5;
+                if (status === 'war') acceptanceChance = 1.0;
+                if (status === 'ally' && currentStatus !== 'peace') acceptanceChance = 0.2;
+                if (status === 'ally' && currentStatus === 'peace') acceptanceChance = 0.6;
+
+                if (Math.random() < acceptanceChance) {
+                    p.gold -= cost;
+                    gameState.diplomacy[key] = status;
+                    logEvent(`🤝 Player ${p1 + 1} and Player ${p2 + 1} (AI) agreed to ${status}.`);
+                    alert(`Player ${p2 + 1} (AI) accepted the proposal.`);
+                } else {
+                    p.gold -= Math.floor(cost * 0.2);
+                    logEvent(`❌ Player ${p2 + 1} (AI) rejected the ${status} proposal.`);
+                    alert(`Player ${p2 + 1} (AI) rejected the proposal.`);
+                }
+            } else {
+                if (document.getElementById('game-mode').value === 'pass') {
+                    if (!confirm(`Player ${p2 + 1}, do you accept the proposal for ${status} from Player ${p1 + 1}?`)) {
+                        logEvent(`❌ Player ${p2 + 1} rejected the ${status} proposal.`);
+                        return;
+                    }
+                }
+                p.gold -= cost;
+                gameState.diplomacy[key] = status;
+                logEvent(`🤝 Diplomatic status between Player ${p1 + 1} and Player ${p2 + 1} changed to ${status}.`);
+            }
             openDiplomacy();
             renderGame();
         }
@@ -1890,6 +1996,7 @@
 
             let p = gameState.players[gameState.currentPlayer];
             applyDisasterEffects();
+            processAIDiplomacy(gameState.currentPlayer);
 
             let minesCount = 0;
             let citiesCount = 0;
@@ -1951,21 +2058,25 @@
 
         function executeAITurn() {
             if (gameState.players[gameState.currentPlayer].isAI === false) return;
+            
             logEvent(`🤖 Processing Smart AI Turn for Player ${gameState.currentPlayer + 1}`);
 
             const playerIdx = gameState.currentPlayer;
             const p = gameState.players[playerIdx];
 
             if (p.gold > gameState.TROOP_COST * 2 && p.troops < 500) {
-                buyTroopsDirectly();
+                gameState.players[playerIdx].gold -= gameState.TROOP_COST;
+                gameState.players[playerIdx].troops += 100;
             }
+
+            processAIDiplomacy(playerIdx);
 
             for (let i = 0; i < gameState.ownership.length; i++) {
                 if (gameState.ownership[i] !== -1 && gameState.ownership[i] !== playerIdx) {
                     const r = Math.floor(i / gameState.boardCols);
                     const c = i % gameState.boardCols;
                     if (isAdjacentToOwned(r, c, playerIdx) && Math.random() < 0.7) {
-                        handleAttack(i, gameState.ownership[i], playerIdx);
+                        aiAttack(i, gameState.ownership[i], playerIdx);
                         break;
                     }
                 }
@@ -1985,13 +2096,13 @@
 
             for (let i = 0; i < gameState.ownership.length; i++) {
                 if (gameState.ownership[i] === playerIdx && !gameState.buildings[i] && p.gold > 50000) {
-                    const r = Math.floor(i / gameState.boardCols);
-                    const c = i % gameState.boardCols;
                     const structures = ['fort', 'town', 'mine'];
-                    handleBuildStructure(i, playerIdx, playerIdx, structures[Math.floor(Math.random() * structures.length)], r, c);
+                    let structType = structures[Math.floor(Math.random() * structures.length)];
+                    aiBuildStructure(i, playerIdx, structType);
                     break;
                 }
             }
+            
             endTurn();
         }
 
@@ -2094,7 +2205,7 @@
                     cell.dataset.row = r;
                     cell.dataset.col = c;
 
-                    if (gameState.ownership[idx] === gameState.currentPlayer && document.querySelector(`[data-row='${r}'][data-col='${c}']`)?.classList.contains('selected')) {
+                    if (gameState.selectedRow === r && gameState.selectedCol === c) {
                         cell.classList.add('selected');
                     }
 
@@ -2151,8 +2262,6 @@
                     }
 
                     cell.addEventListener('click', () => {
-                        document.querySelectorAll('.cell').forEach(el => el.classList.remove('selected'));
-                        cell.classList.add('selected');
                         handleCellClick(r, c);
                     });
                     cell.addEventListener('mousemove', (e) => showTooltip(e, r, c));
