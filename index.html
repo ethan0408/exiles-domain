@@ -991,7 +991,6 @@
         function switchLanguage() {
             const select = document.getElementById('language-select');
             currentLang = select.value;
-            currentLang = Lang;
             const t = localization[currentLang];
 
             document.getElementById('ui-title').innerHTML = t.title;
@@ -1509,7 +1508,7 @@
         function aiAttack(targetIdx, defenderIdx, attackerIdx) {
             const p_attacker = gameState.players[attackerIdx];
             if (p_attacker.troops < 50) return;
-            
+
             gameState.troops[targetIdx] = Math.max(0, gameState.troops[targetIdx] - 20);
             p_attacker.troops -= 20;
             if (gameState.troops[targetIdx] <= 0) {
@@ -1578,7 +1577,7 @@
             const neighbors = [
                 [r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]
             ];
-            
+
             for (const [nr, nc] of neighbors) {
                 if (nr >= 0 && nr < gameState.boardRows && nc >= 0 && nc < gameState.boardCols) {
                     const checkIdx = nr * gameState.boardCols + nc;
@@ -2058,7 +2057,7 @@
 
         function executeAITurn() {
             if (gameState.players[gameState.currentPlayer].isAI === false) return;
-            
+
             logEvent(`🤖 Processing Smart AI Turn for Player ${gameState.currentPlayer + 1}`);
 
             const playerIdx = gameState.currentPlayer;
@@ -2102,7 +2101,7 @@
                     break;
                 }
             }
-            
+
             endTurn();
         }
 
