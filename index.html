@@ -7,10 +7,10 @@
     <style>
         :root {
             --bg-main: #0a0e17;
-            --bg-panel: rgba(18, 24, 38, 0.75);
-            --bg-element: rgba(30, 41, 59, 0.4);
-            --border-color: rgba(255, 255, 255, 0.08);
-            --border-active: rgba(99, 102, 241, 0.5);
+            --bg-panel: rgba(18, 24, 38, 0.85);
+            --bg-element: rgba(30, 41, 59, 0.5);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-active: rgba(99, 102, 241, 0.6);
             --accent-primary: #6366f1;
             --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
             --text-main: #f8fafc;
@@ -19,6 +19,10 @@
             --success: #10b981;
             --warning: #f59e0b;
             --info: #3b82f6;
+            --p1-color: #ef4444;
+            --p2-color: #3b82f6;
+            --p3-color: #10b981;
+            --p4-color: #f59e0b;
         }
 
         * {
@@ -37,33 +41,33 @@
             flex-direction: column;
             align-items: center;
             padding: 24px;
+            background-image: radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.15), transparent 60%);
         }
 
-        /* Glassmorphic Container */
         #menu-screen {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 3rem 2.5rem;
+            padding: 3.5rem 2.5rem;
             max-width: 480px;
             width: 100%;
             background: var(--bg-panel);
-            border-radius: 16px;
-            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.7);
             margin-top: 40px;
-            animation: fadeIn 0.4s ease-out;
+            animation: fadeIn 0.5s ease-out;
         }
 
         #menu-screen h1 {
-            font-size: 2.5rem;
+            font-size: 2.75rem;
             font-weight: 800;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.025em;
+            margin-bottom: 0.65rem;
+            letter-spacing: -0.03em;
             text-align: center;
-            background: linear-gradient(to right, #818cf8, #6366f1);
+            background: linear-gradient(to right, #a5b4fc, #6366f1, #818cf8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -87,11 +91,11 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 0.35rem;
+            gap: 0.45rem;
         }
 
         .menu-option label {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
@@ -101,20 +105,21 @@
         .menu-option select,
         .menu-option input {
             width: 100%;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
             border: 1px solid var(--border-color);
             font-size: 0.95rem;
             background-color: var(--bg-element);
             color: var(--text-main);
             outline: none;
-            transition: border-color 0.2s, background-color 0.2s;
+            transition: all 0.25s ease;
         }
 
         .menu-option select:focus,
         .menu-option input:focus {
             border-color: var(--border-active);
-            background-color: rgba(30, 41, 59, 0.6);
+            background-color: rgba(30, 41, 59, 0.7);
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
         }
 
         .toggle-option {
@@ -122,11 +127,12 @@
             align-items: center;
             justify-content: space-between;
             gap: 1rem;
-            padding: 0.25rem 0;
+            padding: 0.35rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         }
 
         .toggle-option label {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
@@ -135,13 +141,13 @@
 
         .toggle-switch {
             position: relative;
-            width: 52px;
+            width: 54px;
             height: 28px;
             background: #1e293b;
             border: 1px solid var(--border-color);
             border-radius: 14px;
             cursor: pointer;
-            transition: background-color 0.3s, border-color 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .toggle-switch.active {
@@ -150,7 +156,7 @@
         }
 
         .toggle-switch.active::after {
-            left: 27px;
+            left: 28px;
         }
 
         .toggle-switch::after {
@@ -161,30 +167,31 @@
             border-radius: 50%;
             background: var(--text-main);
             top: 3px;
-            left: 3px;
+            left: 4px;
             transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
             pointer-events: none;
         }
 
         .start-btn {
             width: 100%;
-            padding: 0.85rem;
+            padding: 0.95rem;
             font-size: 1rem;
             font-weight: 700;
             background: var(--accent-gradient);
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             color: white;
             cursor: pointer;
             margin-top: 0.75rem;
-            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
-            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .start-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
+            filter: brightness(1.1);
         }
 
         .start-btn:active {
@@ -192,16 +199,17 @@
         }
 
         .secondary-btn {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.06);
             border: 1px solid var(--border-color);
             color: var(--text-main);
+            box-shadow: none;
         }
 
         .secondary-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
         }
 
-        /* Game Screen */
         #game-screen {
             display: none;
             padding: 1.5rem 1rem;
@@ -213,7 +221,7 @@
         .game-header {
             background: var(--bg-panel);
             padding: 1.25rem 1.5rem;
-            border-radius: 12px;
+            border-radius: 16px;
             border: 1px solid var(--border-color);
             margin-bottom: 1.25rem;
             display: flex;
@@ -221,66 +229,67 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
 
         .game-title {
-            font-size: 1.35rem;
+            font-size: 1.4rem;
             font-weight: 800;
             letter-spacing: -0.01em;
-            background: linear-gradient(to right, #f8fafc, #94a3b8);
+            background: linear-gradient(to right, #ffffff, #94a3b8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .turn-info {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
-            background: rgba(99, 102, 241, 0.15);
-            color: #818cf8;
-            padding: 0.4rem 0.85rem;
+            background: rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+            padding: 0.45rem 1rem;
             border-radius: 20px;
-            border: 1px solid rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.3);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
         }
 
         .disaster-countdown {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
             color: #fca5a5;
-            background: rgba(220, 38, 38, 0.15);
-            padding: 0.4rem 0.85rem;
+            background: rgba(220, 38, 38, 0.2);
+            padding: 0.45rem 1rem;
             border-radius: 20px;
-            border: 1px solid rgba(220, 38, 38, 0.2);
-            letter-spacing: 0.02em;
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            letter-spacing: 0.03em;
         }
 
-        /* Player Stats */
         .players-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.25rem;
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
         }
 
         .player-card {
             background: var(--bg-panel);
-            padding: 1.15rem 1.35rem;
-            border-radius: 12px;
+            padding: 1.25rem 1.45rem;
+            border-radius: 16px;
             border: 1px solid var(--border-color);
-            border-left: 5px solid;
+            border-left: 6px solid;
             font-size: 0.85rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }
 
-        .player-card.p1 { border-left-color: #ef4444; }
-        .player-card.p2 { border-left-color: #3b82f6; }
-        .player-card.p3 { border-left-color: #10b981; }
-        .player-card.p4 { border-left-color: #f59e0b; }
+        .player-card.p1 { border-left-color: var(--p1-color); }
+        .player-card.p2 { border-left-color: var(--p2-color); }
+        .player-card.p3 { border-left-color: var(--p3-color); }
+        .player-card.p4 { border-left-color: var(--p4-color); }
 
         .player-name {
             font-size: 0.95rem;
             font-weight: 700;
-            margin-bottom: 0.65rem;
+            margin-bottom: 0.75rem;
             color: var(--text-main);
             display: flex;
             justify-content: space-between;
@@ -291,7 +300,7 @@
             display: flex;
             justify-content: space-between;
             font-size: 0.85rem;
-            margin-bottom: 0.35rem;
+            margin-bottom: 0.4rem;
             color: var(--text-muted);
         }
 
@@ -300,39 +309,40 @@
             color: var(--text-main);
         }
 
-        /* Action Panel */
         .action-panel {
             background: var(--bg-panel);
-            padding: 1.25rem;
-            border-radius: 12px;
+            padding: 1.5rem;
+            border-radius: 16px;
             border: 1px solid var(--border-color);
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
         }
 
         .action-buttons {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-            gap: 0.65rem;
+            grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+            gap: 0.75rem;
         }
 
         .action-btn {
-            padding: 0.65rem 0.4rem;
+            padding: 0.8rem 0.5rem;
             font-size: 0.75rem;
             font-weight: 600;
             border: 1px solid var(--border-color);
             background: var(--bg-element);
             color: var(--text-main);
-            border-radius: 6px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             text-transform: uppercase;
-            letter-spacing: 0.02em;
+            letter-spacing: 0.03em;
         }
 
         .action-btn:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.04);
-            transform: translateY(-1px);
+            border-color: var(--border-active);
+            background: rgba(99, 102, 241, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .action-btn:active {
@@ -340,10 +350,10 @@
         }
 
         .action-btn.active {
-            background: rgba(99, 102, 241, 0.15);
+            background: rgba(99, 102, 241, 0.2);
             border-color: var(--accent-primary);
             color: #a5b4fc;
-            box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
         }
 
         .action-btn.disabled {
@@ -358,24 +368,32 @@
             color: white !important;
         }
 
-        /* Game Board */
+        .end-turn-btn:hover {
+            filter: brightness(1.1);
+        }
+
         .game-board-container {
             background: var(--bg-panel);
-            padding: 1.5rem;
-            border-radius: 12px;
+            padding: 3.5rem;
+            border-radius: 20px;
             border: 1px solid var(--border-color);
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
             overflow-x: auto;
+            perspective: 2000px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
         }
 
         .game-board {
             display: grid;
-            gap: 1px;
-            background: #0f172a;
+            gap: 0px;
+            background: #090d16;
             border: 1px solid var(--border-color);
             margin: 0 auto;
             width: fit-content;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.6);
+            transform: rotateX(54deg) rotateZ(-36deg);
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
         }
 
         .game-board.no-borders {
@@ -384,17 +402,19 @@
         }
 
         .cell {
-            width: 50px;
-            height: 50px;
+            width: 52px;
+            height: 52px;
             position: relative;
             cursor: pointer;
-            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             font-size: 9px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transform-style: preserve-3d;
+            border-radius: 6px;
         }
 
         .game-board.no-borders .cell {
@@ -402,8 +422,8 @@
         }
 
         .cell.fogged {
-            background: #090d16;
-            color: #334155;
+            background: #0a0e17;
+            color: #1e293b;
             pointer-events: auto;
         }
 
@@ -413,28 +433,41 @@
 
         .cell.fogged::after {
             content: '🌫️';
-            font-size: 1.2rem;
-            opacity: 0.35;
+            font-size: 1.3rem;
+            opacity: 0.25;
+            transform: translateZ(12px);
         }
 
         .cell:hover {
-            filter: brightness(1.15);
-            transform: scale(1.05);
-            z-index: 10;
-            box-shadow: 0 0 12px rgba(255, 255, 255, 0.1);
+            filter: brightness(1.35);
+            transform: translateZ(16px) scale(1.04);
+            z-index: 20;
+            box-shadow: 0 12px 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .ocean, .plains, .desert, .mountain, .hills, .oasis, .tundra {
+            transform: translateZ(0px);
         }
 
         .ocean { background: rgba(56, 189, 248, 0.25); color: #bae6fd; }
         .plains { background: rgba(34, 197, 94, 0.2); color: #bbf7d0; }
         .desert { background: rgba(245, 158, 11, 0.2); color: #fde68a; }
-        .mountain { background: rgba(100, 116, 139, 0.3); color: #cbd5e1; }
-        .hills { background: rgba(148, 163, 184, 0.2); color: #e2e8f0; }
+        .mountain { background: rgba(100, 116, 139, 0.4); color: #cbd5e1; }
+        .hills { background: rgba(148, 163, 184, 0.25); color: #e2e8f0; }
         .oasis { background: rgba(20, 184, 166, 0.2); color: #99f6e4; }
         .tundra { background: rgba(241, 245, 249, 0.15); color: #f8fafc; }
 
+        .p1-pol { background: rgba(239, 68, 68, 0.5) !important; color: #fca5a5 !important; }
+        .p2-pol { background: rgba(59, 130, 246, 0.5) !important; color: #93c5fd !important; }
+        .p3-pol { background: rgba(16, 185, 129, 0.5) !important; color: #6ee7b7 !important; }
+        .p4-pol { background: rgba(245, 158, 11, 0.5) !important; color: #fde68a !important; }
+        .unclaimed-pol { background: rgba(30, 41, 59, 0.4) !important; }
+
         .cell.selected {
             outline: 2px solid var(--accent-primary);
-            z-index: 20;
+            transform: translateZ(20px);
+            box-shadow: 0 0 20px var(--accent-primary);
+            z-index: 25;
         }
 
         .ownership-bar {
@@ -442,25 +475,27 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 3.5px;
+            height: 5px;
+            transform: translateZ(2px);
         }
 
-        .ownership-bar.p1 { background: #ef4444; }
-        .ownership-bar.p2 { background: #3b82f6; }
-        .ownership-bar.p3 { background: #10b981; }
-        .ownership-bar.p4 { background: #f59e0b; }
+        .ownership-bar.p1 { background: var(--p1-color); }
+        .ownership-bar.p2 { background: var(--p2-color); }
+        .ownership-bar.p3 { background: var(--p3-color); }
+        .ownership-bar.p4 { background: var(--p4-color); }
 
         .building-icon {
             position: absolute;
             top: 3px;
             right: 3px;
-            font-size: 7.5px;
-            background: rgba(15, 23, 42, 0.7);
-            padding: 2px 3px;
+            font-size: 8.5px;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 2.5px 4.5px;
             border-radius: 4px;
             font-weight: bold;
             backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transform: translateZ(10px);
         }
 
         .city-icon { color: #f59e0b; }
@@ -472,15 +507,16 @@
 
         .troop-count {
             position: absolute;
-            bottom: 4px;
+            bottom: 5px;
             left: 3px;
-            font-size: 0.65rem;
-            background: rgba(15, 23, 42, 0.8);
-            padding: 1.5px 3.5px;
+            font-size: 0.62rem;
+            background: rgba(15, 23, 42, 0.95);
+            padding: 2px 4px;
             border-radius: 4px;
             font-weight: 600;
             color: #f8fafc;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transform: translateZ(8px);
         }
 
         .disaster-overlay {
@@ -492,20 +528,21 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
+            font-size: 1.3rem;
             pointer-events: none;
-            backdrop-filter: brightness(0.7);
+            transform: translateZ(6px);
+            backdrop-filter: brightness(0.65);
         }
 
-        .mud-overlay { background: rgba(101,67,33,0.5); }
-        .flood-overlay { background: rgba(56,189,248,0.4); }
+        .mud-overlay { background: rgba(101,67,33,0.55); }
+        .flood-overlay { background: rgba(56,189,248,0.45); }
         .crack-overlay {
-            background: linear-gradient(45deg, transparent 40%, rgba(15,23,42,0.8) 40%, rgba(15,23,42,0.8) 60%, transparent 60%);
+            background: linear-gradient(45deg, transparent 40%, rgba(15,23,42,0.85) 40%, rgba(15,23,42,0.85) 60%, transparent 60%);
         }
-        .magma-overlay { background: rgba(239, 68, 68, 0.4); }
-        .snow-overlay { background: rgba(255,255,255,0.2); }
+        .magma-overlay { background: rgba(239, 68, 68, 0.45); }
+        .snow-overlay { background: rgba(255,255,255,0.25); }
         .plague-overlay {
-            background: rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.35);
             font-size: 0.85rem;
         }
         .radiation-overlay {
@@ -514,72 +551,74 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 0.85; }
+            0%, 100% { opacity: 0.65; }
+            50% { opacity: 0.9; }
         }
 
         .capital-marker {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.25rem;
-            font-weight: 700;
-            text-shadow: 0 4px 12px rgba(0,0,0,0.8);
+            transform: translate(-50%, -50%) translateZ(14px);
+            font-size: 1.45rem;
+            text-shadow: 0 4px 16px rgba(0,0,0,0.9);
         }
 
         .named-feature {
             position: absolute;
-            bottom: -16px;
+            bottom: -20px;
             left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.6rem;
-            background: rgba(15, 23, 42, 0.9);
-            padding: 1.5px 5px;
-            border-radius: 4px;
+            transform: translateX(-50%) translateZ(16px);
+            font-size: 0.55rem;
+            background: rgba(15, 23, 42, 0.98);
+            padding: 2.5px 7px;
+            border-radius: 5px;
             white-space: nowrap;
-            color: #f59e0b;
+            color: #fbbf24;
             border: 1px solid var(--border-color);
             pointer-events: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
         }
 
         .event-log {
             background: var(--bg-panel);
-            padding: 1.25rem;
-            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px;
             border: 1px solid var(--border-color);
             max-height: 140px;
             overflow-y: auto;
             font-size: 0.82rem;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
         }
 
         .event-log p {
-            margin-bottom: 0.45rem;
-            padding-bottom: 0.45rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
             color: #cbd5e1;
         }
 
         .event-log p:last-child {
             border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
         }
 
         .tooltip {
             position: absolute;
-            background: rgba(15, 23, 42, 0.95);
+            background: rgba(15, 23, 42, 0.96);
             color: var(--text-main);
-            padding: 0.65rem 0.85rem;
-            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
             font-size: 0.8rem;
             pointer-events: none;
             z-index: 1000;
             white-space: pre-line;
             display: none;
             backdrop-filter: blur(12px);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 35px -5px rgba(0,0,0,0.8);
         }
 
         .modal {
@@ -589,8 +628,8 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(10, 14, 23, 0.85);
-            backdrop-filter: blur(12px);
+            background: rgba(10, 14, 23, 0.9);
+            backdrop-filter: blur(16px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -599,75 +638,84 @@
         .modal-content {
             background: var(--bg-panel);
             border: 1px solid var(--border-color);
-            padding: 2rem;
-            border-radius: 16px;
+            padding: 2.25rem;
+            border-radius: 20px;
             max-width: 580px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
-            box-shadow: 0 30px 60px -12px rgba(0,0,0,0.7);
+            box-shadow: 0 30px 75px -12px rgba(0,0,0,0.8);
         }
 
         .modal-title {
-            font-size: 1.35rem;
+            font-size: 1.45rem;
             font-weight: 800;
             margin-bottom: 1.25rem;
-            letter-spacing: -0.01em;
+            letter-spacing: -0.015em;
             color: var(--text-main);
         }
 
         .diplomacy-grid {
             display: grid;
-            gap: 1rem;
+            gap: 0.9rem;
         }
 
         .diplomacy-row {
             background: var(--bg-element);
             border: 1px solid var(--border-color);
-            padding: 1.15rem;
-            border-radius: 10px;
+            padding: 1.25rem;
+            border-radius: 12px;
         }
 
         .diplomacy-buttons {
             display: flex;
             gap: 0.5rem;
-            margin-top: 0.75rem;
+            margin-top: 0.85rem;
         }
 
         .diplo-btn {
-            padding: 0.5rem 0.95rem;
+            padding: 0.55rem 0.95rem;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.02em;
-            transition: filter 0.15s;
+            letter-spacing: 0.03em;
+            transition: all 0.18s;
         }
 
-        .diplo-btn:hover { filter: brightness(1.15); }
+        .diplo-btn:hover {
+            filter: brightness(1.15);
+            transform: translateY(-1px);
+        }
 
-        .diplo-btn.war { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
-        .diplo-btn.peace { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
-        .diplo-btn.ally { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .diplo-btn.war { background: rgba(239, 68, 68, 0.22); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.35); }
+        .diplo-btn.peace { background: rgba(59, 130, 246, 0.22); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.35); }
+        .diplo-btn.ally { background: rgba(16, 185, 129, 0.22); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.35); }
 
         .close-modal {
             background: var(--bg-element);
             color: var(--text-muted);
             border: 1px solid var(--border-color);
-            padding: 0.65rem 1.25rem;
-            border-radius: 8px;
+            padding: 0.75rem 1.45rem;
+            border-radius: 10px;
             cursor: pointer;
-            margin-top: 1.5rem;
+            margin-top: 1.75rem;
             font-weight: 600;
-            font-size: 0.85rem;
-            transition: all 0.15s;
+            font-size: 0.82rem;
+            transition: all 0.18s;
         }
 
         .close-modal:hover {
             color: var(--text-main);
             border-color: rgba(255,255,255,0.2);
+            filter: brightness(1.15);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -770,6 +818,7 @@
                 <button class="action-btn" id="btn-deploy" onclick="setAction('deploy')">➕ Deploy</button>
                 <button class="action-btn" id="btn-launch" onclick="setAction('launch')">🚀 Launch</button>
                 <button class="action-btn" onclick="openDiplomacy()">🤝 Diplomacy</button>
+                <button class="action-btn" id="btn-map-toggle" onclick="toggleMapMode()">🗺️ Toggle Map</button>
                 <button class="action-btn" onclick="returnToMenu()">🏠 Menu</button>
                 <button class="action-btn" id="btn-execute" onclick="executeAction()">🎯 Execute</button>
                 <button class="action-btn end-turn-btn" id="btn-end-turn" onclick="endTurn()">⏭️ End Turn</button>
@@ -823,6 +872,7 @@
             showBorders: true,
             musicEnabled: false,
             fogEnabled: false,
+            mapMode: 'geographic',
             selectedAction: 'claim',
             terrain: [],
             ownership: [],
@@ -837,6 +887,7 @@
             TROOP_CLAIM: 100,
             maxClaimsPerTurn: 3,
             claimsThisTurn: 0,
+            attacksThisTurn: 0,
             selectedRow: null,
             selectedCol: null,
             BUILDING_COSTS: {
@@ -865,6 +916,9 @@
         let customSettings = {
             happinessThreshold: 30
         };
+
+        let audioCtx = null;
+        let musicInterval = null;
 
         const melody = [
             { f: 261.6, d: 0.3, t: 'sine', b: 130.8 },
@@ -938,7 +992,24 @@
                 diplomacy: "Diplomacy",
                 menu: "Menu",
                 execute: "Execute",
-                endTurn: "End Turn"
+                endTurn: "End Turn",
+                owner: "Owner",
+                building: "Building",
+                troops: "Troops",
+                disaster: "Disaster",
+                status: "Current Status",
+                diploCostText: "Peace Cost: $50,000 | Alliance Cost: $200,000",
+                warBtn: "War",
+                peaceBtn: "Peace",
+                allyBtn: "Alliance",
+                worldGenerated: "🌍 World generated. Ready for action!",
+                ocean: "Ocean",
+                plains: "Plains",
+                desert: "Desert",
+                mountain: "Mountain",
+                hills: "Hills",
+                oasis: "Oasis",
+                tundra: "Tundra"
             },
             zh: {
                 title: "⚔️ 流放之地 ⚔️",
@@ -984,9 +1055,78 @@
                 diplomacy: "外交",
                 menu: "菜单",
                 execute: "执行",
-                endTurn: "结束回合"
+                endTurn: "结束回合",
+                owner: "所有者",
+                building: "建筑",
+                troops: "军队",
+                disaster: "灾难",
+                status: "当前状态",
+                diploCostText: "和平消耗: 50,000 | 盟约消耗: 200,000",
+                warBtn: "交战",
+                peaceBtn: "和平",
+                allyBtn: "结盟",
+                worldGenerated: "🌍 世界生成完毕。准备行动！",
+                ocean: "海洋",
+                plains: "平原",
+                desert: "沙漠",
+                mountain: "山脉",
+                hills: "丘陵",
+                oasis: "绿洲",
+                tundra: "苔原"
             }
         };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll('.toggle-switch').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                });
+            });
+        });
+
+        async function playMusic() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            if (audioCtx.state === 'suspended') {
+                await audioCtx.resume();
+            }
+
+            if (musicInterval) clearInterval(musicInterval);
+
+            let index = 0;
+            musicInterval = setInterval(async () => {
+                if (audioCtx.state === 'suspended') {
+                    await audioCtx.resume();
+                }
+                const note = melody[index % melody.length];
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = note.t;
+                osc.frequency.value = note.f;
+
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.00001, now + note.d);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(now + note.d);
+
+                index++;
+            }, 600);
+        }
+
+        function stopMusic() {
+            if (musicInterval) {
+                clearInterval(musicInterval);
+                musicInterval = null;
+            }
+        }
 
         function switchLanguage() {
             const select = document.getElementById('language-select');
@@ -1028,128 +1168,26 @@
             document.getElementById('btn-execute').innerHTML = "🎯 " + t.execute;
             document.getElementById('btn-end-turn').innerHTML = "⏭️ " + t.endTurn;
 
+            const logP = document.querySelector('#event-log p');
+            if (logP) {
+                logP.textContent = t.worldGenerated;
+            }
+
             if (document.getElementById('game-screen').style.display === 'block') {
                 renderGame();
             }
         }
 
-        let audioCtx = null;
-        let musicInterval = null;
-        let currentNote = 0;
-
-        function playMusic() {
-            if (!gameState.musicEnabled) return;
-            try {
-                if (!audioCtx) {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                if (musicInterval) {
-                    clearInterval(musicInterval);
-                }
-
-                musicInterval = setInterval(() => {
-                    if (!gameState.musicEnabled) {
-                        clearInterval(musicInterval);
-                        return;
-                    }
-
-                    const note = melody[currentNote];
-                    const now = audioCtx.currentTime;
-
-                    let osc = audioCtx.createOscillator();
-                    let gainNode = audioCtx.createGain();
-                    let filter = audioCtx.createBiquadFilter();
-
-                    osc.type = note.t;
-                    osc.frequency.value = note.f;
-                    filter.type = 'lowpass';
-                    filter.frequency.value = 600;
-
-                    gainNode.gain.setValueAtTime(0, now);
-                    gainNode.gain.linearRampToValueAtTime(0.08, now + 0.08);
-                    gainNode.gain.linearRampToValueAtTime(0, now + note.d);
-
-                    osc.connect(filter);
-                    filter.connect(gainNode);
-                    gainNode.connect(audioCtx.destination);
-                    osc.start();
-                    osc.stop(now + note.d);
-
-                    // Bassline
-                    let bassOsc = audioCtx.createOscillator();
-                    let bassGain = audioCtx.createGain();
-
-                    bassOsc.type = 'triangle';
-                    bassOsc.frequency.value = note.b;
-
-                    bassGain.gain.setValueAtTime(0, now);
-                    bassGain.gain.linearRampToValueAtTime(0.05, now + 0.05);
-                    bassGain.gain.linearRampToValueAtTime(0, now + note.d + 0.1);
-
-                    bassOsc.connect(bassGain);
-                    bassGain.connect(audioCtx.destination);
-                    bassOsc.start();
-                    bassOsc.stop(now + note.d + 0.1);
-
-                    if (currentNote % 2 === 0) {
-                        let kickOsc = audioCtx.createOscillator();
-                        let kickGain = audioCtx.createGain();
-
-                        kickOsc.type = 'sine';
-                        kickOsc.frequency.setValueAtTime(150, now);
-                        kickOsc.frequency.exponentialRampToValueAtTime(40, now + 0.12);
-
-                        kickGain.gain.setValueAtTime(0, now);
-                        kickGain.gain.linearRampToValueAtTime(0.18, now + 0.01);
-                        kickGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-
-                        kickOsc.connect(kickGain);
-                        kickGain.connect(audioCtx.destination);
-                        kickOsc.start();
-                        kickOsc.stop(now + 0.16);
-                    }
-
-                    currentNote = (currentNote + 1) % melody.length;
-                }, 650);
-            } catch (e) {
-                console.log('Music system starting up...');
+        function toggleMapMode() {
+            if (gameState.mapMode === 'geographic') {
+                gameState.mapMode = 'political';
+                logEvent("Switched to Political Map View");
+            } else {
+                gameState.mapMode = 'geographic';
+                logEvent("Switched to Geographic Map View");
             }
+            renderGame();
         }
-
-        function stopMusic() {
-            if (musicInterval) {
-                clearInterval(musicInterval);
-                musicInterval = null;
-                currentNote = 0;
-            }
-        }
-
-        const toggles = ['border-toggle', 'music-toggle', 'fog-toggle', 'capital-toggle'];
-        toggles.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('click', function() {
-                    this.classList.toggle('active');
-                    if (id === 'border-toggle') {
-                        gameState.showBorders = this.classList.contains('active');
-                        renderBoard();
-                    } else if (id === 'music-toggle') {
-                        gameState.musicEnabled = this.classList.contains('active');
-                        if (gameState.musicEnabled) {
-                            playMusic();
-                        } else {
-                            stopMusic();
-                        }
-                    } else if (id === 'fog-toggle') {
-                        gameState.fogEnabled = this.classList.contains('active');
-                        renderBoard();
-                    }
-                });
-            }
-        });
 
         function openInstructions() {
             document.getElementById('instructions-modal').style.display = 'flex';
@@ -1176,6 +1214,8 @@
 
             if (gameState.musicEnabled) {
                 playMusic();
+            } else {
+                stopMusic();
             }
             renderGame();
         }
@@ -1198,7 +1238,7 @@
         }
 
         function updateActionButtons() {
-            const buttons = ['claim', 'attack', 'fort', 'town', 'city', 'mine', 'silo', 'mds', 'vaccine', 'launch', 'withdraw', 'deploy'];
+            const buttons = ['claim', 'attack', 'fort', 'town', 'city', 'mine', 'silo', 'mds', 'launch', 'withdraw', 'deploy'];
             buttons.forEach(btn => {
                 const el = document.getElementById(`btn-${btn}`);
                 if (el) {
@@ -1228,7 +1268,8 @@
                     troops: 200,
                     population: startPop,
                     happiness: 100,
-                    isAI: gameMode === 'pvai' && i > 0
+                    isAI: gameMode === 'pvai' && i > 0,
+                    isDefeated: false
                 });
             }
 
@@ -1257,6 +1298,7 @@
             }
 
             gameState.numPlayers = numPlayers;
+            gameState.mapMode = 'geographic';
             const rows = gameState.boardRows;
             const cols = gameState.boardCols;
             const totalCells = rows * cols;
@@ -1270,6 +1312,7 @@
             gameState.troops = new Array(totalCells).fill(0);
             gameState.disasters = new Array(totalCells).fill(null);
             gameState.claimsThisTurn = 0;
+            gameState.attacksThisTurn = 0;
             gameState.selectedRow = null;
             gameState.selectedCol = null;
 
@@ -1649,8 +1692,13 @@
             }
         }
 
-        function handleAttack(targetIdx, defenderIdx, attackerIdx) {
+        function handleAttack(targetIdx, defenderIdx, attackerIdx, sourceIdx) {
             const p_attacker = gameState.players[attackerIdx];
+
+            if (gameState.attacksThisTurn >= 3) {
+                alert("Cannot make more than 3 attacks per turn!");
+                return;
+            }
 
             const key = attackerIdx < defenderIdx ? `${attackerIdx}_${defenderIdx}` : `${defenderIdx}_${attackerIdx}`;
             const status = gameState.diplomacy[key] || 'war';
@@ -1659,20 +1707,27 @@
                 return;
             }
 
-            if (p_attacker.troops < 50) {
-                alert("Not enough troops to attack!");
+            if (gameState.troops[sourceIdx] <= 20) {
+                alert("Not enough troops on this tile to attack!");
                 return;
             }
 
-            gameState.troops[targetIdx] = Math.max(0, gameState.troops[targetIdx] - 20);
-            p_attacker.troops -= 20;
+            const attackerTroops = gameState.troops[sourceIdx];
+            const defenderTroops = gameState.troops[targetIdx];
+
+            let damage = Math.floor(attackerTroops * 0.4);
+            gameState.troops[targetIdx] = Math.max(0, defenderTroops - damage);
+            gameState.troops[sourceIdx] = Math.max(0, attackerTroops - Math.floor(damage * 0.4));
+
             if (gameState.troops[targetIdx] <= 0) {
                 gameState.ownership[targetIdx] = attackerIdx;
-                gameState.troops[targetIdx] = 20;
+                gameState.troops[targetIdx] = Math.floor(attackerTroops * 0.2);
                 logEvent(`${p_attacker.name} conquered territory ${targetIdx}!`);
             } else {
-                logEvent(`${p_attacker.name} attacked territory ${targetIdx} but failed to capture it.`);
+                logEvent(`${p_attacker.name} attacked territory ${targetIdx}. Defender troops remaining: ${gameState.troops[targetIdx]}`);
             }
+
+            gameState.attacksThisTurn++;
             renderGame();
         }
 
@@ -1770,6 +1825,7 @@
                             gameState.ownership[i] = -1;
                             gameState.buildings[i] = null;
                             gameState.troops[i] = 0;
+                            gameState.disasters[i] = null;
                             logEvent(`⚠️ The crisis passes at tile ${i}. The territory is restored to the wasteland.`);
                         }
                         gameState.disasters[i] = null;
@@ -1802,7 +1858,7 @@
                         if (nr >= 0 && nr < gameState.boardRows && nc >= 0 && nc < gameState.boardCols) {
                             const targetIdx = nr * gameState.boardCols + nc;
                             if (gameState.ownership[targetIdx] !== -1 && gameState.ownership[targetIdx] !== playerIdx) {
-                                handleAttack(targetIdx, gameState.ownership[targetIdx], playerIdx);
+                                handleAttack(targetIdx, gameState.ownership[targetIdx], playerIdx, idx);
                                 attacked = true;
                                 break;
                             }
@@ -1911,20 +1967,21 @@
             grid.innerHTML = '';
 
             for (let i = 0; i < gameState.numPlayers; i++) {
-                if (i === gameState.currentPlayer) continue;
+                if (i === gameState.currentPlayer || gameState.players[i].isDefeated) continue;
                 const row = document.createElement('div');
                 row.className = 'diplomacy-row';
 
                 const key = gameState.currentPlayer < i ? `${gameState.currentPlayer}_${i}` : `${i}_${gameState.currentPlayer}`;
                 const currentStatus = gameState.diplomacy[key] || 'war';
+                const t = localization[currentLang];
 
                 row.innerHTML = `
-                    <div><strong>Player ${i + 1}</strong> (Current Status: ${currentStatus.toUpperCase()})</div>
-                    <div><small style="color: var(--text-muted);">Peace Cost: $50,000 | Alliance Cost: $200,000</small></div>
+                    <div><strong>Player ${i + 1}</strong> (${t.status}: ${currentStatus.toUpperCase()})</div>
+                    <div><small style="color: var(--text-muted);">${t.diploCostText}</small></div>
                     <div class="diplomacy-buttons">
-                        <button class="diplo-btn war" onclick="setDiplomacy(${gameState.currentPlayer}, ${i}, 'war')">War</button>
-                        <button class="diplo-btn peace" onclick="setDiplomacy(${gameState.currentPlayer}, ${i}, 'peace')">Peace</button>
-                        <button class="diplo-btn ally" onclick="setDiplomacy(${gameState.currentPlayer}, ${i}, 'ally')">Alliance</button>
+                        <button class="diplo-btn war" onclick="setDiplomacy(${gameState.currentPlayer}, ${i}, 'war')">${t.warBtn}</button>
+                        <button class="diplo-btn peace" onclick="setDiplomacy(${gameState.currentPlayer}, ${i}, 'peace')">${t.peaceBtn}</button>
+                        <button class="diplo-btn ally" onclick="setDiplomacy(${gameState.currentPlayer}, ${i}, 'ally')">${t.allyBtn}</button>
                     </div>
                 `;
                 grid.appendChild(row);
@@ -2029,13 +2086,51 @@
 
             if (p.population < 500 || p.happiness < customSettings.happinessThreshold) {
                 alert(p.name + " collapsed due to population failure or revolt!");
-                initializeGame();
+
+                for (let i = 0; i < gameState.ownership.length; i++) {
+                    if (gameState.ownership[i] === gameState.currentPlayer) {
+                        gameState.ownership[i] = -1;
+                        gameState.troops[i] = 0;
+                        gameState.buildings[i] = null;
+                        gameState.disasters[i] = null;
+                    }
+                }
+
+                p.isDefeated = true;
+            }
+
+            // Check for complete elimination of all territories
+            for (let i = 0; i < gameState.numPlayers; i++) {
+                if (!gameState.players[i].isDefeated) {
+                    let hasTiles = false;
+                    for (let j = 0; j < gameState.ownership.length; j++) {
+                        if (gameState.ownership[j] === i) {
+                            hasTiles = true;
+                            break;
+                        }
+                    }
+                    if (!hasTiles) {
+                        gameState.players[i].isDefeated = true;
+                        logEvent(`💀 Player ${i + 1} (${gameState.players[i].name}) was eliminated because they lost all their territory.`);
+                    }
+                }
+            }
+
+            const remainingPlayers = gameState.players.filter(pl => !pl.isDefeated);
+            if (remainingPlayers.length === 1) {
+                alert(`${remainingPlayers[0].name} has conquered the Exile's Domain! Game Over.`);
+                returnToMenu();
                 isProcessingTurn = false;
                 renderGame();
                 return;
             }
 
             gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.numPlayers;
+
+            while (gameState.players[gameState.currentPlayer].isDefeated) {
+                gameState.currentPlayer = (gameState.currentPlayer + 1) % gameState.numPlayers;
+            }
+
             if (gameState.currentPlayer === 0) {
                 gameState.turn++;
                 gameState.disasterTimer--;
@@ -2046,8 +2141,9 @@
             }
 
             gameState.claimsThisTurn = 0;
+            gameState.attacksThisTurn = 0;
 
-            if (gameState.players[gameState.currentPlayer] && gameState.players[gameState.currentPlayer].isAI) {
+            if (gameState.players[gameState.currentPlayer].isAI) {
                 setTimeout(executeAITurn, 600);
             }
 
@@ -2108,6 +2204,7 @@
         function showTooltip(e, r, c) {
             const tooltip = document.getElementById('tooltip');
             const idx = r * gameState.boardCols + c;
+            const t = localization[currentLang];
 
             if (gameState.fogEnabled && !isCellVisible(r, c, gameState.currentPlayer)) {
                 return;
@@ -2119,19 +2216,20 @@
             const troops = gameState.troops[idx];
             const disaster = gameState.disasters[idx];
 
-            let text = `${terrain.toUpperCase()} (${r}, ${c})`;
+            let terrainName = t[terrain] || terrain.toUpperCase();
+            let text = `${terrainName} (${r}, ${c})`;
 
             if (owner >= 0) {
-                text += `\nOwner: Player ${owner + 1}`;
+                text += `\n${t.owner}: Player ${owner + 1}`;
             }
             if (building) {
-                text += `\nBuilding: ${building.toUpperCase()}`;
+                text += `\n${t.building}: ${t[building] || building.toUpperCase()}`;
             }
             if (troops > 0) {
-                text += `\nTroops: ${troops.toLocaleString()}`;
+                text += `\n${t.troops}: ${troops.toLocaleString()}`;
             }
             if (disaster) {
-                text += `\nDisaster: ${disaster.type.toUpperCase()}`;
+                text += `\n${t.disaster}: ${t[disaster.type] || disaster.type.toUpperCase()}`;
             }
 
             tooltip.textContent = text;
@@ -2154,6 +2252,7 @@
         function renderGame() {
             renderPlayerCards();
             renderBoard();
+            const t = localization[currentLang];
             document.getElementById('turn-info').textContent = `Turn ${gameState.turn} - Player ${gameState.currentPlayer + 1}'s Turn`;
             document.getElementById('disaster-countdown').textContent = `⚠️ Disaster in ${gameState.disasterTimer} turns`;
         }
@@ -2163,6 +2262,7 @@
             grid.innerHTML = '';
 
             gameState.players.forEach((p, idx) => {
+                if (p.isDefeated) return;
                 const card = document.createElement('div');
                 card.className = `player-card p${idx + 1}`;
                 card.style.borderColor = p.color;
@@ -2185,8 +2285,8 @@
             const board = document.getElementById('game-board');
             board.innerHTML = '';
 
-            board.style.gridTemplateColumns = `repeat(${gameState.boardCols}, 50px)`;
-            board.style.gridTemplateRows = `repeat(${gameState.boardRows}, 50px)`;
+            board.style.gridTemplateColumns = `repeat(${gameState.boardCols}, 52px)`;
+            board.style.gridTemplateRows = `repeat(${gameState.boardRows}, 52px)`;
 
             if (gameState.showBorders) {
                 board.classList.remove('no-borders');
@@ -2200,9 +2300,18 @@
                     const cell = document.createElement('div');
                     const terrain = gameState.terrain[r][c];
 
-                    cell.className = `cell ${terrain}`;
                     cell.dataset.row = r;
                     cell.dataset.col = c;
+                    cell.className = `cell ${terrain}`;
+
+                    if (gameState.mapMode === 'political') {
+                        const owner = gameState.ownership[idx];
+                        if (owner === 0) cell.classList.add('p1-pol');
+                        else if (owner === 1) cell.classList.add('p2-pol');
+                        else if (owner === 2) cell.classList.add('p3-pol');
+                        else if (owner === 3) cell.classList.add('p4-pol');
+                        else cell.classList.add('unclaimed-pol');
+                    }
 
                     if (gameState.selectedRow === r && gameState.selectedCol === c) {
                         cell.classList.add('selected');
@@ -2213,33 +2322,35 @@
                     if (!visible) {
                         cell.classList.add('fogged');
                     } else {
-                        const troops = gameState.troops[idx];
-                        if (troops > 0) {
-                            const troopCount = document.createElement('div');
-                            troopCount.className = 'troop-count';
-                            troopCount.textContent = troops;
-                            cell.appendChild(troopCount);
-                        }
+                        if (gameState.mapMode === 'political') {
+                            const troops = gameState.troops[idx];
+                            if (troops > 0) {
+                                const troopCount = document.createElement('div');
+                                troopCount.className = 'troop-count';
+                                troopCount.textContent = troops;
+                                cell.appendChild(troopCount);
+                            }
 
-                        const building = gameState.buildings[idx];
-                        if (building) {
-                            const buildingIcon = document.createElement('div');
-                            buildingIcon.className = `building-icon ${building}-icon`;
-                            buildingIcon.textContent = getBuildingChar(building);
-                            cell.appendChild(buildingIcon);
-                        }
+                            const building = gameState.buildings[idx];
+                            if (building) {
+                                const buildingIcon = document.createElement('div');
+                                buildingIcon.className = `building-icon ${building}-icon`;
+                                buildingIcon.textContent = getBuildingChar(building);
+                                cell.appendChild(buildingIcon);
+                            }
 
-                        const owner = gameState.ownership[idx];
-                        if (owner >= 0) {
-                            const bar = document.createElement('div');
-                            bar.className = `ownership-bar p${owner + 1}`;
-                            cell.appendChild(bar);
+                            const owner = gameState.ownership[idx];
+                            if (owner >= 0) {
+                                const bar = document.createElement('div');
+                                bar.className = `ownership-bar p${owner + 1}`;
+                                cell.appendChild(bar);
 
-                            if (building === 'city' && gameState.troops[idx] >= 200) {
-                                const marker = document.createElement('div');
-                                marker.className = 'capital-marker';
-                                marker.textContent = '👑';
-                                cell.appendChild(marker);
+                                if (building === 'city' && gameState.troops[idx] >= 200) {
+                                    const marker = document.createElement('div');
+                                    marker.className = 'capital-marker';
+                                    marker.textContent = '👑';
+                                    cell.appendChild(marker);
+                                }
                             }
                         }
 
