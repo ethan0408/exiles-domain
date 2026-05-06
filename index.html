@@ -322,225 +322,410 @@
         .end-turn-btn:hover { filter: brightness(1.1); }
 
         .game-board-container {
-            background: var(--bg-panel);
-            padding: 3.5rem;
+            position: relative;
+            background:
+                radial-gradient(ellipse at 50% 35%, rgba(56, 130, 246, 0.10), transparent 65%),
+                linear-gradient(180deg, #04070e 0%, #02040a 100%);
+            padding: 12rem 10rem;
             border-radius: 20px;
             border: 1px solid var(--border-color);
             margin-bottom: 1.5rem;
-            overflow-x: auto;
-            perspective: 2000px;
+            overflow: auto;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+            min-height: 780px;
+            width: 100%;
+        }
+
+        .game-board-stage {
+            perspective: 2400px;
+            perspective-origin: 50% 50%;
+            transform-style: preserve-3d;
+            margin: 0 auto;
+            width: max-content;
+            height: max-content;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .game-board {
             display: grid;
             gap: 0;
-            background: #090d16;
-            border: 1px solid var(--border-color);
             margin: 0 auto;
             width: fit-content;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.6);
-            transform: rotateX(54deg) rotateZ(-36deg);
+
+            /* Camera Rotations applied via CSS Variables */
+            --rot-x: 60deg;
+            --rot-z: -45deg;
+            transform: rotateX(var(--rot-x)) rotateZ(var(--rot-z));
+
+            transform-origin: center center;
             transform-style: preserve-3d;
-            transition: transform 0.3s ease;
+            transition: transform 0.1s linear;
         }
 
-        .game-board.no-borders { gap: 0; border: none; }
+        .game-board.no-borders .face-top { box-shadow: none !important; }
 
         .cell {
-            width: 52px;
-            height: 52px;
+            --tile-h: 0px;
+            --tile-top: #4ade80;
+            --tile-side: #15803d;
+            --tile-shadow: #052e16;
+            --owner-color: transparent;
+            width: 60px;
+            height: 60px;
             position: relative;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 9px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), filter 0.2s ease;
             transform-style: preserve-3d;
-            border-radius: 6px;
+            transform: translateZ(var(--tile-h));
         }
 
-        .game-board.no-borders .cell { border: none; }
-        .cell.fogged { background: #0a0e17; color: #1e293b; pointer-events: auto; }
-        .cell.fogged > * { display: none; }
-        .cell.fogged::after { content: '🌫️'; font-size: 1.3rem; opacity: 0.25; transform: translateZ(12px); }
+        /* TRUE 3D VOXEL FACES */
+        .face-top {
+            position: absolute;
+            inset: 0;
+            background: var(--tile-top);
+            background-image:
+                radial-gradient(120% 90% at 30% 25%, rgba(255,255,255,0.22), transparent 60%),
+                radial-gradient(120% 80% at 70% 80%, rgba(0,0,0,0.20), transparent 70%);
+            box-shadow:
+                inset 0 0 0 1px rgba(255,255,255,0.12),
+                inset 0 -2px 0 rgba(0,0,0,0.20);
+            transform: translateZ(0);
+            pointer-events: none;
+            transform-style: preserve-3d;
+        }
+
+        .wall {
+            position: absolute;
+            transform-origin: top left;
+            width: 60px; height: 180px;
+            background: linear-gradient(180deg, var(--tile-side) 0%, var(--tile-shadow) 100%);
+            pointer-events: none;
+        }
+        .wall-n { top: 0px; left: 0px; transform: rotateX(-90deg); filter: brightness(0.85); }
+        .wall-s { top: 60px; left: 0px; transform: rotateX(-90deg); filter: brightness(1.1); }
+        .wall-e { top: 0px; left: 60px; transform: rotateZ(90deg) rotateX(-90deg); filter: brightness(0.95); }
+        .wall-w { top: 0px; left: 0px; transform: rotateZ(90deg) rotateX(-90deg); filter: brightness(0.75); }
+
+        .cell.fogged { pointer-events: auto; }
+        .cell.fogged {
+            --tile-top: #0a0e17;
+            --tile-side: #050810;
+            --tile-shadow: #02040a;
+            --tile-h: 0px;
+        }
+        .cell.fogged .face-top {
+            background: #0a0e17;
+            background-image: none;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+        }
+        .cell.fogged > *:not(.face-top):not(.wall):not(.fog-icon) { display: none; }
+        .cell.fogged .fog-icon { display: flex; }
+
+        /* BILLBOARDING: EXACTLY INVERT THE CAMERA ROTATION */
+        .fog-icon, .terrain-prop, .building-prop, .troop-count, .capital-marker, .named-feature {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform-origin: center center;
+            transform: translate(-50%, -50%)
+                       translateZ(var(--pz, 15px))
+                       rotateZ(calc(var(--rot-z) * -1))
+                       rotateX(calc(var(--rot-x) * -1));
+            pointer-events: none;
+        }
+
+        .fog-icon {
+            font-size: 1.4rem;
+            opacity: 0.4;
+            --pz: 8px;
+        }
 
         .cell:hover {
-            filter: brightness(1.35);
-            transform: translateZ(16px) scale(1.04);
-            z-index: 20;
-            box-shadow: 0 12px 30px rgba(255, 255, 255, 0.2);
-        }
-
-        /* TERRAIN: improved mountains + animated ocean shimmer */
-        .ocean, .plains, .desert, .mountain, .hills, .oasis, .tundra {
-            transform: translateZ(0px);
-            overflow: hidden;
+            transform: translateZ(var(--tile-h));
+            filter: brightness(1.2);
+            z-index: 30;
         }
 
         .ocean {
-            background:
-                linear-gradient(180deg, rgba(125, 211, 252, 0.30) 0%, rgba(2, 132, 199, 0.28) 55%, rgba(3, 105, 161, 0.34) 100%);
-            color: #bae6fd;
+            --tile-top: #3fa9e0;
+            --tile-side: #1d6da0;
+            --tile-shadow: #0a3858;
+            --tile-h: -22px;
         }
 
-        .ocean::before {
-            content: "";
-            position: absolute;
-            inset: -20%;
-            background:
-                radial-gradient(120% 70% at 20% 15%, rgba(255,255,255,0.16), transparent 55%),
-                radial-gradient(90% 60% at 80% 85%, rgba(2,132,199,0.22), transparent 60%),
-                repeating-linear-gradient(
-                    -25deg,
-                    rgba(255,255,255,0.06) 0px,
-                    rgba(255,255,255,0.06) 2px,
-                    transparent 2px,
-                    transparent 8px
-                );
-            mix-blend-mode: screen;
-            opacity: 0.85;
-            pointer-events: none;
-            transform: translateZ(1px);
+        .ocean .face-top {
+            background-image:
+                radial-gradient(140% 80% at 30% 25%, rgba(255,255,255,0.30), transparent 55%),
+                repeating-linear-gradient(-25deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 8px);
+            background-color: var(--tile-top);
             animation: oceanShimmer 5.5s linear infinite;
-            will-change: transform, opacity;
-        }
-
-        .ocean::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.09) 45%, transparent 70%);
-            opacity: 0.55;
-            transform: translateX(-120%) translateZ(2px);
-            animation: oceanSweep 4.5s ease-in-out infinite;
-            pointer-events: none;
         }
 
         @keyframes oceanShimmer {
-            0%   { transform: translate3d(-4%, 0%, 1px) scale(1.02); opacity: 0.74; }
-            50%  { transform: translate3d(4%, -2%, 1px) scale(1.03); opacity: 0.9; }
-            100% { transform: translate3d(-4%, 0%, 1px) scale(1.02); opacity: 0.74; }
+            0%   { background-position: 0 0, 0 0; }
+            100% { background-position: 0 0, 24px 0; }
         }
 
-        @keyframes oceanSweep {
-            0%   { transform: translateX(-120%) translateZ(2px); opacity: 0.2; }
-            45%  { opacity: 0.55; }
-            100% { transform: translateX(130%) translateZ(2px); opacity: 0.2; }
+        .plains {
+            --tile-top: #7ed957;
+            --tile-side: #3f9d2e;
+            --tile-shadow: #1c5e15;
+            --tile-h: 0px;
         }
 
-        .plains { background: rgba(34, 197, 94, 0.2); color: #bbf7d0; }
-        .desert { background: rgba(245, 158, 11, 0.2); color: #fde68a; }
-        .hills { background: rgba(148, 163, 184, 0.25); color: #e2e8f0; }
-        .oasis { background: rgba(20, 184, 166, 0.2); color: #99f6e4; }
-        .tundra { background: rgba(241, 245, 249, 0.15); color: #f8fafc; }
+        .desert {
+            --tile-top: #f5d97a;
+            --tile-side: #c79b3c;
+            --tile-shadow: #6e4f17;
+            --tile-h: 4px;
+        }
+
+        .hills {
+            --tile-top: #8fc66a;
+            --tile-side: #4f8a3a;
+            --tile-shadow: #224a18;
+            --tile-h: 18px;
+        }
+
+        .oasis {
+            --tile-top: #56d6b8;
+            --tile-side: #1f8c75;
+            --tile-shadow: #0a4a3d;
+            --tile-h: 2px;
+        }
+
+        .tundra {
+            --tile-top: #e6f1f6;
+            --tile-side: #a4bdc7;
+            --tile-shadow: #4f6a76;
+            --tile-h: 3px;
+        }
 
         .mountain {
-            background: linear-gradient(160deg, rgba(148,163,184,0.42) 0%, rgba(71,85,105,0.55) 55%, rgba(30,41,59,0.68) 100%);
-            color: #cbd5e1;
+            --tile-top: #a89889;
+            --tile-side: #5a4f40;
+            --tile-shadow: #2a2218;
+            --tile-h: 36px;
         }
 
-        .mountain::before {
-            content: "";
+        .terrain-prop {
+            line-height: 1;
+            font-size: var(--ps, 14px);
+            text-shadow: 0 3px 5px rgba(0,0,0,0.55);
+            z-index: 4;
+            top: var(--py, 50%); left: var(--px, 50%);
+        }
+
+        .terrain-prop.mountain-prop {
+            font-size: 64px;
+            --px: 50%; --py: 50%;
+            --pz: 32px;
+            text-shadow: 0 6px 10px rgba(0,0,0,0.7);
+        }
+
+        .terrain-prop.hills-prop  { opacity: 0.95; }
+        .terrain-prop.oasis-prop  { opacity: 0.95; }
+        .terrain-prop.desert-prop { opacity: 0.9; }
+        .terrain-prop.plains-prop { opacity: 0.9; }
+        .terrain-prop.tundra-prop { opacity: 0.9; }
+
+        .owner-ring {
             position: absolute;
-            left: 5px;
-            right: 5px;
-            top: 5px;
-            bottom: 5px;
-            background:
-                linear-gradient(130deg, rgba(226,232,240,0.70) 0%, rgba(148,163,184,0.42) 35%, rgba(51,65,85,0.82) 100%);
-            clip-path: polygon(50% 4%, 92% 84%, 8% 84%);
+            inset: 2px;
+            border: 3px solid var(--owner-color);
             box-shadow:
-                0 4px 9px rgba(0,0,0,0.45),
-                inset -9px -10px 14px rgba(15,23,42,0.58);
-            transform: translateZ(2px);
+                0 0 0 1px rgba(0,0,0,0.45),
+                inset 0 0 0 1px rgba(255,255,255,0.22),
+                inset 0 0 14px color-mix(in srgb, var(--owner-color) 50%, transparent);
+            transform: translateZ(1px);
             pointer-events: none;
+            z-index: 3;
         }
 
-        .mountain::after {
-            content: "";
+        .cell.owned-p1 .wall,
+        .cell.owned-p2 .wall,
+        .cell.owned-p3 .wall,
+        .cell.owned-p4 .wall {
+            background: linear-gradient(180deg,
+                color-mix(in srgb, var(--owner-color) 60%, var(--tile-side)) 0%,
+                var(--tile-shadow) 100%);
+        }
+
+        .cell.owned-p1 { --owner-color: #ef4444; }
+        .cell.owned-p2 { --owner-color: #3b82f6; }
+        .cell.owned-p3 { --owner-color: #10b981; }
+        .cell.owned-p4 { --owner-color: #f59e0b; }
+
+        .cell.selected .face-top {
+            box-shadow:
+                inset 0 0 0 2px var(--accent-primary),
+                inset 0 0 18px rgba(99, 102, 241, 0.55);
+        }
+        .cell.selected {
+            transform: translateZ(calc(var(--tile-h) + 18px));
+            z-index: 35;
+        }
+
+        .building-prop {
+            font-size: 38px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.65), 0 0 14px rgba(0,0,0,0.35);
+            z-index: 6;
+        }
+
+        .building-base {
             position: absolute;
-            left: 16px;
-            right: 16px;
-            top: 9px;
-            height: 16px;
-            background: rgba(248,250,252,0.95);
-            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-            filter: drop-shadow(0 1px 2px rgba(255,255,255,0.28));
-            transform: translateZ(3px);
+            top: 50%; left: 50%;
+            width: 38px; height: 14px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 70%);
+            transform: translate(-50%, -50%) translateZ(1px);
             pointer-events: none;
+            z-index: 2;
         }
 
-        .p1-pol { background: rgba(239, 68, 68, 0.5) !important; color: #fca5a5 !important; }
-        .p2-pol { background: rgba(59, 130, 246, 0.5) !important; color: #93c5fd !important; }
-        .p3-pol { background: rgba(16, 185, 129, 0.5) !important; color: #6ee7b7 !important; }
-        .p4-pol { background: rgba(245, 158, 11, 0.5) !important; color: #fde68a !important; }
-        .unclaimed-pol { background: rgba(30, 41, 59, 0.4) !important; }
+        .building-prop.silo-prop  { font-size: 42px; --pz: 26px; }
+        .building-prop.city-prop  { font-size: 44px; --pz: 24px; }
+        .building-prop.fort-prop  { font-size: 40px; --pz: 22px; }
+        .building-prop.town-prop  { font-size: 36px; --pz: 18px; }
+        .building-prop.mine-prop  { font-size: 34px; --pz: 16px; }
+        .building-prop.mds-prop   { font-size: 36px; --pz: 20px; }
 
-        .cell.selected { outline: 2px solid var(--accent-primary); transform: translateZ(20px); box-shadow: 0 0 20px var(--accent-primary); z-index: 25; }
-
-        .ownership-bar {
+        .building-tag {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            transform: translateZ(2px);
-        }
-
-        .ownership-bar.p1 { background: var(--p1-color); }
-        .ownership-bar.p2 { background: var(--p2-color); }
-        .ownership-bar.p3 { background: var(--p3-color); }
-        .ownership-bar.p4 { background: var(--p4-color); }
-
-        .building-icon {
-            position: absolute;
-            top: 3px;
-            right: 3px;
-            font-size: 8.5px;
-            background: rgba(15, 23, 42, 0.9);
-            padding: 2.5px 4.5px;
-            border-radius: 4px;
-            font-weight: bold;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            transform: translateZ(10px);
-        }
-
-        .city-icon { color: #f59e0b; }
-        .town-icon { color: #f97316; }
-        .fort-icon { color: #64748b; }
-        .mine-icon { color: #c084fc; }
-        .silo-icon { color: #ef4444; }
-        .mds-icon { color: #38bdf8; }
-
-        .troop-count {
-            position: absolute;
-            bottom: 5px;
-            left: 3px;
-            font-size: 0.62rem;
+            top: 4px;
+            right: 4px;
+            font-size: 8px;
+            font-weight: 800;
+            color: #f8fafc;
             background: rgba(15, 23, 42, 0.95);
             padding: 2px 4px;
+            border-radius: 3px;
+            border: 1px solid var(--owner-color, rgba(255,255,255,0.2));
+            transform: translateZ(2px) rotateZ(calc(var(--rot-z) * -1)) rotateX(calc(var(--rot-x) * -1));
+            z-index: 6;
+            pointer-events: none;
+        }
+
+        .missile-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: visible;
+            z-index: 100;
+        }
+
+        .missile {
+            position: absolute;
+            font-size: 28px;
+            line-height: 1;
+            transform-origin: center center;
+            text-shadow: 0 0 10px rgba(255, 200, 80, 0.8), 0 0 20px rgba(255, 120, 40, 0.6);
+            will-change: transform, opacity;
+        }
+
+        .missile-trail {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, rgba(255, 220, 120, 0.9) 0%, rgba(255, 140, 40, 0.4) 50%, transparent 80%);
+            opacity: 0.85;
+            animation: trailFade 0.6s linear forwards;
+            will-change: opacity, transform;
+        }
+
+        @keyframes trailFade {
+            0%   { opacity: 0.85; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.4); }
+        }
+
+        .missile-explosion {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center,
+                rgba(255, 250, 240, 1) 0%,
+                rgba(255, 200, 80, 0.95) 25%,
+                rgba(255, 120, 40, 0.8) 50%,
+                rgba(120, 30, 0, 0.4) 75%,
+                transparent 100%);
+            transform: translate(-50%, -50%) scale(0);
+            animation: explode 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+            box-shadow: 0 0 60px rgba(255, 180, 60, 0.9);
+            will-change: transform, opacity;
+        }
+
+        @keyframes explode {
+            0%   { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            40%  { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+        }
+
+        .missile-intercept {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center,
+                rgba(180, 230, 255, 1) 0%,
+                rgba(80, 160, 255, 0.85) 35%,
+                rgba(20, 60, 180, 0.5) 70%,
+                transparent 100%);
+            transform: translate(-50%, -50%) scale(0);
+            animation: intercept 0.8s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+            box-shadow: 0 0 50px rgba(80, 160, 255, 0.85);
+            will-change: transform, opacity;
+        }
+
+        @keyframes intercept {
+            0%   { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            50%  { transform: translate(-50%, -50%) scale(1.6); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+        }
+
+        .cell.attack-source .face-top {
+            box-shadow:
+                inset 0 0 0 3px #fbbf24,
+                inset 0 0 22px rgba(251, 191, 36, 0.55);
+        }
+        .cell.attack-target .face-top {
+            box-shadow:
+                inset 0 0 0 3px #ef4444,
+                inset 0 0 22px rgba(239, 68, 68, 0.55);
+            animation: targetPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes targetPulse {
+            0%, 100% { filter: brightness(1); }
+            50%      { filter: brightness(1.35); }
+        }
+
+        .troop-count {
+            font-size: 0.75rem;
+            background: rgba(15, 23, 42, 0.95);
+            padding: 2px 6px;
             border-radius: 4px;
-            font-weight: 600;
+            font-weight: 700;
             color: #f8fafc;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transform: translateZ(8px);
+            border: 1px solid var(--owner-color, rgba(255, 255, 255, 0.18));
+            z-index: 6;
+            white-space: nowrap;
+            --pz: 35px; /* Float high */
         }
 
         .disaster-overlay {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            inset: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.3rem;
             pointer-events: none;
-            transform: translateZ(6px);
+            transform: translateZ(2px);
             backdrop-filter: brightness(0.65);
+            z-index: 5;
         }
 
         .mud-overlay { background: rgba(101,67,33,0.55); }
@@ -557,28 +742,23 @@
         }
 
         .capital-marker {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) translateZ(14px);
-            font-size: 1.45rem;
-            text-shadow: 0 4px 16px rgba(0,0,0,0.9);
+            font-size: 1.6rem;
+            text-shadow: 0 4px 14px rgba(0,0,0,0.95);
+            z-index: 7;
+            --pz: 40px;
         }
 
         .named-feature {
-            position: absolute;
-            bottom: -20px;
-            left: 50%;
-            transform: translateX(-50%) translateZ(16px);
-            font-size: 0.55rem;
+            font-size: 0.65rem;
             background: rgba(15, 23, 42, 0.98);
-            padding: 2.5px 7px;
+            padding: 3px 8px;
             border-radius: 5px;
             white-space: nowrap;
             color: #fbbf24;
             border: 1px solid var(--border-color);
-            pointer-events: none;
             box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            z-index: 8;
+            --pz: 50px;
         }
 
         .event-log {
@@ -685,6 +865,34 @@
 
         .close-modal:hover { color: var(--text-main); border-color: rgba(255,255,255,0.2); filter: brightness(1.15); }
 
+        .inst-body { font-size: 0.88rem; color: #cbd5e1; line-height: 1.55; }
+        .inst-body h3 {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #a5b4fc;
+            margin: 1.3rem 0 0.45rem;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.25);
+            padding-bottom: 0.3rem;
+        }
+        .inst-body h3:first-child { margin-top: 0; }
+        .inst-body p { margin: 0 0 0.6rem; }
+        .inst-body ul { margin: 0 0 0.8rem 1.1rem; padding: 0; list-style: disc; }
+        .inst-body li { margin-bottom: 0.35rem; }
+        .inst-body strong { color: #f8fafc; font-weight: 700; }
+        .inst-body code {
+            background: rgba(99, 102, 241, 0.18);
+            color: #c7d2fe;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+        .inst-body table { width: 100%; border-collapse: collapse; margin: 0.4rem 0 0.9rem; font-size: 0.82rem; }
+        .inst-body th, .inst-body td { padding: 5px 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .inst-body th { color: #a5b4fc; font-weight: 700; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -754,7 +962,7 @@
             </div>
 
             <div class="toggle-option">
-                <label id="ui-lbl-music">Music Active:</label>
+                <label id="ui-lbl-music">Music & SFX Active:</label>
                 <div class="toggle-switch" id="music-toggle"></div>
             </div>
 
@@ -787,7 +995,6 @@
                 <button class="action-btn" id="btn-deploy" onclick="setAction('deploy')">➕ Deploy</button>
                 <button class="action-btn" id="btn-launch" onclick="setAction('launch')">🚀 Launch</button>
                 <button class="action-btn" onclick="openDiplomacy()">🤝 Diplomacy</button>
-                <button class="action-btn" id="btn-map-toggle" onclick="toggleMapMode()">🗺️ Toggle Map</button>
                 <button class="action-btn" onclick="returnToMenu()">🏠 Menu</button>
                 <button class="action-btn" id="btn-execute" onclick="executeAction()">🎯 Execute</button>
                 <button class="action-btn end-turn-btn" id="btn-end-turn" onclick="endTurn()">⏭️ End Turn</button>
@@ -795,7 +1002,10 @@
         </div>
 
         <div class="game-board-container">
-            <div class="game-board" id="game-board"></div>
+            <div class="game-board-stage">
+                <div class="game-board" id="game-board"></div>
+            </div>
+            <div class="missile-layer" id="missile-layer"></div>
         </div>
 
         <div class="event-log" id="event-log">
@@ -814,17 +1024,7 @@
     <div class="modal" id="instructions-modal">
         <div class="modal-content">
             <h2 class="modal-title" id="ui-inst-title">❓ How to Play</h2>
-            <p id="ui-inst-body">
-                <strong>Exile's Domain</strong> is a strategic war game of conquest and survival.
-                <br /><br />
-                <strong>Controls & Actions:</strong>
-                <br />
-                • <strong>Claim</strong>: Expand and claim territories (costs 100 troops, limited to 3 claims/turn).<br />
-                • <strong>Attack</strong>: Invade adjacent enemy territories. Win Chance depends on terrain multipliers, troop numbers, and economic factors.<br />
-                • <strong>Economy</strong>: Earn gold every turn based on territory counts. Mines generate +$15,000 but decrease happiness by 4%.<br />
-                • <strong>Buildings</strong>: Build cities (increases population), forts, mines, or defensive systems (MDS) to intercept enemy missiles.<br />
-                • <strong>Silos & Missiles</strong>: Build a Silo and spend $250,000 to launch missiles at enemy territories. The MDS can intercept them.
-            </p>
+            <div id="ui-inst-body" class="inst-body"></div>
             <button class="close-modal" id="ui-inst-close" onclick="closeInstructions()">Close</button>
         </div>
     </div>
@@ -841,8 +1041,8 @@
             showBorders: true,
             musicEnabled: false,
             fogEnabled: false,
-            mapMode: 'geographic',
             selectedAction: 'claim',
+            attackSourceIdx: null,
             terrain: [],
             ownership: [],
             buildings: [],
@@ -860,6 +1060,8 @@
             attacksThisTurn: 0,
             selectedRow: null,
             selectedCol: null,
+            boardRotationX: 60,
+            boardRotationZ: -45,
             BUILDING_COSTS: {
                 fort: 10000,
                 town: 100000,
@@ -887,11 +1089,82 @@
         let audioCtx = null;
         let musicInterval = null;
 
+        const sfx = {
+            ctx: null,
+            init() {
+                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+            },
+            enabled() {
+                return gameState.musicEnabled && this.ctx;
+            },
+            playTone(freq, type, duration, vol) {
+                if (!this.enabled()) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+                // Calming envelope: soft attack, smooth decay
+                gain.gain.setValueAtTime(0.001, this.ctx.currentTime);
+                const attackTime = Math.min(0.05, duration * 0.2);
+                gain.gain.exponentialRampToValueAtTime(vol, this.ctx.currentTime + attackTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            },
+            click() { this.playTone(440, 'sine', 0.15, 0.08); },
+            error() { this.playTone(180, 'sine', 0.4, 0.15); },
+            claim() {
+                if (!this.enabled()) return;
+                this.playTone(523.25, 'sine', 0.2, 0.08);
+                setTimeout(() => this.playTone(659.25, 'sine', 0.4, 0.08), 100);
+            },
+            attack() {
+                if (!this.enabled()) return;
+                this.playTone(150, 'triangle', 0.3, 0.15);
+                setTimeout(() => this.playTone(120, 'triangle', 0.4, 0.15), 150);
+            },
+            build() {
+                if (!this.enabled()) return;
+                this.playTone(392.00, 'sine', 0.2, 0.08);
+                setTimeout(() => this.playTone(523.25, 'sine', 0.4, 0.08), 100);
+            },
+            launch() {
+                if (!this.enabled()) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(600, this.ctx.currentTime + 1.2);
+
+                gain.gain.setValueAtTime(0.001, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.15, this.ctx.currentTime + 0.2);
+                gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 1.2);
+
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 1.2);
+            },
+            explode() {
+                if (!this.enabled()) return;
+                this.playTone(80, 'triangle', 0.8, 0.2);
+                setTimeout(() => this.playTone(60, 'sine', 1.0, 0.25), 100);
+            },
+            disaster() {
+                if (!this.enabled()) return;
+                this.playTone(100, 'triangle', 1.5, 0.2);
+                setTimeout(() => this.playTone(80, 'sine', 2.0, 0.2), 200);
+            }
+        };
+
         const melody = [
-            { f: 261.6, d: 0.3, t: 'sine', b: 130.8 },
-            { f: 311.1, d: 0.3, t: 'sawtooth', b: 155.6 },
-            { f: 392.0, d: 0.6, t: 'sine', b: 196.0 },
-            { f: 349.2, d: 0.3, t: 'sawtooth', b: 174.6 }
+            { f: 261.6, d: 0.8, t: 'sine', b: 130.8 },
+            { f: 329.6, d: 0.8, t: 'sine', b: 164.8 },
+            { f: 392.0, d: 1.2, t: 'sine', b: 196.0 },
+            { f: 349.2, d: 0.8, t: 'sine', b: 174.6 }
         ];
 
         const TERRAIN_NAMES = {
@@ -927,22 +1200,79 @@
                 capital: "Capital Only Start:",
                 fog: "Fog of War:",
                 borders: "Grid Borders:",
-                music: "Music Active:",
+                music: "Music & SFX Active:",
                 startBtn: "START GAME",
                 howBtn: "❓ HOW TO PLAY",
                 gameTitle: "⚔️ EXILE'S DOMAIN",
                 diploTitle: "🤝 Diplomacy",
                 diploClose: "Close",
                 instTitle: "❓ How to Play",
-                instBody: `<strong>Exile's Domain</strong> is a strategic war game of conquest and survival.
-                <br/><br/>
-                <strong>Controls & Actions:</strong>
-                <br/>
-                • <strong>Claim</strong>: Expand and claim territories (costs 100 troops, limited to 3 claims/turn).<br/>
-                • <strong>Attack</strong>: Invade adjacent enemy territories. Win Chance depends on terrain multipliers, troop numbers, and economic factors.<br/>
-                • <strong>Economy</strong>: Earn gold every turn based on territory counts. Mines generate +$15,000 but decrease happiness by 4%.<br/>
-                • <strong>Buildings</strong>: Build cities (increases population), forts, mines, or defensive systems (MDS) to intercept enemy missiles.<br/>
-                • <strong>Silos & Missiles</strong>: Build a Silo and spend $250,000 to launch missiles at enemy territories. The MDS can intercept them.`,
+                instBody: `<h3>1. Goal of the Game</h3>
+<p><strong>Exile's Domain</strong> is a turn-based strategy game of expansion, war, and survival. You take a small starting territory and try to outlast every other player. A player is <strong>defeated</strong> when they lose all their territories or their capital falls. The last surviving civilization wins.</p>
+<h3>2. The Map</h3>
+<ul>
+  <li><strong>Tiles & terrain.</strong> The world is a grid of 3D tiles. Each tile is one of: <strong>Plains</strong>, <strong>Hills</strong>, <strong>Mountain</strong>, <strong>Desert</strong>, <strong>Oasis</strong>, <strong>Tundra</strong>, or <strong>Ocean</strong>. Hover any tile to see its full info.</li>
+  <li><strong>Ocean</strong> tiles cannot be claimed, walked into, or built on — they are impassable.</li>
+  <li><strong>Defensive bonus.</strong> Defenders get a <strong>terrain multiplier</strong>: Plains/Oasis ×1, Hills/Tundra ×1.5, Desert ×2, Mountain ×3. So attacking a Mountain is much harder than attacking Plains.</li>
+  <li><strong>Ownership.</strong> Each tile is either unclaimed (no colored ring) or owned by a player (ring + colored side wall in that player's color). Your <strong>capital</strong> is marked with 👑.</li>
+  <li><strong>Fog of War</strong> (if enabled in setup). You only see tiles adjacent to ones you own. Hidden tiles show a 🌫️ icon.</li>
+</ul>
+<h3>3. Turn Flow</h3>
+<ol>
+  <li>The active player's name shows "🟢 Active" in the player panel.</li>
+  <li>You may take <strong>up to 3 Claims</strong> and <strong>up to 3 Attacks</strong> per turn, plus any number of builds, deploys, withdraws, troop purchases, diplomacy moves, and missile launches you can afford.</li>
+  <li>Click <strong>⏭️ End Turn</strong> when you're done. AI opponents then take their turns automatically.</li>
+  <li>At the end of every player's turn they collect income, population grows, and happiness shifts.</li>
+</ol>
+<h3>4. Selecting Tiles & Actions</h3>
+<p>The basic loop is: <strong>(1)</strong> click an action button at the top, <strong>(2)</strong> click the tile you want to act on, <strong>(3)</strong> click <strong>🎯 Execute</strong>. Some actions (like Attack) execute directly when you click a valid second tile — see below.</p>
+<h3>5. Claim 🏳️</h3>
+<ul>
+  <li><strong>What:</strong> Take an unclaimed tile that is adjacent to one of yours.</li>
+  <li><strong>Cost:</strong> 100 troops from the adjacent source tile (it must hold ≥ 100 troops).</li>
+  <li><strong>Limit:</strong> max <strong>3 claims per turn</strong>.</li>
+  <li><strong>How:</strong> select Claim → click the unclaimed target tile → press Execute. The new tile starts with 50 troops.</li>
+</ul>
+<h3>6. Attack ⚔️ (streamlined)</h3>
+<ul>
+  <li><strong>What:</strong> Invade an enemy tile orthogonally adjacent to one of yours.</li>
+  <li><strong>Restrictions:</strong> you cannot attack a player you have <strong>Peace</strong> or <strong>Alliance</strong> with. Max <strong>3 attacks per turn</strong>.</li>
+  <li><strong>How:</strong>
+    <ol>
+      <li>Click <strong>⚔️ Attack</strong>.</li>
+      <li>Click <strong>YOUR tile</strong> that has more than 20 troops — it gets a <span style="color:#fbbf24;font-weight:700;">yellow border</span> as the attack source.</li>
+      <li>All <strong>adjacent enemy tiles light up red and pulse</strong> — click any of them to attack directly.</li>
+    </ol>
+  </li>
+  <li><strong>Combat math:</strong> damage to defender = 40% of your attacker troops.</li>
+</ul>
+<h3>7. Buildings</h3>
+<table>
+  <tr><th>Building</th><th>Cost</th><th>Effect</th></tr>
+  <tr><td>🏰 <strong>Fort</strong></td><td>$10,000</td><td>Boosts the tile's defensive multiplier.</td></tr>
+  <tr><td>🏘️ <strong>Town</strong></td><td>$100,000</td><td>Mid-tier population & income boost.</td></tr>
+  <tr><td>🏙️ <strong>City</strong></td><td>$1,000,000</td><td>Large population growth and income.</td></tr>
+  <tr><td>⛏️ <strong>Mine</strong></td><td>$50,000</td><td>+$15,000 income/turn, but −4% happiness.</td></tr>
+  <tr><td>🚀 <strong>Silo</strong></td><td>$5,000,000</td><td>Required to launch missiles.</td></tr>
+  <tr><td>🛡️ <strong>MDS</strong></td><td>$2,000,000</td><td>Auto-intercepts enemy missiles aimed at any tile within 1 tile of the MDS.</td></tr>
+</table>
+<h3>8. Silos & Missiles 🚀</h3>
+<ul>
+  <li><strong>Build a Silo</strong> on any of your tiles ($5,000,000).</li>
+  <li>Click <strong>🚀 Launch</strong>, click your <strong>Silo tile</strong>, then press Execute.</li>
+  <li><strong>Cost per launch:</strong> $250,000.</li>
+  <li><strong>Damage:</strong> 150 troops to the target tile.</li>
+</ul>
+<h3>9. Disasters & Epidemics</h3>
+<ul>
+  <li><strong>Disasters:</strong> Every 10 turns, random disasters (Mud, Flood, Crack, Magma, Snow, or Radiation) will strike a 2x2 area, damaging troops and structures.</li>
+  <li><strong>Epidemics:</strong> Random outbreaks can strike any player at the end of a turn, reducing their population.</li>
+</ul>
+<h3>10. Map Rotation</h3>
+<ul>
+  <li>Press <strong>W / S</strong> to tilt the map view up or down.</li>
+  <li>Press <strong>A / D</strong> to rotate the map view left or right.</li>
+</ul>`,
                 instClose: "Close",
                 claim: "Claim",
                 attack: "Attack",
@@ -958,7 +1288,6 @@
                 launch: "Launch",
                 diplomacy: "Diplomacy",
                 menu: "Menu",
-                mapToggle: "Toggle Map",
                 execute: "Execute",
                 endTurn: "End Turn",
                 turnLabel: "Turn",
@@ -1002,15 +1331,72 @@
                 diploTitle: "🤝 外交关系",
                 diploClose: "关闭",
                 instTitle: "❓ 玩法说明",
-                instBody: `<strong>流放之地</strong>是一款充满征服与生存元素的战略战争游戏。
-                <br/><br/>
-                <strong>控制与行动：</strong>
-                <br/>
-                • <strong>占领</strong>：消耗100名士兵扩张领土（每回合限3次）。<br/>
-                • <strong>攻击</strong>：攻击相邻的敌方领土。胜率取决于地形修正、兵力和经济因素。<br/>
-                • <strong>经济</strong>：每回合根据领土获得金币。矿场提供额外收入，但会略微降低民众满意度。<br/>
-                • <strong>建筑</strong>：建造城市、城镇、要塞或防御系统（MDS）来拦截导弹袭击。<br/>
-                • <strong>发射井</strong>：消耗25万金币发射导弹打击敌人，注意敌方的导弹防御系统可能将之拦截。`,
+                instBody: `<h3>1. 游戏目标</h3>
+<p><strong>流放之地 (Exile's Domain)</strong> 是一款集扩张、战争和生存于一体的回合制战略游戏。你将从一小块领土开始，努力战胜所有其他玩家。当一个玩家失去所有领土或首都沦陷时，即被<strong>击败</strong>。坚持到最后的文明将获得胜利。</p>
+<h3>2. 游戏地图</h3>
+<ul>
+  <li><strong>地形：</strong> 世界由3D网格组成，包含<strong>平原</strong>、<strong>丘陵</strong>、<strong>山脉</strong>、<strong>沙漠</strong>、<strong>绿洲</strong>、<strong>苔原</strong>和<strong>海洋</strong>。将鼠标悬停在上方可以查看详细信息。</li>
+  <li><strong>海洋：</strong> 无法占领、无法通行也无法建造。</li>
+  <li><strong>防御加成：</strong> 防守方会获得<strong>地形乘数</strong>：平原/绿洲 ×1，丘陵/苔原 ×1.5，沙漠 ×2，山脉 ×3。因此攻打山脉要比攻打平原困难得多。</li>
+  <li><strong>所有权：</strong> 每个地块要么是无主的，要么归某个玩家所有（带有该玩家颜色的圆环和侧壁）。你的<strong>首都</strong>标记为 👑。</li>
+  <li><strong>战争迷雾：</strong> （如果在设置中启用）你只能看到自己拥有的及相邻的地块。隐藏的地块会显示 🌫️ 图标。</li>
+</ul>
+<h3>3. 回合流程</h3>
+<ol>
+  <li>当前行动的玩家面板上会显示 "🟢 Active"（活动）。</li>
+  <li>每回合你最多可以进行 <strong>3次占领</strong> 和 <strong>3次攻击</strong>，以及不限次数的建造、部署、撤军、购买军队、外交或发射导弹（只要资金允许）。</li>
+  <li>完成操作后点击 <strong>⏭️ 结束回合</strong>。之后AI对手会自动进行他们的回合。</li>
+  <li>每个玩家回合结束时，将收集收入、增长人口并更新满意度。</li>
+</ol>
+<h3>4. 选择地块与行动</h3>
+<p>基本操作流程是：<strong>(1)</strong> 点击顶部的一个行动按钮，<strong>(2)</strong> 点击你想操作的地图地块，<strong>(3)</strong> 点击 <strong>🎯 执行</strong>。某些行动（如“攻击”）在你点击第二个有效目标时会直接执行——详见下文。</p>
+<h3>5. 占领 🏳️</h3>
+<ul>
+  <li><strong>内容：</strong> 占领与你相邻的无主地块。</li>
+  <li><strong>消耗：</strong> 从相邻源地块消耗100名士兵（该地块必须至少有100名士兵）。</li>
+  <li><strong>限制：</strong> 每回合最多 <strong>3次占领</strong>。</li>
+  <li><strong>操作：</strong> 选择“占领” → 点击无主目标地块 → 点击“执行”。新占领的地块初始拥有50名士兵。</li>
+</ul>
+<h3>6. 攻击 ⚔️</h3>
+<ul>
+  <li><strong>内容：</strong> 入侵与你相邻的敌方地块。</li>
+  <li><strong>限制：</strong> 无法攻击与你处于<strong>和平</strong>或<strong>结盟</strong>状态的玩家。每回合最多 <strong>3次攻击</strong>。</li>
+  <li><strong>操作：</strong>
+    <ol>
+      <li>点击 <strong>⚔️ 攻击</strong>。</li>
+      <li>点击<strong>你的地块</strong>（需大于20名士兵），它会显示<span style="color:#fbbf24;font-weight:700;">黄色边框</span>作为攻击源。</li>
+      <li>所有<strong>相邻的敌方地块会闪烁红光</strong> —— 直接点击其中任意一个即可发起攻击。</li>
+    </ol>
+  </li>
+  <li><strong>战斗计算：</strong> 对防守方造成的伤害 = 你攻击兵力的 40%。</li>
+</ul>
+<h3>7. 建筑</h3>
+<table>
+  <tr><th>建筑</th><th>费用</th><th>效果</th></tr>
+  <tr><td>🏰 <strong>要塞</strong></td><td>$10,000</td><td>提升地块的防御乘数。</td></tr>
+  <tr><td>🏘️ <strong>城镇</strong></td><td>$100,000</td><td>中等程度提升人口和收入。</td></tr>
+  <tr><td>🏙️ <strong>城市</strong></td><td>$1,000,000</td><td>大幅提升人口增长和收入。</td></tr>
+  <tr><td>⛏️ <strong>矿场</strong></td><td>$50,000</td><td>每回合+$15,000收入，但满意度降低4%。</td></tr>
+  <tr><td>🚀 <strong>导弹井</strong></td><td>$5,000,000</td><td>发射导弹的前提条件。</td></tr>
+  <tr><td>🛡️ <strong>防御系统</strong></td><td>$2,000,000</td><td>自动拦截瞄准该系统周围1格范围内任意地块的敌方导弹。</td></tr>
+</table>
+<h3>8. 导弹井与导弹 🚀</h3>
+<ul>
+  <li>在你的任意地块上<strong>建造导弹井</strong>（$5,000,000）。</li>
+  <li>点击 <strong>🚀 发射</strong>，点击你的<strong>导弹井地块</strong>，然后点击“执行”。</li>
+  <li><strong>每次发射消耗：</strong> $250,000。</li>
+  <li><strong>伤害：</strong> 对目标地块造成150名士兵的伤害。</li>
+</ul>
+<h3>9. 灾难与疫情</h3>
+<ul>
+  <li><strong>灾难：</strong> 每过10回合，随机灾难（泥石流、洪水、地裂、岩浆、暴雪或核辐射）会袭击2x2区域，破坏军队或建筑。</li>
+  <li><strong>疫情：</strong> 回合结束时可能随机爆发疫情，减少玩家的人口。</li>
+</ul>
+<h3>10. 地图控制</h3>
+<ul>
+  <li>按 <strong>W / S</strong> 键上下倾斜地图视角。</li>
+  <li>按 <strong>A / D</strong> 键左右旋转地图视角。</li>
+</ul>`,
                 instClose: "关闭",
                 claim: "占领",
                 attack: "攻击",
@@ -1026,7 +1412,6 @@
                 launch: "发射",
                 diplomacy: "外交",
                 menu: "菜单",
-                mapToggle: "切换地图",
                 execute: "执行",
                 endTurn: "结束回合",
                 turnLabel: "回合",
@@ -1070,17 +1455,59 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             document.querySelectorAll('.toggle-switch').forEach(toggle => {
-                toggle.addEventListener('click', function () { this.classList.toggle('active'); });
+                toggle.addEventListener('click', function () {
+                    this.classList.toggle('active');
+                    if(this.id === 'music-toggle') {
+                        sfx.init();
+                    }
+                });
+            });
+            switchLanguage();
+
+            window.addEventListener('keydown', (e) => {
+                const board = document.getElementById('game-board');
+                if (!board) return;
+
+                const activeElement = document.activeElement;
+                if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'SELECT')) {
+                    return;
+                }
+
+                switch (e.key.toLowerCase()) {
+                    case 'a':
+                        gameState.boardRotationZ -= 5;
+                        break;
+                    case 'd':
+                        gameState.boardRotationZ += 5;
+                        break;
+                    case 'w':
+                        gameState.boardRotationX = Math.min(85, gameState.boardRotationX + 2);
+                        break;
+                    case 's':
+                        gameState.boardRotationX = Math.max(15, gameState.boardRotationX - 2);
+                        break;
+                    default:
+                        return;
+                }
+
+                e.preventDefault();
+                board.style.setProperty('--rot-x', gameState.boardRotationX + 'deg');
+                board.style.setProperty('--rot-z', gameState.boardRotationZ + 'deg');
             });
         });
 
         async function playMusic() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') await audioCtx.resume();
+            sfx.init();
+            if (audioCtx) {
+                if (audioCtx.state === 'suspended') await audioCtx.resume();
+            } else {
+                audioCtx = sfx.ctx;
+            }
             if (musicInterval) clearInterval(musicInterval);
 
             let index = 0;
             musicInterval = setInterval(async () => {
+                if (!gameState.musicEnabled) return;
                 if (audioCtx.state === 'suspended') await audioCtx.resume();
                 const note = melody[index % melody.length];
                 const now = audioCtx.currentTime;
@@ -1089,8 +1516,9 @@
 
                 osc.type = note.t;
                 osc.frequency.value = note.f;
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.00001, now + note.d);
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.exponentialRampToValueAtTime(0.03, now + 0.1); // soft attack
+                gain.gain.exponentialRampToValueAtTime(0.001, now + note.d);
 
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
@@ -1141,7 +1569,6 @@
             document.getElementById('btn-withdraw').innerHTML = "➖ " + t.withdraw;
             document.getElementById('btn-deploy').innerHTML = "➕ " + t.deploy;
             document.getElementById('btn-launch').innerHTML = "🚀 " + t.launch;
-            document.getElementById('btn-map-toggle').innerHTML = "🗺️ " + t.mapToggle;
             document.getElementById('btn-execute').innerHTML = "🎯 " + t.execute;
             document.getElementById('btn-end-turn').innerHTML = "⏭️ " + t.endTurn;
 
@@ -1151,22 +1578,25 @@
             if (document.getElementById('game-screen').style.display === 'block') renderGame();
         }
 
-        function toggleMapMode() {
-            gameState.mapMode = gameState.mapMode === 'geographic' ? 'political' : 'geographic';
-            logEvent(gameState.mapMode === 'political' ? "Switched to Political Map View" : "Switched to Geographic Map View");
-            renderGame();
+        function openInstructions() {
+            sfx.click();
+            document.getElementById('instructions-modal').style.display = 'flex';
+        }
+        function closeInstructions() {
+            sfx.click();
+            document.getElementById('instructions-modal').style.display = 'none';
         }
 
-        function openInstructions() { document.getElementById('instructions-modal').style.display = 'flex'; }
-        function closeInstructions() { document.getElementById('instructions-modal').style.display = 'none'; }
-
         function returnToMenu() {
+            sfx.click();
             stopMusic();
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('menu-screen').style.display = 'flex';
         }
 
         function startGame() {
+            sfx.init();
+            sfx.click();
             initializeGame();
             document.getElementById('menu-screen').style.display = 'none';
             document.getElementById('game-screen').style.display = 'block';
@@ -1174,6 +1604,12 @@
             gameState.fogEnabled = document.getElementById('fog-toggle').classList.contains('active');
             gameState.showBorders = document.getElementById('border-toggle').classList.contains('active');
             gameState.musicEnabled = document.getElementById('music-toggle').classList.contains('active');
+
+            const board = document.getElementById('game-board');
+            if (board) {
+                board.style.setProperty('--rot-x', gameState.boardRotationX + 'deg');
+                board.style.setProperty('--rot-z', gameState.boardRotationZ + 'deg');
+            }
 
             if (gameState.musicEnabled) playMusic(); else stopMusic();
             renderGame();
@@ -1189,7 +1625,9 @@
         }
 
         function setAction(action) {
+            sfx.click();
             gameState.selectedAction = action;
+            if (action !== 'attack') gameState.attackSourceIdx = null;
             updateActionButtons();
             logEvent(`Selected action: ${action.toUpperCase()}`);
         }
@@ -1230,12 +1668,12 @@
             const boardSizeSelect = document.getElementById('board-size').value;
             const startCapitalOnly = document.getElementById('capital-toggle').classList.contains('active');
 
-            if (boardSizeSelect === 'small') { gameState.boardRows = 12; gameState.boardCols = 15; }
-            else if (boardSizeSelect === 'large') { gameState.boardRows = 18; gameState.boardCols = 22; }
+            const boardSelect = boardSizeSelect;
+            if (boardSelect === 'small') { gameState.boardRows = 12; gameState.boardCols = 15; }
+            else if (boardSelect === 'large') { gameState.boardRows = 18; gameState.boardCols = 22; }
             else { gameState.boardRows = 15; gameState.boardCols = 18; }
 
             gameState.numPlayers = numPlayers;
-            gameState.mapMode = 'geographic';
             const rows = gameState.boardRows;
             const cols = gameState.boardCols;
             const totalCells = rows * cols;
@@ -1253,23 +1691,25 @@
             gameState.selectedRow = null;
             gameState.selectedCol = null;
             gameState.capitalTiles = new Set();
+            gameState.boardRotationX = 60;
+            gameState.boardRotationZ = -45;
 
             if (!startCapitalOnly) {
                 for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < cols; c++) {
                         const idx = r * cols + c;
                         if (numPlayers === 2) {
-                            if (c < Math.floor(cols / 2)) { gameState.ownership[idx] = 0; gameState.troops[idx] = 50; }
-                            else { gameState.ownership[idx] = 1; gameState.troops[idx] = 50; }
+                            if (c < Math.floor(cols / 2)) { gameState.ownership[idx] = 0; }
+                            else { gameState.ownership[idx] = 1; }
                         } else if (numPlayers === 3) {
-                            if (c < Math.floor(cols / 3)) { gameState.ownership[idx] = 0; gameState.troops[idx] = 50; }
-                            else if (c < Math.floor(2 * cols / 3)) { gameState.ownership[idx] = 1; gameState.troops[idx] = 50; }
-                            else { gameState.ownership[idx] = 2; gameState.troops[idx] = 50; }
+                            if (c < Math.floor(cols / 3)) { gameState.ownership[idx] = 0; }
+                            else if (c < Math.floor(2 * cols / 3)) { gameState.ownership[idx] = 1; }
+                            else { gameState.ownership[idx] = 2; }
                         } else {
-                            if (r < Math.floor(rows / 2) && c < Math.floor(cols / 2)) { gameState.ownership[idx] = 0; gameState.troops[idx] = 50; }
-                            else if (r < Math.floor(rows / 2) && c >= Math.floor(cols / 2)) { gameState.ownership[idx] = 1; gameState.troops[idx] = 50; }
-                            else if (r >= Math.floor(rows / 2) && c < Math.floor(cols / 2)) { gameState.ownership[idx] = 2; gameState.troops[idx] = 50; }
-                            else { gameState.ownership[idx] = 3; gameState.troops[idx] = 50; }
+                            if (r < Math.floor(rows / 2) && c < Math.floor(cols / 2)) { gameState.ownership[idx] = 0; }
+                            else if (r < Math.floor(rows / 2) && c >= Math.floor(cols / 2)) { gameState.ownership[idx] = 1; }
+                            else if (r >= Math.floor(rows / 2) && c < Math.floor(cols / 2)) { gameState.ownership[idx] = 2; }
+                            else { gameState.ownership[idx] = 3; }
                         }
                     }
                 }
@@ -1413,6 +1853,99 @@
             }
         }
 
+        function animateMissile(sourceIdx, targetIdx, intercepted) {
+            return new Promise(resolve => {
+                sfx.launch();
+                const layer = document.getElementById('missile-layer');
+                if (!layer) { resolve(); return; }
+
+                const sR = Math.floor(sourceIdx / gameState.boardCols);
+                const sC = sourceIdx % gameState.boardCols;
+                const tR = Math.floor(targetIdx / gameState.boardCols);
+                const tC = targetIdx % gameState.boardCols;
+                const sCell = document.querySelector(`.cell[data-row="${sR}"][data-col="${sC}"]`);
+                const tCell = document.querySelector(`.cell[data-row="${tR}"][data-col="${tC}"]`);
+                if (!sCell || !tCell) { resolve(); return; }
+
+                const layerRect = layer.getBoundingClientRect();
+                const sRect = sCell.getBoundingClientRect();
+                const tRect = tCell.getBoundingClientRect();
+
+                const sx = sRect.left - layerRect.left + sRect.width / 2;
+                const sy = sRect.top  - layerRect.top  + sRect.height / 2;
+                const tx = tRect.left - layerRect.left + tRect.width / 2;
+                const ty = tRect.top  - layerRect.top  + tRect.height / 2;
+
+                const stopFrac = intercepted ? 0.55 : 1.0;
+                const ex = sx + (tx - sx) * stopFrac;
+                const ey = sy + (ty - sy) * stopFrac;
+
+                const distance = Math.hypot(tx - sx, ty - sy);
+                const duration = Math.min(1400, 600 + distance * 1.4);
+
+                const missile = document.createElement('div');
+                missile.className = 'missile';
+                missile.textContent = '🚀';
+                missile.style.left = '0px';
+                missile.style.top = '0px';
+                missile.style.transform = `translate(${sx}px, ${sy}px) rotate(0deg)`;
+                layer.appendChild(missile);
+
+                const start = performance.now();
+                const arcHeight = Math.max(80, distance * 0.35);
+
+                let lastTrailAt = 0;
+
+                function frame(now) {
+                    const tRaw = (now - start) / duration;
+                    const t = Math.min(1, tRaw) * stopFrac;
+                    const x = sx + (ex - sx) * (t / stopFrac);
+                    const y = sy + (ey - sy) * (t / stopFrac) - Math.sin((t / stopFrac) * Math.PI) * arcHeight;
+                    const dxN = (ex - sx);
+                    const dyN = (ey - sy) - Math.cos((t / stopFrac) * Math.PI) * Math.PI * arcHeight;
+                    const angle = Math.atan2(dyN, dxN) * 180 / Math.PI + 90;
+                    missile.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%) rotate(${angle}deg)`;
+
+                    if (now - lastTrailAt > 35) {
+                        lastTrailAt = now;
+                        const trail = document.createElement('div');
+                        trail.className = 'missile-trail';
+                        trail.style.left = `${x - 5}px`;
+                        trail.style.top  = `${y - 5}px`;
+                        layer.appendChild(trail);
+                        setTimeout(() => trail.remove(), 600);
+                    }
+
+                    if (tRaw < stopFrac) {
+                        requestAnimationFrame(frame);
+                    } else {
+                        sfx.explode();
+                        missile.remove();
+                        const burst = document.createElement('div');
+                        burst.className = intercepted ? 'missile-intercept' : 'missile-explosion';
+                        burst.style.left = `${ex}px`;
+                        burst.style.top  = `${ey}px`;
+                        layer.appendChild(burst);
+                        setTimeout(() => { burst.remove(); resolve(); }, 900);
+                    }
+                }
+                requestAnimationFrame(frame);
+            });
+        }
+
+        function getBuildingGlyph(building) {
+            switch (building) {
+                case 'city': return '🏙️';
+                case 'town': return '🏘️';
+                case 'fort': return '🏰';
+                case 'mine': return '⛏️';
+                case 'silo': return '🚀';
+                case 'mds':  return '🛡️';
+                case 'vaccine': return '💉';
+                default: return '';
+            }
+        }
+
         function getDisasterChar(type) {
             switch (type) {
                 case 'mud': return '🟫';
@@ -1458,6 +1991,7 @@
                 logEvent(`Player ${attackerIdx + 1} (AI) attacked territory ${targetIdx}.`);
             }
 
+            sfx.attack();
             gameState.attacksThisTurn++;
             return true;
         }
@@ -1465,7 +1999,11 @@
         function aiBuildStructure(idx, playerIdx, type) {
             const p = gameState.players[playerIdx];
             const cost = gameState.BUILDING_COSTS[type];
-            if (p.gold >= cost) { p.gold -= cost; gameState.buildings[idx] = type; }
+            if (p.gold >= cost) {
+                p.gold -= cost;
+                gameState.buildings[idx] = type;
+                sfx.build();
+            }
         }
 
         function processAIDiplomacy(playerIdx) {
@@ -1500,6 +2038,65 @@
         }
 
         function handleCellClick(r, c) {
+            sfx.click();
+            const idx = r * gameState.boardCols + c;
+            const playerIdx = gameState.currentPlayer;
+            const owner = gameState.ownership[idx];
+
+            if (gameState.selectedAction === 'attack') {
+                if (gameState.attackSourceIdx === null) {
+                    if (owner !== playerIdx) {
+                        sfx.error();
+                        alert("Pick one of YOUR tiles first (with more than 20 troops).");
+                        return;
+                    }
+                    if (gameState.troops[idx] <= 20) {
+                        sfx.error();
+                        alert("That tile doesn't have enough troops to attack (need > 20).");
+                        return;
+                    }
+                    gameState.attackSourceIdx = idx;
+                    gameState.selectedRow = r;
+                    gameState.selectedCol = c;
+                    logEvent(`🎯 Source set to (${r}, ${c}). Now click an adjacent enemy tile.`);
+                    renderGame();
+                    return;
+                }
+
+                const sR = Math.floor(gameState.attackSourceIdx / gameState.boardCols);
+                const sC = gameState.attackSourceIdx % gameState.boardCols;
+                const isAdjacent = (Math.abs(sR - r) + Math.abs(sC - c)) === 1;
+
+                if (owner === playerIdx) {
+                    if (gameState.troops[idx] <= 20) {
+                        sfx.error();
+                        alert("That tile doesn't have enough troops to attack (need > 20).");
+                        return;
+                    }
+                    gameState.attackSourceIdx = idx;
+                    gameState.selectedRow = r;
+                    gameState.selectedCol = c;
+                    logEvent(`🎯 Source changed to (${r}, ${c}).`);
+                    renderGame();
+                    return;
+                }
+
+                if (!isAdjacent) {
+                    sfx.error();
+                    alert("Target must be ADJACENT (up/down/left/right) to your source tile.");
+                    return;
+                }
+                if (owner === -1) {
+                    sfx.error();
+                    alert("That tile is unclaimed — use Claim instead.");
+                    return;
+                }
+                handleAttack(idx, owner, playerIdx, gameState.attackSourceIdx);
+                gameState.attackSourceIdx = null;
+                renderGame();
+                return;
+            }
+
             logEvent(`Selected tile: (${r}, ${c})`);
             gameState.selectedRow = r;
             gameState.selectedCol = c;
@@ -1507,7 +2104,9 @@
         }
 
         function handleClaim(idx, newOwner) {
-            if (gameState.claimsThisTurn >= gameState.maxClaimsPerTurn) { alert("Cannot make more claims this turn!"); return; }
+            if (gameState.claimsThisTurn >= gameState.maxClaimsPerTurn) {
+                sfx.error(); alert("Cannot make more claims this turn!"); return;
+            }
 
             const r = Math.floor(idx / gameState.boardCols);
             const c = idx % gameState.boardCols;
@@ -1524,13 +2123,18 @@
                 }
             }
 
-            if (sourceIdx === -1) { alert("You need an adjacent territory with at least 100 troops to claim this territory!"); return; }
-            if (gameState.ownership[idx] !== -1) { alert("Can only claim an unclaimed territory!"); return; }
+            if (sourceIdx === -1) {
+                sfx.error(); alert("You need an adjacent territory with at least 100 troops to claim this territory!"); return;
+            }
+            if (gameState.ownership[idx] !== -1) {
+                sfx.error(); alert("Can only claim an unclaimed territory!"); return;
+            }
 
             gameState.ownership[idx] = newOwner;
             gameState.troops[sourceIdx] -= gameState.TROOP_CLAIM;
             gameState.troops[idx] = Math.floor(gameState.TROOP_CLAIM / 2);
             gameState.claimsThisTurn++;
+            sfx.claim();
             logEvent(`Player ${newOwner + 1} claimed territory ${idx}.`);
             renderGame();
         }
@@ -1554,6 +2158,7 @@
                 gameState.troops[sourceIdx] -= gameState.TROOP_CLAIM;
                 gameState.troops[targetIdx] = Math.floor(gameState.TROOP_CLAIM / 2);
                 gameState.claimsThisTurn++;
+                sfx.claim();
                 logEvent(`Player ${playerIdx + 1} (AI) claimed territory ${targetIdx}.`);
                 return true;
             }
@@ -1561,27 +2166,33 @@
         }
 
         function buyTroopsDirectly() {
+            sfx.click();
             const p = gameState.players[gameState.currentPlayer];
             if (p.gold >= gameState.TROOP_COST) {
                 p.gold -= gameState.TROOP_COST;
                 p.troops += 100;
+                sfx.build();
                 logEvent(`${p.name} bought 100 troops.`);
                 renderGame();
-            } else alert("Not enough gold to buy troops!");
+            } else {
+                sfx.error();
+                alert("Not enough gold to buy troops!");
+            }
         }
 
         function handleAttack(targetIdx, defenderIdx, attackerIdx, sourceIdx) {
             const pAttacker = gameState.players[attackerIdx];
-            if (gameState.attacksThisTurn >= 3) { alert("Cannot make more than 3 attacks per turn!"); return; }
+            if (gameState.attacksThisTurn >= 3) { sfx.error(); alert("Cannot make more than 3 attacks per turn!"); return; }
 
             const key = attackerIdx < defenderIdx ? `${attackerIdx}_${defenderIdx}` : `${defenderIdx}_${attackerIdx}`;
             const status = gameState.diplomacy[key] || 'war';
             if (status === 'ally' || status === 'peace') {
+                sfx.error();
                 alert(`Cannot attack Player ${defenderIdx + 1}! You have an active ${status} agreement.`);
                 return;
             }
 
-            if (gameState.troops[sourceIdx] <= 20) { alert("Not enough troops on this tile to attack!"); return; }
+            if (gameState.troops[sourceIdx] <= 20) { sfx.error(); alert("Not enough troops on this tile to attack!"); return; }
 
             const attackerTroops = gameState.troops[sourceIdx];
             const defenderTroops = gameState.troops[targetIdx];
@@ -1598,25 +2209,31 @@
                 logEvent(`${pAttacker.name} attacked territory ${targetIdx}. Defender troops remaining: ${gameState.troops[targetIdx]}`);
             }
 
+            sfx.attack();
             gameState.attacksThisTurn++;
             renderGame();
         }
 
         function handleBuildStructure(idx, ownerIdx, playerIdx, type, r, c) {
-            if (ownerIdx !== playerIdx) { alert("You can only build structures on your own territory!"); return; }
+            if (ownerIdx !== playerIdx) { sfx.error(); alert("You can only build structures on your own territory!"); return; }
 
             const p = gameState.players[playerIdx];
             const cost = gameState.BUILDING_COSTS[type];
             if (p.gold >= cost) {
                 p.gold -= cost;
                 gameState.buildings[idx] = type;
+                sfx.build();
                 logEvent(`${p.name} built a ${type} at (${r}, ${c}).`);
                 renderGame();
-            } else alert(`Not enough gold to build a ${type}`);
+            } else {
+                sfx.error();
+                alert(`Not enough gold to build a ${type}`);
+            }
         }
 
         function triggerDisaster() {
             logEvent('⚠️ Disaster triggered across the board.');
+            sfx.disaster();
             const rows = gameState.boardRows;
             const cols = gameState.boardCols;
             const disasterTypes = ['mud', 'flood', 'crack', 'magma', 'snow', 'radiation'];
@@ -1686,6 +2303,7 @@
                         gameState.ownership[i] = -1;
                         gameState.buildings[i] = null;
                         gameState.troops[i] = 0;
+                        gameState.disasters[i] = null;
                         logEvent(`⚠️ The crisis passes at tile ${i}. The territory is restored to the wasteland.`);
                     }
                     gameState.disasters[i] = null;
@@ -1694,7 +2312,9 @@
         }
 
         function executeAction() {
+            sfx.click();
             if (gameState.selectedRow === null || gameState.selectedCol === null) {
+                sfx.error();
                 alert("Please select a territory on the board first.");
                 return;
             }
@@ -1709,19 +2329,42 @@
                     handleClaim(idx, playerIdx);
                     break;
                 case 'attack': {
+                    if (gameState.attackSourceIdx === null) {
+                        if (gameState.ownership[idx] !== playerIdx) {
+                            sfx.error();
+                            alert("Click YOUR tile first to set it as the attack source, then click an adjacent enemy tile.");
+                            break;
+                        }
+                        if (gameState.troops[idx] <= 20) {
+                            sfx.error();
+                            alert("This tile doesn't have enough troops to attack (need > 20).");
+                            break;
+                        }
+                        gameState.attackSourceIdx = idx;
+                        logEvent(`🎯 Source set to (${r}, ${c}). Now click an adjacent enemy tile.`);
+                        renderGame();
+                        break;
+                    }
+                    const sR = Math.floor(gameState.attackSourceIdx / gameState.boardCols);
+                    const sC = gameState.attackSourceIdx % gameState.boardCols;
+                    const neighbors = [[sR - 1, sC], [sR + 1, sC], [sR, sC - 1], [sR, sC + 1]];
                     let attacked = false;
-                    const neighbors = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]];
                     for (const [nr, nc] of neighbors) {
                         if (nr >= 0 && nr < gameState.boardRows && nc >= 0 && nc < gameState.boardCols) {
                             const targetIdx = nr * gameState.boardCols + nc;
-                            if (gameState.ownership[targetIdx] !== -1 && gameState.ownership[targetIdx] !== playerIdx) {
-                                handleAttack(targetIdx, gameState.ownership[targetIdx], playerIdx, idx);
+                            const towner = gameState.ownership[targetIdx];
+                            if (towner !== -1 && towner !== playerIdx) {
+                                handleAttack(targetIdx, towner, playerIdx, gameState.attackSourceIdx);
                                 attacked = true;
                                 break;
                             }
                         }
                     }
-                    if (!attacked) alert("No adjacent enemy territory to attack!");
+                    gameState.attackSourceIdx = null;
+                    if (!attacked) {
+                        sfx.error();
+                        alert("No adjacent enemy territory next to your selected source!");
+                    }
                     break;
                 }
                 case 'fort':
@@ -1739,8 +2382,14 @@
                             gameState.players[playerIdx].troops += 50;
                             logEvent(`Withdrew 50 troops from (${r}, ${c}).`);
                             renderGame();
-                        } else alert("Not enough troops to withdraw!");
-                    } else alert("You don't own this territory!");
+                        } else {
+                            sfx.error();
+                            alert("Not enough troops to withdraw!");
+                        }
+                    } else {
+                        sfx.error();
+                        alert("You don't own this territory!");
+                    }
                     break;
                 case 'deploy':
                     if (gameState.ownership[idx] === playerIdx) {
@@ -1749,8 +2398,14 @@
                             gameState.troops[idx] += 50;
                             logEvent(`Deployed 50 troops to (${r}, ${c}).`);
                             renderGame();
-                        } else alert("Not enough troops in reserve!");
-                    } else alert("You don't own this territory!");
+                        } else {
+                            sfx.error();
+                            alert("Not enough troops in reserve!");
+                        }
+                    } else {
+                        sfx.error();
+                        alert("You don't own this territory!");
+                    }
                     break;
                 case 'launch':
                     if (gameState.buildings[idx] === 'silo') {
@@ -1758,13 +2413,12 @@
                         for (let i = 0; i < gameState.ownership.length; i++) {
                             if (gameState.ownership[i] !== -1 && gameState.ownership[i] !== playerIdx) targets.push(i);
                         }
-
-                        if (targets.length === 0) { alert("No enemy targets to launch a missile at!"); break; }
+                        if (targets.length === 0) { sfx.error(); alert("No enemy targets to launch a missile at!"); break; }
 
                         const targetIdx = targets[Math.floor(Math.random() * targets.length)];
                         const p = gameState.players[playerIdx];
 
-                        if (p.gold < 250000) { alert("Not enough gold to launch a missile ($250,000 required)!"); break; }
+                        if (p.gold < 250000) { sfx.error(); alert("Not enough gold to launch a missile ($250,000 required)!"); break; }
 
                         p.gold -= 250000;
                         const targetR = Math.floor(targetIdx / gameState.boardCols);
@@ -1781,26 +2435,33 @@
                             if (intercepted) break;
                         }
 
-                        if (intercepted) {
-                            logEvent(`🚀 Missile launched by Player ${playerIdx + 1} at tile ${targetIdx} but was intercepted by MDS!`);
-                        } else {
-                            gameState.troops[targetIdx] = Math.max(0, gameState.troops[targetIdx] - 150);
-                            if (gameState.buildings[targetIdx] && !isCapitalTile(targetIdx)) {
-                                gameState.buildings[targetIdx] = null;
-                                logEvent(`🚀 Missile hit! Structure at tile ${targetIdx} destroyed.`);
+                        animateMissile(idx, targetIdx, intercepted).then(() => {
+                            if (intercepted) {
+                                logEvent(`🚀 Missile launched by Player ${playerIdx + 1} at tile ${targetIdx} but was intercepted by MDS!`);
                             } else {
-                                logEvent(`🚀 Missile hit! Tile ${targetIdx} took 150 damage.`);
+                                gameState.troops[targetIdx] = Math.max(0, gameState.troops[targetIdx] - 150);
+                                if (gameState.buildings[targetIdx] && !isCapitalTile(targetIdx)) {
+                                    gameState.buildings[targetIdx] = null;
+                                    logEvent(`🚀 Missile hit! Structure at tile ${targetIdx} destroyed.`);
+                                } else {
+                                    logEvent(`🚀 Missile hit! Tile ${targetIdx} took 150 damage.`);
+                                }
                             }
-                        }
-                        renderGame();
-                    } else alert("Select a tile containing your Silo to launch!");
+                            renderGame();
+                        });
+                    } else {
+                        sfx.error();
+                        alert("Select a tile containing your Silo to launch!");
+                    }
                     break;
                 default:
+                    sfx.error();
                     alert("Unsupported action selected or action not implemented yet!");
             }
         }
 
         function openDiplomacy() {
+            sfx.click();
             const grid = document.getElementById('diplomacy-grid');
             grid.innerHTML = '';
 
@@ -1829,13 +2490,17 @@
             document.getElementById('diplomacy-modal').style.display = 'flex';
         }
 
-        function closeDiplomacy() { document.getElementById('diplomacy-modal').style.display = 'none'; }
+        function closeDiplomacy() {
+            sfx.click();
+            document.getElementById('diplomacy-modal').style.display = 'none';
+        }
 
         function setDiplomacy(p1, p2, status) {
+            sfx.click();
             const key = p1 < p2 ? `${p1}_${p2}` : `${p2}_${p1}`;
             const currentStatus = gameState.diplomacy[key] || 'war';
 
-            if (currentStatus === status) { alert("Already in this diplomatic state!"); return; }
+            if (currentStatus === status) { sfx.error(); alert("Already in this diplomatic state!"); return; }
 
             const p = gameState.players[p1];
             let cost = 0;
@@ -1843,6 +2508,7 @@
             if (status === 'ally') cost = 200000;
 
             if (p.gold < cost) {
+                sfx.error();
                 alert(`Not enough gold to propose ${status}! ($${cost.toLocaleString()} required)`);
                 return;
             }
@@ -1884,6 +2550,7 @@
         function endTurn() {
             if (isProcessingTurn) return;
             isProcessingTurn = true;
+            sfx.click();
 
             const p = gameState.players[gameState.currentPlayer];
             applyDisasterEffects();
@@ -1916,6 +2583,7 @@
             p.population += 120;
 
             if (p.population < 500 || p.happiness < customSettings.happinessThreshold) {
+                sfx.error();
                 alert(p.name + " collapsed due to population failure or revolt!");
                 for (let i = 0; i < gameState.ownership.length; i++) {
                     if (gameState.ownership[i] === gameState.currentPlayer) {
@@ -2031,7 +2699,10 @@
             const idx = r * gameState.boardCols + c;
             const t = localization[currentLang];
 
-            if (gameState.fogEnabled && !isCellVisible(r, c, gameState.currentPlayer)) return;
+            if (gameState.fogEnabled && !isCellVisible(r, c, gameState.currentPlayer)) {
+                hideTooltip();
+                return;
+            }
 
             const terrain = gameState.terrain[r][c];
             const owner = gameState.ownership[idx];
@@ -2049,8 +2720,19 @@
 
             tooltip.textContent = text;
             tooltip.style.display = 'block';
-            tooltip.style.left = (e.pageX + 12) + 'px';
-            tooltip.style.top = (e.pageY + 12) + 'px';
+
+            let left = e.pageX + 12;
+            let top = e.pageY + 12;
+
+            if (left + 220 > window.innerWidth) {
+                left = e.pageX - 232;
+            }
+            if (top + 180 > window.innerHeight) {
+                top = e.pageY - 192;
+            }
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
         }
 
         function hideTooltip() { document.getElementById('tooltip').style.display = 'none'; }
@@ -2095,12 +2777,63 @@
             });
         }
 
+        const TERRAIN_PROPS = {
+            mountain: { glyphs: ['⛰️'], count: 1, sizeRange: [60, 60], floatRange: [28, 28] },
+            hills:    { glyphs: ['🌲', '🌳'],      count: 4, sizeRange: [16, 22], floatRange: [4, 10] },
+            plains:   { glyphs: ['🌾', '🌱'],      count: 4, sizeRange: [13, 18], floatRange: [2, 5] },
+            desert:   { glyphs: ['🌵', '🪨'],      count: 4, sizeRange: [14, 20], floatRange: [3, 7] },
+            oasis:    { glyphs: ['🌴', '🌿'],      count: 3, sizeRange: [16, 22], floatRange: [4, 8] },
+            tundra:   { glyphs: ['❄️', '🪨'],      count: 4, sizeRange: [12, 16], floatRange: [2, 5] },
+            ocean:    { glyphs: [], count: 0, sizeRange: [0, 0], floatRange: [0, 0] }
+        };
+
+        function tileRand(seed) {
+            let x = (seed * 2654435761) >>> 0;
+            return function () {
+                x ^= x << 13; x >>>= 0;
+                x ^= x >> 17; x >>>= 0;
+                x ^= x << 5;  x >>>= 0;
+                return (x % 10000) / 10000;
+            };
+        }
+
+        function decorateTile(cell, terrain, r, c) {
+            if (terrain === 'mountain') {
+                const propEl = document.createElement('div');
+                propEl.className = 'terrain-prop mountain-prop';
+                propEl.textContent = TERRAIN_PROPS.mountain.glyphs[0];
+                cell.appendChild(propEl);
+                return;
+            }
+
+            const cfg = TERRAIN_PROPS[terrain];
+            if (!cfg || cfg.count === 0) return;
+            const rand = tileRand(r * 137 + c * 31 + 7);
+            const [sMin, sMax] = cfg.sizeRange;
+            const [fMin, fMax] = cfg.floatRange;
+
+            for (let i = 0; i < cfg.count; i++) {
+                const propEl = document.createElement('div');
+                propEl.className = `terrain-prop ${terrain}-prop`;
+                propEl.textContent = cfg.glyphs[Math.floor(rand() * cfg.glyphs.length)];
+                const px = Math.round(15 + rand() * 70);
+                const py = Math.round(15 + rand() * 70);
+                const ps = Math.round(sMin + rand() * (sMax - sMin));
+                const pz = Math.round(fMin + rand() * (fMax - fMin));
+                propEl.style.setProperty('--px', px + '%');
+                propEl.style.setProperty('--py', py + '%');
+                propEl.style.setProperty('--ps', ps + 'px');
+                propEl.style.setProperty('--pz', pz + 'px');
+                cell.appendChild(propEl);
+            }
+        }
+
         function renderBoard() {
             const board = document.getElementById('game-board');
             board.innerHTML = '';
 
-            board.style.gridTemplateColumns = `repeat(${gameState.boardCols}, 52px)`;
-            board.style.gridTemplateRows = `repeat(${gameState.boardRows}, 52px)`;
+            board.style.gridTemplateColumns = `repeat(${gameState.boardCols}, 60px)`;
+            board.style.gridTemplateRows = `repeat(${gameState.boardRows}, 60px)`;
 
             if (gameState.showBorders) board.classList.remove('no-borders');
             else board.classList.add('no-borders');
@@ -2115,51 +2848,83 @@
                     cell.dataset.col = c;
                     cell.className = `cell ${terrain}`;
 
-                    if (gameState.mapMode === 'political') {
-                        const owner = gameState.ownership[idx];
-                        if (owner === 0) cell.classList.add('p1-pol');
-                        else if (owner === 1) cell.classList.add('p2-pol');
-                        else if (owner === 2) cell.classList.add('p3-pol');
-                        else if (owner === 3) cell.classList.add('p4-pol');
-                        else cell.classList.add('unclaimed-pol');
-                    }
+                    const faceTop = document.createElement('div');
+                    faceTop.className = 'face-top';
+                    cell.appendChild(faceTop);
+
+                    const walls = ['n', 's', 'e', 'w'];
+                    walls.forEach(w => {
+                        const wall = document.createElement('div');
+                        wall.className = `wall wall-${w}`;
+                        cell.appendChild(wall);
+                    });
+
+                    const owner = gameState.ownership[idx];
+                    if (owner >= 0) cell.classList.add(`owned-p${owner + 1}`);
 
                     if (gameState.selectedRow === r && gameState.selectedCol === c) cell.classList.add('selected');
+
+                    if (gameState.selectedAction === 'attack') {
+                        if (gameState.attackSourceIdx === idx) {
+                            cell.classList.add('attack-source');
+                        } else if (gameState.attackSourceIdx !== null) {
+                            const sR = Math.floor(gameState.attackSourceIdx / gameState.boardCols);
+                            const sC = gameState.attackSourceIdx % gameState.boardCols;
+                            const adjacent = (Math.abs(sR - r) + Math.abs(sC - c)) === 1;
+                            if (adjacent && owner !== -1 && owner !== gameState.currentPlayer) {
+                                cell.classList.add('attack-target');
+                            }
+                        }
+                    }
 
                     const visible = isCellVisible(r, c, gameState.currentPlayer);
                     if (!visible) {
                         cell.classList.add('fogged');
+                        const fog = document.createElement('div');
+                        fog.className = 'fog-icon';
+                        fog.textContent = '🌫️';
+                        cell.appendChild(fog);
                     } else {
-                        if (gameState.mapMode === 'political') {
-                            const troops = gameState.troops[idx];
-                            if (troops > 0) {
-                                const troopCount = document.createElement('div');
-                                troopCount.className = 'troop-count';
-                                troopCount.textContent = troops;
-                                cell.appendChild(troopCount);
-                            }
+                        if (!gameState.buildings[idx]) {
+                            decorateTile(cell, terrain, r, c);
+                        }
 
-                            const building = gameState.buildings[idx];
-                            if (building) {
-                                const buildingIcon = document.createElement('div');
-                                buildingIcon.className = `building-icon ${building}-icon`;
-                                buildingIcon.textContent = getBuildingChar(building);
-                                cell.appendChild(buildingIcon);
-                            }
+                        if (owner >= 0) {
+                            const ring = document.createElement('div');
+                            ring.className = 'owner-ring';
+                            cell.appendChild(ring);
+                        }
 
-                            const owner = gameState.ownership[idx];
-                            if (owner >= 0) {
-                                const bar = document.createElement('div');
-                                bar.className = `ownership-bar p${owner + 1}`;
-                                cell.appendChild(bar);
+                        const troops = gameState.troops[idx];
+                        if (troops > 0) {
+                            const troopCount = document.createElement('div');
+                            troopCount.className = 'troop-count';
+                            troopCount.textContent = troops;
+                            cell.appendChild(troopCount);
+                        }
 
-                                if (isCapitalTile(idx)) {
-                                    const marker = document.createElement('div');
-                                    marker.className = 'capital-marker';
-                                    marker.textContent = '👑';
-                                    cell.appendChild(marker);
-                                }
-                            }
+                        const building = gameState.buildings[idx];
+                        if (building) {
+                            const base = document.createElement('div');
+                            base.className = 'building-base';
+                            cell.appendChild(base);
+
+                            const buildingProp = document.createElement('div');
+                            buildingProp.className = `building-prop ${building}-prop`;
+                            buildingProp.textContent = getBuildingGlyph(building);
+                            cell.appendChild(buildingProp);
+
+                            const tag = document.createElement('div');
+                            tag.className = 'building-tag';
+                            tag.textContent = getBuildingChar(building);
+                            cell.appendChild(tag);
+                        }
+
+                        if (owner >= 0 && isCapitalTile(idx)) {
+                            const marker = document.createElement('div');
+                            marker.className = 'capital-marker';
+                            marker.textContent = '👑';
+                            cell.appendChild(marker);
                         }
 
                         const disaster = gameState.disasters[idx];
