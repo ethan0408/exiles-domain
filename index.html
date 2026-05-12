@@ -5627,6 +5627,79 @@
             }
         }
 
+        // Map a viewport-space point back to a (row, col) on the rotated board
+        // by inverting the rotateX/rotateZ + perspective transform applied to
+        // .game-board. Lets far-half tiles be clickable regardless of orientation
+        // (browser hit-testing on 3D-rotated coplanar elements falls back to
+        // paint-order on AABB overlaps, which steals far-side clicks).
+        function getCellFromScreenPoint(clientX, clientY) {
+            const board = document.getElementById('game-board');
+            if (!board) return null;
+            const stage = board.parentElement;
+            if (!stage) return null;
+
+            const rotX = gameState.boardRotationX * Math.PI / 180;
+            const rotZ = gameState.boardRotationZ * Math.PI / 180;
+            const P = 2400; // must match .game-board-stage CSS `perspective`
+
+            // The stage is centered around the board (flex centering) and
+            // perspective-origin is 50% 50%, so the perspective origin in
+            // viewport coords coincides with the board's untransformed center.
+            const stageRect = stage.getBoundingClientRect();
+            const ox = stageRect.left + stageRect.width / 2;
+            const oy = stageRect.top + stageRect.height / 2;
+
+            const cellSize = 60;
+            const W = gameState.boardCols * cellSize;
+            const H = gameState.boardRows * cellSize;
+
+            const dx = clientX - ox;
+            const dy = clientY - oy;
+
+            const cosRX = Math.cos(rotX);
+            const sinRX = Math.sin(rotX);
+            const cosRZ = Math.cos(rotZ);
+            const sinRZ = Math.sin(rotZ);
+
+            // Project the screen ray onto the rotated plane (rotateZ then rotateX
+            // applied to a z=0 plane in board-local space). Solving the perspective
+            // projection for the two unknowns gives a closed form.
+            const denom = P * cosRX + dy * sinRX;
+            if (Math.abs(denom) < 1e-6) return null;
+            const v = P * dy / denom;
+            const u = dx * (P - v * sinRX) / P;
+
+            // Invert the rotateZ to get board-local (x, y), then to grid indices.
+            const xL = u * cosRZ + v * sinRZ;
+            const yL = -u * sinRZ + v * cosRZ;
+
+            const col = Math.floor((xL + W / 2) / cellSize);
+            const row = Math.floor((yL + H / 2) / cellSize);
+
+            if (row < 0 || row >= gameState.boardRows) return null;
+            if (col < 0 || col >= gameState.boardCols) return null;
+            return { row, col };
+        }
+
+        let _boardInteractionsBound = false;
+        function bindBoardInteractions() {
+            if (_boardInteractionsBound) return;
+            const container = document.querySelector('.game-board-container');
+            if (!container) return;
+            _boardInteractionsBound = true;
+
+            container.addEventListener('click', (e) => {
+                const cell = getCellFromScreenPoint(e.clientX, e.clientY);
+                if (cell) handleCellClick(cell.row, cell.col);
+            });
+            container.addEventListener('mousemove', (e) => {
+                const cell = getCellFromScreenPoint(e.clientX, e.clientY);
+                if (cell) showTooltip(e, cell.row, cell.col);
+                else hideTooltip();
+            });
+            container.addEventListener('mouseleave', hideTooltip);
+        }
+
         function renderBoard() {
             const board = document.getElementById('game-board');
             board.innerHTML = '';
@@ -5737,12 +5810,14 @@
                         }
                     }
 
-                    cell.addEventListener('click', () => handleCellClick(r, c));
-                    cell.addEventListener('mousemove', (e) => showTooltip(e, r, c));
-                    cell.addEventListener('mouseleave', hideTooltip);
                     board.appendChild(cell);
                 }
             }
+            // Hit-testing on 3D-rotated coplanar cells is unreliable in browsers
+            // (far-side clicks get stolen by nearer cells whose screen AABBs overlap),
+            // so all click/hover handling goes through a delegated listener that
+            // inverts the transform manually. See getCellFromScreenPoint.
+            bindBoardInteractions();
         }
     </script>
 </body>
