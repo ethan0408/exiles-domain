@@ -1670,8 +1670,14 @@
 <h3>Attacks & Battles</h3><p>Attack adjacent enemy tiles freely — there's no penalty for being invaded. Battles open a 3D tactical view: pick a <strong>tactic</strong>, fight in real time (drag-select your dots, click to move, <strong>R</strong> to retreat), or run a multi-day <strong>🏕️ Field Campaign</strong> placing camps, trenches, towers and artillery.</p>
 <h3>Sieges</h3><p>Attacking a Fort / Town / City / Wall can start a <strong>Siege</strong> — the garrison bleeds each turn until it breaks.</p>
 <h3>Leaders & Elections</h3><p>Every 10 turns, open <strong>🗳️ Election</strong> and pick a leader. Each has permanent traits (income / research / attack / happiness).</p>
+<h3>🎖️ Generals</h3><p>The <strong>General</strong> button (Military tab) recruits a battlefield commander for <strong>$120K + 30 iron</strong>. Pick one of your tiles to station them. Attacks launched <strong>from the general's tile hit +35%</strong>, and that tile <strong>defends +35%</strong>. Moving the general to another of your tiles is free — re-click any time. A 🎖️ marker shows where they command.</p>
+<h3>🎖️ Veterancy</h3><p>Your army earns <strong>Battle XP</strong> from every fight. At 100 XP it ranks up (Recruits → Trained → Seasoned → Veteran → Elite → Legendary). Each rank gives <strong>+8% damage, +5% defence</strong> — permanently.</p>
+<h3>⚔️ Unit Counters</h3><p>Units fall into three classes that counter each other: <strong>cavalry beats artillery → artillery beats infantry → infantry beats cavalry</strong>. If your army's dominant class counters the enemy's, you deal +30% damage. Scout their composition.</p>
+<h3>⛏️🌾 Resources & 🏛️ Ages</h3><p>Beyond gold you stockpile <strong>⛏️ Iron</strong> (mountains/hills/mines — pays for specialist units) and <strong>🌾 Food</strong> (plains/oasis/towns — feeds population; a deficit causes famine). Unlocking techs advances your <strong>Age</strong> (Ancient → Medieval → Industrial → Modern), each granting income/research bonuses.</p>
+<h3>🌦️ Weather & 📜 Events</h3><p>Weather rerolls each round (rain/fog/snow/storm reduce all combat). Roughly every few turns a <strong>random event</strong> offers you a choice with real consequences.</p>
+<h3>🏆 Victory</h3><p>Choose a victory condition on the menu: <strong>Conquest</strong> (last civ standing), <strong>Domination</strong> (hold 60% of land), or <strong>Score</strong> (highest score at turn 100).</p>
 <h3>Custom Ideology & Flags</h3><p>At game start you can <strong>🎨 design a custom ideology</strong> with sliders, or mix <strong>⛪ Theocracy</strong> into any primary. Use <strong>🚩 Design Your Flag</strong> on the menu — patterns, colors, emblems, and freehand drawing.</p>
-<h3>🐤 Training</h3><p>The <strong>Train</strong> button runs a Flappy-Bird mini-game — clear 12 pipes to gain a permanent training rank (+5% damage, +2% defence).</p>
+<h3>🐤 Training</h3><p>The <strong>Train</strong> button runs a Flappy-Bird mini-game — clear 8 pipes to gain a permanent training rank (+5% damage, +2% defence).</p>
 <h3>Buildings</h3>
 <table>
   <tr><th>Building</th><th>Cost</th><th>Effect</th></tr>
@@ -1694,6 +1700,7 @@
 <li><strong>War Coalitions:</strong> Ask other nations to join your war via Diplomacy.</li>
 </ul>
 <h3>Difficulty note</h3><p>The AI is aggressive — it recruits hard, walls its frontier with thousands of troops, and attacks your weakest tiles. Fortify your borders and keep supply lines intact.</p>
+<h3>Action Bar</h3><p>Buttons are grouped into <strong>🏗️ Build</strong>, <strong>⚔️ Military</strong>, and <strong>🏛️ Empire</strong> tabs. Hover any button for a tooltip. End Turn is always visible.</p>
 <h3>Controls</h3><p><strong>W/S</strong> tilt camera, <strong>A/D</strong> rotate camera. In battle: drag to box-select, click to move, <strong>R</strong> retreat, <strong>Space</strong> select all.</p>`,
                 instClose: "Close",
                 claim: "Claim", attack: "Attack", buyTroops: "Buy Troops",
@@ -7061,6 +7068,26 @@
             if (ideo.happinessFloor !== undefined) happiness = Math.max(ideo.happinessFloor, happiness);
             p.happiness = Math.min(100, Math.max(10, happiness));
 
+            // AI EMERGENCY HAPPINESS PRIORITY: happiness death is INSTANT, so the
+            // AI does whatever it takes to never reach the threshold. If an AI's
+            // happiness would land in the danger zone, it sues for peace with
+            // EVERY war enemy this instant and the populace is calmed back to a
+            // safe level. Survival is its top priority.
+            if (p.isAI && p.happiness < customSettings.happinessThreshold + 12) {
+                let madePeace = 0;
+                for (let j = 0; j < gameState.numPlayers; j++) {
+                    if (j === gameState.currentPlayer || gameState.players[j].isDefeated) continue;
+                    if (getDiploStatus(gameState.currentPlayer, j) === 'war') {
+                        setDiploStatus(gameState.currentPlayer, j, 'peace');
+                        madePeace++;
+                    }
+                }
+                // Emergency decree — calm the people to a safe margin above death.
+                p.happiness = Math.max(p.happiness, customSettings.happinessThreshold + 14);
+                if (madePeace > 0)
+                    logEvent(`🕊️ ${p.name} (AI) made emergency peace with ${madePeace} nation(s) to avert collapse.`);
+            }
+
             // Epidemic
             if (Math.random() < 0.25) {
                 const afflictedIdx = Math.floor(Math.random() * gameState.numPlayers);
@@ -7073,21 +7100,10 @@
                 }
             }
 
-            // Defeat checks — happiness collapse now requires SUSTAINED unrest
-            // (3 turns in a row below threshold). Previously a single dip below
-            // 30 killed any war-stressed player instantly, so every AI imploded
-            // by turn ~9 and you could win by doing nothing.
-            if (p.happiness < customSettings.happinessThreshold) {
-                p.lowHappyTurns = (p.lowHappyTurns || 0) + 1;
-            } else {
-                p.lowHappyTurns = 0;
-            }
-            // The happiness rule applies to EVERYONE now (AI included) — but the
-            // AI actively manages happiness in executeAITurn (builds services,
-            // sues for peace, eases conscription) so it never lets it plummet.
-            // Collapse needs 5 sustained turns below threshold.
-            const happyCollapse = p.lowHappyTurns >= 5;
-            if (p.population < 500 || happyCollapse) {
+            // Defeat checks — INSTANT collapse: a single dip below the happiness
+            // threshold (or population under 500) ends a civilisation. The AI's
+            // emergency-happiness priority above keeps it clear of this line.
+            if (p.population < 500 || p.happiness < customSettings.happinessThreshold) {
                 if (!p.isAI) { sfx.error(); alert(p.name + " collapsed due to population/revolt!"); }
                 else logEvent(`💀 ${p.name} collapsed from unrest.`);
                 eliminatePlayer(gameState.currentPlayer);
@@ -8142,23 +8158,36 @@
                 if (!t) continue;
                 const card = document.createElement('label');
                 card.className = 'starter-tech-card';
-                card.style.cssText = 'display:flex; align-items:flex-start; gap:0.5rem; cursor:pointer; padding:0.5rem 0.6rem; border-radius:8px; border:1px solid var(--border-color); transition:all 0.15s;';
+                card.style.cssText = 'display:flex; align-items:center; gap:0.55rem; cursor:pointer; padding:0.5rem 0.6rem; border-radius:8px; border:1px solid var(--border-color); transition:all 0.15s;';
+                // Hidden native checkbox + a small custom check badge, so the
+                // box is a tidy 18px square instead of the oversized default.
                 const cb = document.createElement('input');
                 cb.type = 'checkbox'; cb.value = key;
-                cb.style.cssText = 'accent-color:var(--accent-primary); margin-top:0.15rem;';
+                cb.style.cssText = 'position:absolute; opacity:0; width:0; height:0;';
+                const badge = document.createElement('span');
+                badge.style.cssText = 'flex:0 0 auto; width:18px; height:18px; border-radius:5px; border:2px solid var(--border-color); display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; transition:all 0.12s;';
+                const syncBadge = () => {
+                    badge.textContent = cb.checked ? '✓' : '';
+                    badge.style.background = cb.checked ? 'var(--accent-primary)' : 'transparent';
+                    badge.style.borderColor = cb.checked ? 'var(--accent-primary)' : 'var(--border-color)';
+                };
                 cb.addEventListener('change', () => {
                     if (grid.querySelectorAll('input:checked').length > 4) {
                         cb.checked = false;
                         alert('You can pick at most 4 starter techs.');
                     }
+                    syncBadge();
                     updateCounter();
                 });
                 const txt = document.createElement('div');
+                txt.style.cssText = 'flex:1; min-width:0;';
                 txt.innerHTML = `<div style="font-weight:700; font-size:0.8rem;">${t.name}</div>
                                  <div style="color:var(--text-muted); font-size:0.68rem; line-height:1.3;">${t.desc}</div>`;
                 card.appendChild(cb);
+                card.appendChild(badge);
                 card.appendChild(txt);
                 grid.appendChild(card);
+                syncBadge();
             }
         }
         function getSelectedStarterTechs() {
@@ -9464,16 +9493,39 @@
             }
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('class', 'supply-svg');
-            svg.style.cssText = 'position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:4;';
+            svg.style.cssText = 'position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:9;';
             svg.setAttribute('viewBox', `0 0 ${cols * 60} ${rows * 60}`);
             svg.setAttribute('preserveAspectRatio', 'none');
+            // Helper: a styled line segment.
+            const mkLine = (x1, y1, x2, y2, color, w, dash) => {
+                const ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                ln.setAttribute('x1', x1); ln.setAttribute('y1', y1);
+                ln.setAttribute('x2', x2); ln.setAttribute('y2', y2);
+                ln.setAttribute('stroke', color);
+                ln.setAttribute('stroke-width', w);
+                ln.setAttribute('stroke-linecap', 'round');
+                if (dash) ln.setAttribute('stroke-dasharray', dash);
+                return ln;
+            };
+            const outlines = [], cores = [], nodes = [];
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     const idx = r * cols + c;
                     if (gameState.ownership[idx] !== me) continue;
-                    if (isCapitalTile(idx)) continue;
                     if (dist[idx] < 0) continue;  // cut off — no line drawn
-                    // Find a neighbor with distance = dist - 1.
+                    // Bright node dot on every supplied tile.
+                    const cx = c * 60 + 30, cy = r * 60 + 30;
+                    if (!isCapitalTile(idx)) {
+                        const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        ring.setAttribute('cx', cx); ring.setAttribute('cy', cy);
+                        ring.setAttribute('r', 5);
+                        ring.setAttribute('fill', '#22c55e');
+                        ring.setAttribute('stroke', '#022c14');
+                        ring.setAttribute('stroke-width', 2);
+                        nodes.push(ring);
+                    }
+                    if (isCapitalTile(idx)) continue;
+                    // Find a neighbor closer to the capital.
                     let nx = -1, ny = -1;
                     for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
                         const nr = r + dr, nc = c + dc;
@@ -9484,18 +9536,17 @@
                         }
                     }
                     if (nx < 0) continue;
-                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    line.setAttribute('x1', c * 60 + 30);
-                    line.setAttribute('y1', r * 60 + 30);
-                    line.setAttribute('x2', nx * 60 + 30);
-                    line.setAttribute('y2', ny * 60 + 30);
-                    line.setAttribute('stroke', 'rgba(16,185,129,0.55)');
-                    line.setAttribute('stroke-width', '3');
-                    line.setAttribute('stroke-dasharray', '6,4');
-                    line.setAttribute('stroke-linecap', 'round');
-                    svg.appendChild(line);
+                    const x2 = nx * 60 + 30, y2 = ny * 60 + 30;
+                    // Dark outline UNDER a bright core line — high contrast on any
+                    // terrain, even through the 3D tilt.
+                    outlines.push(mkLine(cx, cy, x2, y2, 'rgba(2,30,18,0.95)', 9, null));
+                    cores.push(mkLine(cx, cy, x2, y2, '#34f08a', 5, '10,5'));
                 }
             }
+            // Layer order: outlines, then bright cores, then node dots on top.
+            outlines.forEach(l => svg.appendChild(l));
+            cores.forEach(l => svg.appendChild(l));
+            nodes.forEach(n => svg.appendChild(n));
             board.appendChild(svg);
         }
 
@@ -10628,7 +10679,12 @@
             if (gameState._gameOver) return;
             const me = gameState.players[0];
             if (!me || me.isDefeated) return;
-            if (Math.random() < 0.22) {
+            // COOLDOWN: at least 3 turns must pass since the last event, then a
+            // 12% roll. Stops the "an event every single turn" spam.
+            const last = gameState._lastEventTurn || 0;
+            if (gameState.turn - last < 3) return;
+            if (Math.random() < 0.12) {
+                gameState._lastEventTurn = gameState.turn;
                 const evt = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
                 setTimeout(() => showRandomEvent(evt), 400);
             }
@@ -10644,6 +10700,159 @@
             };
             window.endTurn._eventsWrapped = true;
         })();
+
+        // =============================================================
+        // === NAMED WARS & PEACE TREATIES =============================
+        // =============================================================
+        // Each war is tracked by its diplomacy key. After it drags on for 6+
+        // turns it earns a NAME ("The Ashen War", "War of the Broken Crown"…).
+        // Making peace with a war enemy opens a TREATY modal — white peace,
+        // demand tribute (if you're winning) or buy peace (if you're losing).
+        function _warKey(a, b) { return a < b ? a + '_' + b : b + '_' + a; }
+        const WAR_ADJ  = ['Ashen','Broken','Long','Bitter','Crimson','Iron','Hollow','Endless','Silent','Burning','Frozen','Thousand-Spear','Sundered','Grim'];
+        const WAR_NOUN = ['War','Crown','Conflict','Reckoning','Schism','Feud','Campaign','Strife','Quarrel','Crusade'];
+        function generateWarName() {
+            return 'The ' + WAR_ADJ[Math.floor(Math.random()*WAR_ADJ.length)] + ' ' +
+                   WAR_NOUN[Math.floor(Math.random()*WAR_NOUN.length)];
+        }
+        // Record war starts by wrapping setDiploStatus.
+        (function patchSetDiploForWars() {
+            const orig = window.setDiploStatus;
+            if (!orig || orig._warWrapped) return;
+            window.setDiploStatus = function(p1, p2, status) {
+                const prev = (typeof getDiploStatus === 'function') ? getDiploStatus(p1, p2) : null;
+                orig.apply(this, arguments);
+                if (!gameState.wars) gameState.wars = {};
+                const key = _warKey(p1, p2);
+                if (status === 'war' && prev !== 'war') {
+                    gameState.wars[key] = { p1, p2, startTurn: gameState.turn, name: null };
+                } else if (status !== 'war' && gameState.wars[key]) {
+                    delete gameState.wars[key];
+                }
+            };
+            window.setDiploStatus._warWrapped = true;
+        })();
+        // Each round, name any war that has dragged on 6+ turns.
+        (function patchEndTurnForWarNames() {
+            const orig = window.endTurn;
+            if (!orig || orig._warNameWrapped) return;
+            window.endTurn = function() {
+                orig.apply(this, arguments);
+                if (!gameState.wars) return;
+                for (const key in gameState.wars) {
+                    const w = gameState.wars[key];
+                    if (!w.name && gameState.turn - w.startTurn >= 6) {
+                        w.name = generateWarName();
+                        const n1 = gameState.players[w.p1], n2 = gameState.players[w.p2];
+                        if (n1 && n2 && !n1.isDefeated && !n2.isDefeated) {
+                            logEvent(`📜 The war between ${n1.name} and ${n2.name} is now known as “${w.name}”.`);
+                            if ((w.p1 === 0 || w.p2 === 0) && typeof showToast === 'function')
+                                showToast(`📜 Your long war is now called “${w.name}”.`, 'info');
+                        }
+                    }
+                }
+            };
+            window.endTurn._warNameWrapped = true;
+        })();
+        // Look up the name of an ongoing war (or '' if unnamed/none).
+        function warNameBetween(a, b) {
+            const w = gameState.wars && gameState.wars[_warKey(a, b)];
+            return (w && w.name) ? w.name : '';
+        }
+
+        // ----- Peace treaties -----
+        // Intercept setDiplomacy: when the HUMAN proposes peace to a war enemy,
+        // open a treaty modal instead of an instant flat-cost peace.
+        (function patchSetDiplomacyForTreaties() {
+            const orig = window.setDiplomacy;
+            if (!orig || orig._treatyWrapped) return;
+            window.setDiplomacy = function(p1, p2, status) {
+                const cur = (typeof getDiploStatus === 'function') ? getDiploStatus(p1, p2) : 'peace';
+                if (status === 'peace' && cur === 'war' && p1 === gameState.currentPlayer && !gameState.players[p1].isAI) {
+                    openPeaceTreaty(p1, p2);
+                    return;
+                }
+                return orig.apply(this, arguments);
+            };
+            window.setDiplomacy._treatyWrapped = true;
+        })();
+        function openPeaceTreaty(p1, p2) {
+            sfx.click && sfx.click();
+            const me = gameState.players[p1], foe = gameState.players[p2];
+            // Balance of power = your tiles vs theirs.
+            let myT = 0, foeT = 0;
+            for (const o of gameState.ownership) { if (o === p1) myT++; else if (o === p2) foeT++; }
+            const winning = myT > foeT * 1.15;
+            const losing  = foeT > myT * 1.15;
+            let modal = document.getElementById('treaty-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.className = 'modal'; modal.id = 'treaty-modal';
+                document.body.appendChild(modal);
+            }
+            const wn = warNameBetween(p1, p2);
+            const choices = [];
+            // White peace — always available.
+            choices.push({ label:'🕊️ White Peace — $50K, no terms',
+                desc:'Both sides simply lay down arms.',
+                run:() => { if (me.gold < 50000) return 'Not enough gold for the negotiation.'; me.gold -= 50000; setDiploStatus(p1, p2, 'peace'); return `Peace signed with ${foe.name}.`; }});
+            if (winning) {
+                // You can demand tribute.
+                const tribute = 40000 + foeT * 6000;
+                choices.push({ label:`💰 Demand Tribute — extract $${tribute.toLocaleString()}`,
+                    desc:`${foe.name} is losing and may pay to end the war.`,
+                    run:() => {
+                        const accept = foe.isAI ? (Math.random() < 0.7) : confirm(`${foe.name}: pay $${tribute.toLocaleString()} tribute for peace?`);
+                        if (!accept) return `${foe.name} refused your tribute demand — the war continues.`;
+                        const paid = Math.min(foe.gold, tribute);
+                        foe.gold -= paid; me.gold += paid;
+                        setDiploStatus(p1, p2, 'peace');
+                        return `${foe.name} pays $${paid.toLocaleString()} tribute. Peace signed.`;
+                    }});
+            }
+            if (losing) {
+                // Buy your way out.
+                const ransom = 60000 + myT * 4000;
+                choices.push({ label:`🏳️ Sue for Peace — pay $${ransom.toLocaleString()}`,
+                    desc:`You are losing — ${foe.name} demands payment to stop.`,
+                    run:() => {
+                        if (me.gold < ransom) return 'You cannot afford the ransom.';
+                        me.gold -= ransom; foe.gold += ransom;
+                        setDiploStatus(p1, p2, 'peace');
+                        return `You pay $${ransom.toLocaleString()}. ${foe.name} grants peace.`;
+                    }});
+            }
+            choices.push({ label:'✖ Keep Fighting', desc:'Reject all terms; the war goes on.',
+                run:() => 'You break off negotiations. The war continues.' });
+            modal.innerHTML = `
+              <div class="modal-content" style="max-width:480px;">
+                <h2 class="modal-title">📜 Peace Treaty${wn ? ' — ' + wn : ''}</h2>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.6rem;">
+                  Negotiating peace with <strong style="color:${foe.color};">${foe.name}</strong>.
+                  Your territory: ${myT} · Theirs: ${foeT}.
+                  ${winning ? 'You have the upper hand.' : losing ? 'You are on the back foot.' : 'The war is evenly matched.'}
+                </p>
+                <div id="treaty-choices" style="display:flex; flex-direction:column; gap:0.4rem;"></div>
+                <div id="treaty-result" style="display:none; margin-top:0.7rem; background:var(--bg-element); border:1px solid var(--border-color); border-radius:8px; padding:0.6rem 0.8rem; font-size:0.86rem;"></div>
+                <button class="close-modal" id="treaty-close" onclick="document.getElementById('treaty-modal').style.display='none'; if(typeof openDiplomacy==='function') openDiplomacy(); renderGame();">Close</button>
+              </div>`;
+            const box = modal.querySelector('#treaty-choices');
+            choices.forEach((c) => {
+                const b = document.createElement('button');
+                b.className = 'start-btn';
+                b.style.cssText = 'text-align:left; padding:0.6rem 0.8rem;';
+                b.innerHTML = `<div style="font-weight:700;">${c.label}</div><div style="font-size:0.72rem; opacity:0.85; font-weight:400;">${c.desc}</div>`;
+                b.onclick = () => {
+                    const res = c.run() || 'Done.';
+                    box.style.display = 'none';
+                    const rd = modal.querySelector('#treaty-result');
+                    rd.style.display = 'block'; rd.textContent = res;
+                    logEvent('📜 ' + res);
+                };
+                box.appendChild(b);
+            });
+            modal.style.display = 'flex';
+        }
     </script>
 </body>
 </html>
