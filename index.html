@@ -1561,73 +1561,177 @@
         let musicInterval = null;
         let pendingIdeologyPlayer = 0;
 
+        // ===== Procedural strategy-game sound engine =====
         const sfx = {
             ctx: null,
+            master: null,
+            noiseBuf: null,
             init() {
-                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    this.master = this.ctx.createGain();
+                    this.master.gain.value = 0.85;
+                    // gentle high-shelf softener so synths don't sound harsh
+                    const soft = this.ctx.createBiquadFilter();
+                    soft.type = 'highshelf'; soft.frequency.value = 5200; soft.gain.value = -7;
+                    this.master.connect(soft); soft.connect(this.ctx.destination);
+                    // reusable white-noise buffer for impacts, marching, weather
+                    const len = Math.floor(this.ctx.sampleRate * 1.6);
+                    this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+                    const d = this.noiseBuf.getChannelData(0);
+                    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+                }
                 if (this.ctx.state === 'suspended') this.ctx.resume();
             },
             enabled() { return gameState.musicEnabled && this.ctx; },
-            playTone(freq, type, duration, vol) {
+            // --- low-level building blocks ---
+            tone(freq, type, dur, vol, opt) {
                 if (!this.enabled()) return;
+                opt = opt || {};
+                const t0 = this.ctx.currentTime + (opt.delay || 0);
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.type = type;
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                gain.gain.setValueAtTime(0.001, this.ctx.currentTime);
-                const attackTime = Math.min(0.05, duration * 0.2);
-                gain.gain.exponentialRampToValueAtTime(vol, this.ctx.currentTime + attackTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
-                osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + duration);
+                osc.frequency.setValueAtTime(freq, t0);
+                if (opt.glide) osc.frequency.exponentialRampToValueAtTime(Math.max(1, opt.glide), t0 + dur);
+                if (opt.detune) osc.detune.value = opt.detune;
+                const atk = Math.min(opt.attack || 0.015, dur * 0.5);
+                gain.gain.setValueAtTime(0.0001, t0);
+                gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t0 + atk);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+                let node = osc;
+                if (opt.filter) {
+                    const f = this.ctx.createBiquadFilter();
+                    f.type = opt.filterType || 'lowpass';
+                    f.frequency.value = opt.filter;
+                    osc.connect(f); node = f;
+                }
+                node.connect(gain); gain.connect(this.master);
+                osc.start(t0); osc.stop(t0 + dur + 0.05);
             },
-            click() { this.playTone(440, 'sine', 0.15, 0.08); },
-            error() { this.playTone(180, 'sine', 0.4, 0.15); },
-            claim() {
+            noise(dur, vol, opt) {
                 if (!this.enabled()) return;
-                this.playTone(523.25, 'sine', 0.2, 0.08);
-                setTimeout(() => this.playTone(659.25, 'sine', 0.4, 0.08), 100);
+                opt = opt || {};
+                const t0 = this.ctx.currentTime + (opt.delay || 0);
+                const src = this.ctx.createBufferSource();
+                src.buffer = this.noiseBuf;
+                const gain = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = opt.filterType || 'lowpass';
+                filter.frequency.setValueAtTime(opt.freq || 1000, t0);
+                if (opt.sweep) filter.frequency.exponentialRampToValueAtTime(Math.max(40, opt.sweep), t0 + dur);
+                filter.Q.value = opt.q || 1;
+                gain.gain.setValueAtTime(0.0001, t0);
+                gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t0 + Math.min(0.02, dur * 0.3));
+                gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+                src.connect(filter); filter.connect(gain); gain.connect(this.master);
+                src.start(t0); src.stop(t0 + dur + 0.05);
             },
-            attack() {
-                if (!this.enabled()) return;
-                this.playTone(150, 'triangle', 0.3, 0.15);
-                setTimeout(() => this.playTone(120, 'triangle', 0.4, 0.15), 150);
+            chord(freqs, type, dur, vol, stagger, opt) {
+                freqs.forEach((f, i) => this.tone(f, type || 'sine', dur, vol,
+                    Object.assign({ delay: (stagger || 0) * i, attack: 0.03 }, opt || {})));
             },
+            // backward-compat shim
+            playTone(f, t, d, v) { this.tone(f, t, d, v); },
+            // --- UI ---
+            click() { this.tone(680, 'sine', 0.07, 0.05, { attack: 0.004 }); this.tone(1020, 'sine', 0.05, 0.025, { attack: 0.004 }); },
+            select() { this.tone(900, 'triangle', 0.06, 0.045); },
+            error() { this.tone(165, 'sawtooth', 0.26, 0.1, { filter: 650 }); this.tone(124, 'square', 0.3, 0.05, { delay: 0.04, filter: 500 }); },
+            coin() { this.tone(1318.5, 'triangle', 0.1, 0.05); this.tone(1760, 'triangle', 0.16, 0.045, { delay: 0.055 }); },
+            // --- territory / building ---
+            claim() { this.chord([392, 523.25, 659.25], 'sine', 0.5, 0.06, 0.08); },
+            capture() { this.chord([523.25, 659.25, 783.99, 1046.5], 'triangle', 0.55, 0.07, 0.07); },
             build() {
-                if (!this.enabled()) return;
-                this.playTone(392.00, 'sine', 0.2, 0.08);
-                setTimeout(() => this.playTone(523.25, 'sine', 0.4, 0.08), 100);
+                this.noise(0.17, 0.13, { freq: 700, sweep: 130 });
+                this.tone(320, 'square', 0.1, 0.045, { filter: 900 });
+                this.tone(523.25, 'sine', 0.38, 0.06, { delay: 0.16 });
+            },
+            // --- military ---
+            attack() {
+                this.noise(0.12, 0.15, { freq: 3600, sweep: 700, filterType: 'bandpass', q: 3 });
+                this.tone(185, 'sawtooth', 0.22, 0.12, { glide: 90, filter: 950 });
+                this.tone(2300, 'triangle', 0.09, 0.04, { delay: 0.03 });
+            },
+            cannon() {
+                this.noise(0.34, 0.2, { freq: 950, sweep: 60 });
+                this.tone(72, 'sine', 0.4, 0.18, { glide: 34 });
+            },
+            recruit() {
+                this.tone(110, 'square', 0.09, 0.09, { filter: 420 });
+                this.tone(110, 'square', 0.09, 0.09, { filter: 420, delay: 0.19 });
+                this.tone(330, 'sawtooth', 0.5, 0.06, { delay: 0.3, filter: 1500, attack: 0.05 });
+                this.tone(440, 'sawtooth', 0.5, 0.055, { delay: 0.3, filter: 1500, attack: 0.05 });
+            },
+            march() {
+                this.tone(98, 'square', 0.07, 0.07, { filter: 380 });
+                this.tone(98, 'square', 0.07, 0.07, { filter: 380, delay: 0.13 });
+                this.tone(196, 'triangle', 0.18, 0.04, { delay: 0.06 });
+            },
+            siege() {
+                this.tone(110, 'sawtooth', 0.6, 0.11, { filter: 600, attack: 0.06 });
+                this.noise(0.5, 0.1, { freq: 500, sweep: 90, delay: 0.1 });
+                this.tone(82, 'sine', 0.7, 0.12, { delay: 0.05 });
+            },
+            war() {
+                this.tone(146.83, 'sawtooth', 1.1, 0.12, { filter: 720, attack: 0.12 });
+                this.tone(220, 'sawtooth', 1.1, 0.09, { filter: 720, attack: 0.12, detune: 7 });
+                this.tone(98, 'sine', 1.3, 0.11, { delay: 0.05 });
+            },
+            promote() {
+                this.chord([523.25, 659.25, 783.99], 'sawtooth', 0.4, 0.06, 0.07, { filter: 2000 });
+                this.tone(1046.5, 'triangle', 0.5, 0.055, { delay: 0.24 });
             },
             launch() {
-                if (!this.enabled()) return;
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(600, this.ctx.currentTime + 1.2);
-                gain.gain.setValueAtTime(0.001, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.15, this.ctx.currentTime + 0.2);
-                gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 1.2);
-                osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(); osc.stop(this.ctx.currentTime + 1.2);
+                this.noise(1.2, 0.11, { freq: 400, sweep: 2800, filterType: 'highpass' });
+                this.tone(140, 'sine', 1.2, 0.12, { glide: 740 });
             },
             explode() {
-                if (!this.enabled()) return;
-                this.playTone(80, 'triangle', 0.8, 0.2);
-                setTimeout(() => this.playTone(60, 'sine', 1.0, 0.25), 100);
+                this.noise(0.7, 0.25, { freq: 1900, sweep: 48 });
+                this.tone(58, 'sine', 0.7, 0.22, { glide: 30 });
+                this.tone(95, 'triangle', 0.5, 0.13, { delay: 0.02 });
             },
+            // --- events ---
+            turnEnd() {
+                this.tone(196, 'sine', 0.22, 0.08, { attack: 0.02 });
+                this.tone(293.66, 'sine', 0.42, 0.06, { delay: 0.12 });
+            },
+            tech() { this.chord([1046.5, 1318.5, 1567.98, 2093], 'sine', 0.4, 0.045, 0.05); },
+            alert() { this.tone(880, 'square', 0.13, 0.08, { filter: 1800 }); this.tone(880, 'square', 0.13, 0.08, { delay: 0.2, filter: 1800 }); },
+            peace() { this.chord([523.25, 659.25, 783.99, 1046.5], 'sine', 1.0, 0.06, 0.16); },
             disaster() {
-                if (!this.enabled()) return;
-                this.playTone(100, 'triangle', 1.5, 0.2);
-                setTimeout(() => this.playTone(80, 'sine', 2.0, 0.2), 200);
+                this.noise(1.6, 0.19, { freq: 320, sweep: 42 });
+                this.tone(70, 'sawtooth', 1.6, 0.15, { glide: 45, filter: 320 });
+            },
+            victory() {
+                const f = [523.25, 659.25, 783.99, 1046.5];
+                f.forEach((fr, i) => {
+                    this.tone(fr, 'sawtooth', 0.5, 0.085, { delay: i * 0.16, filter: 2300, attack: 0.03 });
+                    this.tone(fr / 2, 'triangle', 0.5, 0.045, { delay: i * 0.16 });
+                });
+                this.tone(1046.5, 'sawtooth', 1.0, 0.09, { delay: 0.64, filter: 2400 });
+                this.tone(1567.98, 'triangle', 1.0, 0.05, { delay: 0.64 });
+            },
+            defeat() {
+                [392, 329.63, 293.66, 196].forEach((fr, i) =>
+                    this.tone(fr, 'sine', 0.75, 0.09, { delay: i * 0.28, attack: 0.05 }));
+                this.tone(98, 'triangle', 1.4, 0.08, { delay: 0.84 });
             }
         };
 
+        // Brooding minor-key strategy theme: {m: melody, b: bass}
         const melody = [
-            { f: 261.6, d: 0.8, t: 'sine' },
-            { f: 329.6, d: 0.8, t: 'sine' },
-            { f: 392.0, d: 1.2, t: 'sine' },
-            { f: 349.2, d: 0.8, t: 'sine' }
+            { m: 293.66, b: 146.83, t: 'triangle' },
+            { m: 349.23, b: 146.83, t: 'triangle' },
+            { m: 440.00, b: 174.61, t: 'triangle' },
+            { m: 392.00, b: 174.61, t: 'triangle' },
+            { m: 523.25, b: 220.00, t: 'triangle' },
+            { m: 440.00, b: 220.00, t: 'triangle' },
+            { m: 349.23, b: 174.61, t: 'triangle' },
+            { m: 329.63, b: 146.83, t: 'triangle' },
+            { m: 293.66, b: 146.83, t: 'triangle' },
+            { m: 261.63, b: 130.81, t: 'triangle' },
+            { m: 329.63, b: 130.81, t: 'triangle' },
+            { m: 392.00, b: 174.61, t: 'triangle' }
         ];
 
         const TERRAIN_NAMES = {
@@ -2112,20 +2216,18 @@
             let index = 0;
             musicInterval = setInterval(async () => {
                 if (!gameState.musicEnabled) return;
-                if (audioCtx.state === 'suspended') await audioCtx.resume();
+                if (sfx.ctx && sfx.ctx.state === 'suspended') await sfx.ctx.resume();
                 const note = melody[index % melody.length];
-                const now = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = note.t;
-                osc.frequency.value = note.f;
-                gain.gain.setValueAtTime(0.001, now);
-                gain.gain.exponentialRampToValueAtTime(0.03, now + 0.1);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + note.d);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(); osc.stop(now + note.d);
+                // soft melody voice + faint octave shimmer
+                sfx.tone(note.m, note.t, 1.0, 0.032, { attack: 0.12, filter: 2400 });
+                sfx.tone(note.m * 2, 'sine', 0.9, 0.01, { attack: 0.15, delay: 0.02 });
+                // sustained low pad on every other beat
+                if (index % 2 === 0) {
+                    sfx.tone(note.b, 'sine', 2.3, 0.04, { attack: 0.25 });
+                    sfx.tone(note.b * 1.5, 'triangle', 2.0, 0.014, { attack: 0.3, filter: 800 });
+                }
                 index++;
-            }, 600);
+            }, 720);
         }
 
         function stopMusic() {
@@ -2295,6 +2397,7 @@
                 }
                 if (gameState.musicEnabled) playMusic(); else stopMusic();
                 renderGame();
+                setTimeout(() => sfx.war(), 300);   // opening war-horn fanfare
                 return;
             }
 
@@ -3753,7 +3856,7 @@
             if (p.gold < cost) { sfx.error(); alert(`Not enough gold! Need $${cost.toLocaleString()}.`); return; }
             p.gold -= cost;
             p.troops += 100;
-            sfx.build();
+            sfx.recruit();
             logEvent(`${p.name} recruited 100 militia ($${cost.toLocaleString()}).`);
             renderTroopShop();
             renderGame();
@@ -3767,7 +3870,7 @@
             if (p.gold < cost) { sfx.error(); alert(`Need $${cost.toLocaleString()} for 10 Heavy units.`); return; }
             p.gold -= cost;
             p.heavyTroops = (p.heavyTroops || 0) + 10;
-            sfx.build();
+            sfx.recruit();
             logEvent(`🛡️ ${p.name} recruited 10 Heavy Infantry. ($${cost.toLocaleString()})`);
             renderTroopShop();
             renderGame();
@@ -3791,7 +3894,7 @@
             p.iron = Math.max(0, (p.iron || 0) - ironCost);
             if (!p.units) p.units = {};
             p.units[key] = (p.units[key] || 0) + qty;
-            sfx.build();
+            sfx.recruit();
             logEvent(`${p.name} recruited ${qty} ${u.name} ($${cost.toLocaleString()}, ⛏️${ironCost}).`);
             renderTroopShop();
             renderGame();
@@ -5201,6 +5304,7 @@
                     turnsLeft: turns
                 };
                 logEvent(`🏹 ${pAttacker.name} laid a ${turns}-turn siege on enemy tile.`);
+                sfx.siege();
             } else if (strategy.type === 'tactic') {
                 const aT = gameState.troops[sourceIdx];
                 const dT = gameState.troops[targetIdx];
@@ -5502,6 +5606,14 @@
             // === End conditions ===
             const atkAlive = scene.atkDots.filter(d => d.alive).length;
             const defAlive = scene.defDots.filter(d => d.alive).length;
+            // Battle ambience — occasional clash while both sides are engaged.
+            if (atkAlive > 0 && defAlive > 0) {
+                rb._sfxClock = (rb._sfxClock || 0.5) - dt;
+                if (rb._sfxClock <= 0) {
+                    rb._sfxClock = 0.6 + rb.rng() * 0.7;
+                    if (rb.rng() < 0.5) sfx.attack(); else sfx.march();
+                }
+            }
             const maxDur = 90;
             if (rb.forceEnd || atkAlive === 0 || defAlive === 0 || elapsed > maxDur) {
                 finalizeRealtimeBattle();
@@ -5718,11 +5830,16 @@
                 if (defAlive > 0 && atkAlive === 0) gameState.stats[pb.defenderIdx].battlesWon = (gameState.stats[pb.defenderIdx].battlesWon || 0) + 1;
             }
 
-            // Capture if defender wiped + attacker still has dots on field.
-            const captured = defAlive === 0 && atkAlive > 0;
+            // Capture ONLY if the defender is wiped AND the attacker still has
+            // dots HOLDING the ground — units under a retreat order are fleeing
+            // the field and can never seize the tile, even if the last defender
+            // happens to fall while they're running for the exit.
+            const holdingAtk = scene.atkDots.filter(d =>
+                d.alive && !d._saved && d._order !== 'retreat').length;
+            const captured = defAlive === 0 && holdingAtk > 0;
             if (captured) {
                 if (gameState.stats[pb.attackerIdx]) gameState.stats[pb.attackerIdx].battlesWon++;
-                captureTile(pb.targetIdx, pb.attackerIdx, pb.defenderIdx, Math.max(20, Math.floor(atkAlive * 0.4)));
+                captureTile(pb.targetIdx, pb.attackerIdx, pb.defenderIdx, Math.max(20, Math.floor(holdingAtk * 0.4)));
             } else {
                 logEvent(`⚔️ ${pAttacker.name} engaged ${pDefender.name} — losses ${totalAtkLoss}, kills ${totalDefLoss}, saved ${rb.saved}.`);
             }
@@ -5730,8 +5847,17 @@
             gameState.attackSourceIdx = null;
             gameState.pendingBattle = null;
 
-            sfx.explode();
+            // Did the survivors withdraw rather than fall? (any dot still
+            // carrying a retreat order, or dots that escaped the field).
+            const stillRetreating = scene.atkDots.some(d =>
+                d.alive && !d._saved && d._order === 'retreat');
+            const withdrew = !captured && (stillRetreating || (rb.saved > 0 && holdingAtk === 0));
+            if (captured) sfx.victory();
+            else if (atkAlive === 0 && !withdrew) sfx.defeat();
+            else if (withdrew) sfx.march();
+            else sfx.alert();
             const verdict = captured ? '🏳️ TILE CAPTURED'
+                          : withdrew ? '⮌ FORCES WITHDREW'
                           : atkAlive === 0 ? '💀 ARMY ROUTED'
                           : '⚔️ ENGAGEMENT ENDED';
             showBattleOverlay(verdict, () => {
@@ -5919,6 +6045,7 @@
                 if (gameState.troops[targetIdx] <= 0) {
                     if (gameState.stats[attackerIdx]) gameState.stats[attackerIdx].battlesWon = (gameState.stats[attackerIdx].battlesWon || 0) + 1;
                     captureTile(targetIdx, attackerIdx, defenderIdx, Math.floor(aT * 0.2));
+                    if (attackerIdx === 0 || defenderIdx === 0) sfx.capture();
                 } else {
                     logEvent(`${pAttacker.name} attacked. Defenders: ${gameState.troops[targetIdx]}.`);
                 }
@@ -6050,8 +6177,10 @@
                     if (aT > gameState.troops[i]) {
                         captureTile(i, siege.attacker, siege.defender, Math.floor(aT * 0.3));
                         gameState.troops[siege.sourceIdx] = Math.max(20, Math.floor(aT * 0.7));
+                        if (siege.attacker === 0 || siege.defender === 0) sfx.capture();
                     } else {
                         logEvent(`Siege at tile ${i} broken — defenders held.`);
+                        if (siege.attacker === 0 || siege.defender === 0) sfx.alert();
                     }
                     gameState.sieges[i] = null;
                 }
@@ -6571,6 +6700,7 @@
                         if (gameState.troops[idx] > 50) {
                             gameState.troops[idx] -= 50;
                             gameState.players[playerIdx].troops += 50;
+                            sfx.march();
                             logEvent(`Withdrew 50 troops from (${r}, ${c}).`);
                             renderGame();
                         } else { sfx.error(); alert("Not enough troops!"); }
@@ -6581,6 +6711,7 @@
                         if (gameState.players[playerIdx].troops >= 50) {
                             gameState.players[playerIdx].troops -= 50;
                             gameState.troops[idx] += 50;
+                            sfx.march();
                             logEvent(`Deployed 50 troops to (${r}, ${c}).`);
                             renderGame();
                         } else { sfx.error(); alert("Not enough reserves!"); }
@@ -6610,6 +6741,7 @@
                     const sendT = Math.min(portTroops - 10, Math.max(50, Math.floor(portTroops * 0.6)));
                     const sendH = Math.min(gameState.players[playerIdx].heavyTroops, Math.floor(sendT * 0.2));
                     gameState.players[playerIdx].heavyTroops -= sendH;
+                    sfx.march();
                     startNavalExpedition(playerIdx, gameState.attackSourceIdx, idx, sendT, sendH);
                     gameState.attackSourceIdx = null;
                     renderGame();
@@ -6662,9 +6794,11 @@
                         animateMissile(idx, targetIdx, intercepted).then(() => {
                             const targetOwner = gameState.ownership[targetIdx];
                             if (intercepted) {
+                                sfx.alert();
                                 logEvent(`🚀 Missile intercepted by MDS!`);
                                 if (gameState.stats[targetOwner]) gameState.stats[targetOwner].missilesIntercepted++;
                             } else {
+                                sfx.explode();
                                 gameState.troops[targetIdx] = Math.max(0, gameState.troops[targetIdx] - baseDmg);
                                 if (gameState.buildings[targetIdx] && !isCapitalTile(targetIdx)) {
                                     gameState.buildings[targetIdx] = null;
@@ -6964,10 +7098,12 @@
                 if (Math.random() < chance) {
                     p.gold -= cost;          // charge ONLY on success
                     setDiploStatus(p1, p2, status);
+                    sfx.peace();
                     logEvent(`🤝 ${gameState.players[p2].name} (AI) accepted ${status}.`);
                     logChat(p2, status === 'ally' ? "Together we stand." : "Peace it is.");
                 } else {
                     // Rejected — NO gold is taken. Was: charged 20% for nothing.
+                    sfx.error();
                     logEvent(`❌ ${gameState.players[p2].name} (AI) rejected ${status} — no gold spent.`);
                     logChat(p2, "We refuse.");
                     alert(`${gameState.players[p2].name} rejected your offer. No gold was spent.`);
@@ -6975,6 +7111,7 @@
             } else if (otherIsAI && status === 'war') {
                 p.gold -= cost;
                 setDiploStatus(p1, p2, status);
+                sfx.war();
                 logEvent(`⚔️ ${gameState.players[p1].name} declared war on ${gameState.players[p2].name}!`);
                 logChat(p2, "So you've chosen war!");
             } else {
@@ -7034,7 +7171,7 @@
             p.tech.researchPoints -= t.cost;
             p.tech.unlocked.push(key);
             logEvent(`🔬 ${p.name} researched ${t.name}!`);
-            sfx.build();
+            sfx.tech();
             checkAgeAdvance(gameState.currentPlayer, ageBefore);
             openTechTree();
             renderGame();
@@ -7044,7 +7181,7 @@
         function endTurn() {
             if (isProcessingTurn) return;
             isProcessingTurn = true;
-            sfx.click();
+            sfx.turnEnd();
 
             const p = gameState.players[gameState.currentPlayer];
 
@@ -7923,13 +8060,16 @@
                     if (hasTech(playerIdx, 'hydrogen')) dmgMult = 2.25;
                     const dmg = Math.floor(150 * dmgMult);
                     const siloIdx = i;
+                    sfx.launch();
                     // Fly the missile across the board, then resolve the hit —
                     // same animation the player's launches use.
                     animateMissile(siloIdx, target, intercepted).then(() => {
                         if (intercepted) {
+                            sfx.alert();
                             logEvent(`🚀 ${p.name} (AI) fired a missile — intercepted by MDS!`);
                             if (tOwner === 0 && typeof showToast === 'function') showToast('🛡️ Your MDS intercepted an enemy missile!', 'good');
                         } else {
+                            sfx.explode();
                             gameState.troops[target] = Math.max(0, (gameState.troops[target] || 0) - dmg);
                             if (gameState.buildings[target] && !isCapitalTile(target)) gameState.buildings[target] = null;
                             logEvent(`🚀 ${p.name} (AI) launched a missile — ${dmg} damage to enemy territory!`);
@@ -8617,7 +8757,7 @@
             const p = gameState.players[gameState.currentPlayer];
             p.leader = leader;
             gameState.electionPending = false;   // consume the election
-            sfx.build && sfx.build();
+            sfx.promote();
             logEvent(`🗳️ ${p.name} elected ${leader.name} (${leader.traitText}).`);
             document.getElementById('election-modal').style.display = 'none';
             renderGame();
@@ -9373,6 +9513,9 @@
             const ov = document.getElementById('battle-overlay-text');
             const captured = fb.defTroops <= 0;
             ov.textContent = captured ? '🏆 VICTORY!' : (fb.atkTroops + fb.atkHeavy <= 0 ? '💀 DEFEAT' : '🏳️ STALEMATE');
+            if (captured) sfx.victory();
+            else if (fb.atkTroops + fb.atkHeavy <= 0) sfx.defeat();
+            else sfx.alert();
             ov.classList.add('show');
             setTimeout(() => {
                 ov.classList.remove('show');
@@ -9535,7 +9678,7 @@
                         const gained = p.trainingRank - before;
                         status.textContent = `✅ ${f.score} pipes — +${gained} rank${gained > 1 ? 's' : ''}! Now ⭐ ${p.trainingRank}. +${gained*5}% dmg, +${gained*2}% def this run.`;
                         document.getElementById('flap-rank').textContent = '⭐ ' + p.trainingRank;
-                        sfx.build && sfx.build();
+                        sfx.promote();
                     } else {
                         status.textContent = `🏆 Already maxed at ⭐ ${TRAIN_MAX}.`;
                     }
@@ -9695,7 +9838,7 @@
                     p.trainDefence = Math.min(TRAIN_MAX, earned);
                     document.getElementById('g2048-status').textContent = `✅ Defence rank ${p.trainDefence}! +${gain*5}% damage resistance.`;
                     document.getElementById('g2048-rank').textContent = '⭐ ' + p.trainDefence;
-                    sfx.build && sfx.build();
+                    sfx.promote();
                 }
             }
             // Loss check — no moves left.
@@ -9864,7 +10007,7 @@
             if (cleared > 0) {
                 _tetris.lines += cleared;
                 document.getElementById('tetris-lines').textContent = _tetris.lines;
-                sfx.build && sfx.build();
+                sfx.coin();
                 // 1 Discipline rank per 2 lines cleared.
                 const earned = Math.floor(_tetris.lines / 2);
                 const pl = gameState.players[gameState.currentPlayer];
@@ -9873,6 +10016,7 @@
                     pl.trainDiscipline = Math.min(TRAIN_MAX, earned);
                     document.getElementById('tetris-status').textContent = `✅ Discipline rank ${pl.trainDiscipline}! −${gain*3}% battle losses.`;
                     document.getElementById('tetris-rank').textContent = '⭐ ' + pl.trainDiscipline;
+                    sfx.promote();
                 }
             }
             tetrisSpawn();
@@ -10439,6 +10583,13 @@
             el.style.cssText = `background:${colors[type] || colors.info}; color:#fff; padding:0.7rem 1rem; border-radius:10px; font-size:0.85rem; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,0.5); opacity:0; transform:translateX(40px); transition:all 0.3s cubic-bezier(0.2,0.8,0.3,1);`;
             el.textContent = msg;
             host.appendChild(el);
+            // Give each toast a fitting cue.
+            try {
+                if (type === 'danger')      sfx.alert();
+                else if (type === 'warn')   sfx.alert();
+                else if (type === 'good')   sfx.coin();
+                else                        sfx.select();
+            } catch (e) {}
             requestAnimationFrame(() => { el.style.opacity = '1'; el.style.transform = 'translateX(0)'; });
             setTimeout(() => {
                 el.style.opacity = '0'; el.style.transform = 'translateX(40px)';
@@ -10610,8 +10761,10 @@
                 p.veterancy++;
                 const rankName = VET_RANKS[Math.min(VET_RANKS.length - 1, p.veterancy)];
                 logEvent(`🎖️ ${p.name}'s army reached veterancy rank ${p.veterancy} — ${rankName}!`);
-                if (playerIdx === 0 && typeof showToast === 'function') {
-                    showToast(`🎖️ Your army is now ${rankName}! +${Math.round(p.veterancy*VET_DMG_PER_RANK*100)}% damage.`, 'good');
+                if (playerIdx === 0) {
+                    sfx.promote();
+                    if (typeof showToast === 'function')
+                        showToast(`🎖️ Your army is now ${rankName}! +${Math.round(p.veterancy*VET_DMG_PER_RANK*100)}% damage.`, 'good');
                 }
             }
             if (p.veterancy >= VET_MAX) p.battleXP = 0;
@@ -10939,7 +11092,7 @@
             p.generalTile = idx;
             const r = Math.floor(idx / gameState.boardCols), c = idx % gameState.boardCols;
             logEvent(`🎖️ ${p.name}'s General now commands (${r}, ${c}). +35% attack from / defence on this tile.`);
-            sfx.build && sfx.build();
+            sfx.promote();
             renderGame();
         }
         // Demolish a building on your own tile, refunding 30% of its cost.
@@ -10956,7 +11109,7 @@
             gameState.buildings[idx] = null;
             p.gold += refund;
             logEvent(`🧨 ${p.name} demolished a ${b} — recovered $${refund.toLocaleString()}.`);
-            sfx.build && sfx.build();
+            sfx.explode();
             renderGame();
         }
         function generalDamageMult(playerIdx, sourceIdx) {
@@ -11064,6 +11217,7 @@
         function showEndGameScreen(winnerIdx, victoryType) {
             const win = gameState.players[winnerIdx];
             const isYou = winnerIdx === 0;
+            setTimeout(() => { isYou ? sfx.victory() : sfx.defeat(); }, 250);
             let modal = document.getElementById('endgame-modal');
             if (!modal) {
                 modal = document.createElement('div');
@@ -11404,6 +11558,7 @@
             }
         ];
         function showRandomEvent(evt) {
+            sfx.alert();
             let modal = document.getElementById('event-modal');
             if (!modal) {
                 modal = document.createElement('div');
