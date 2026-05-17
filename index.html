@@ -1669,45 +1669,79 @@
                 diploTitle: "🤝 Diplomacy",
                 diploClose: "Close",
                 instTitle: "❓ How to Play",
-                instBody: `<h3>Goal</h3><p>Outlast every other civilization by force, diplomacy, or research. Last one standing wins. If <em>you</em> fall, the world keeps turning — you spectate the AIs fight on.</p>
-<h3>Turns & Map</h3><p>Pick a <strong>Map Type</strong> (Pangaea, Realistic World, Islands, Continental) and <strong>Conscription Rate</strong> on the menu. Disasters trigger every 10 turns; civilian disasters every 20.</p>
-<h3>Troops & Recruiting</h3><p>Use <strong>👥 Buy Troops</strong> to recruit militia, heavy infantry, and specialists (🥾 mountaineers, 🛠️ engineers, 🐎 cavalry, 🔫 cannons, ➕ doctors). <strong>Conscription</strong> also drafts free militia from your population every turn. Use <strong>➕ Deploy</strong> / <strong>➖ Withdraw</strong> to move specific unit types onto/off tiles.</p>
-<h3>Supply Lines</h3><p>Green dashed lines link your tiles back to your capital. A tile cut off from that network produces nothing, bleeds <strong>15 troops/turn</strong>, and <strong>collapses to neutral after 5 turns</strong>.</p>
-<h3>Attacks & Battles</h3><p>Attack adjacent enemy tiles freely — there's no penalty for being invaded. Battles open a 3D tactical view: pick a <strong>tactic</strong>, fight in real time (drag-select your dots, click to move, <strong>R</strong> to retreat), or run a multi-day <strong>🏕️ Field Campaign</strong> placing camps, trenches, towers and artillery.</p>
-<h3>Sieges</h3><p>Attacking a Fort / Town / City / Wall can start a <strong>Siege</strong> — the garrison bleeds each turn until it breaks.</p>
-<h3>Leaders & Elections</h3><p>Every 10 turns, open <strong>🗳️ Election</strong> and pick a leader. Each has permanent traits (income / research / attack / happiness).</p>
-<h3>🎖️ Generals</h3><p>The <strong>General</strong> button (Military tab) recruits a battlefield commander for <strong>$120K + 30 iron</strong>. Pick one of your tiles to station them. Attacks launched <strong>from the general's tile hit +35%</strong>, and that tile <strong>defends +35%</strong>. Moving the general to another of your tiles is free — re-click any time. A 🎖️ marker shows where they command.</p>
-<h3>🎖️ Veterancy</h3><p>Your army earns <strong>Battle XP</strong> from every fight. At 100 XP it ranks up (Recruits → Trained → Seasoned → Veteran → Elite → Legendary). Each rank gives <strong>+8% damage, +5% defence</strong> — permanently.</p>
-<h3>⚔️ Unit Counters</h3><p>Units fall into three classes that counter each other: <strong>cavalry beats artillery → artillery beats infantry → infantry beats cavalry</strong>. If your army's dominant class counters the enemy's, you deal +30% damage. Scout their composition.</p>
-<h3>⛏️🌾 Resources & 🏛️ Ages</h3><p>Beyond gold you stockpile <strong>⛏️ Iron</strong> (mountains/hills/mines — pays for specialist units) and <strong>🌾 Food</strong> (plains/oasis/towns — feeds population; a deficit causes famine). Unlocking techs advances your <strong>Age</strong> (Ancient → Medieval → Industrial → Modern), each granting income/research bonuses.</p>
-<h3>🌦️ Weather & 📜 Events</h3><p>Weather rerolls each round (rain/fog/snow/storm reduce all combat). Roughly every few turns a <strong>random event</strong> offers you a choice with real consequences.</p>
-<h3>🏆 Victory</h3><p>Choose a victory condition on the menu: <strong>Conquest</strong> (last civ standing), <strong>Domination</strong> (hold 60% of land), or <strong>Score</strong> (highest score at turn 100).</p>
-<h3>Custom Ideology & Flags</h3><p>At game start you can <strong>🎨 design a custom ideology</strong> with sliders, or mix <strong>⛪ Theocracy</strong> into any primary. Use <strong>🚩 Design Your Flag</strong> on the menu — patterns, colors, emblems, and freehand drawing.</p>
-<h3>🐤 Training</h3><p>The <strong>Train</strong> button runs a Flappy-Bird mini-game — clear 8 pipes to gain a permanent training rank (+5% damage, +2% defence).</p>
-<h3>Buildings</h3>
+                instBody: `<h3>🎯 Goal</h3><p>Lead a civilization to victory. If <em>you</em> fall the world plays on — you spectate. Pick a <strong>Victory Condition</strong> on the menu:</p>
+<ul>
+<li><strong>Conquest</strong> — be the last civilization standing.</li>
+<li><strong>Domination</strong> — control 60% of all land tiles.</li>
+<li><strong>Score</strong> — highest score (tiles + gold + troops + tech + population) at turn 100.</li>
+</ul>
+
+<h3>🛠️ Menu Setup</h3><p>Before starting you choose: number of players, board size, <strong>Map Type</strong> (Pangaea / Realistic World / Islands / Continental), game mode (vs AI or Pass-&-Play), starting gold / population / <strong>research points</strong>, <strong>Difficulty</strong> (Easy → Brutal), <strong>Conscription Rate</strong>, victory condition, up to 4 <strong>Starter Techs</strong>, and your <strong>🚩 Flag</strong>. At game start you also name your civ and pick an <strong>Ideology</strong>.</p>
+
+<h3>🗓️ Turns</h3><p>Each turn you act, then End Turn. Natural disasters strike every ~10 turns, civilian disasters every ~20. The date and a <strong>weather</strong> badge sit in the header.</p>
+
+<h3>💰 Resources</h3><p>You manage three stockpiles:</p>
+<ul>
+<li><strong>💰 Gold</strong> — from tiles, mines, power, trade. Pays for troops & buildings.</li>
+<li><strong>⛏️ Iron</strong> — from mountains, hills and Mines. Pays for specialist units & Generals.</li>
+<li><strong>🌾 Food</strong> — from plains, oasis, Towns & Cities; consumed by population. A surplus grows your people; a shortage stalls growth; a deficit causes <strong>famine</strong> — and famine deaths <em>escalate</em> every turn it goes unfixed.</li>
+</ul>
+
+<h3>👥 Troops & Recruiting</h3><p><strong>Buy Troops</strong> recruits militia, 🛡️ heavy infantry, and specialists: 🥾 mountaineers (terrain), 🛠️ engineers (siege), 🐎 light & 🐴 heavy cavalry, 🔫 light & 💣 heavy cannons, ➕ doctors (cut losses). <strong>Conscription</strong> drafts free militia from your population each turn (heavier rates anger the people). <strong>➕ Deploy</strong> / <strong>➖ Withdraw</strong> move specific unit types on/off tiles.</p>
+
+<h3>⚔️ Unit Counters</h3><p>Three classes counter each other: <strong>cavalry → beats → artillery → beats → infantry → beats → cavalry</strong>. If your army's dominant class counters the enemy's, you deal +30% damage; if countered, −15%. Scout their composition.</p>
+
+<h3>⛓️ Supply Lines</h3><p>Green dashed lines link each tile back to your capital. <strong>Ports and capitals are sea hubs</strong> — they link across water, so an island with a Port stays supplied (shown as blue sea lanes). You <strong>start with a Port</strong>. A tile with no route home produces nothing, bleeds 15 troops/turn, and collapses to neutral after 5 turns.</p>
+
+<h3>🗡️ Attacks & Battles</h3><p>Attack adjacent enemy tiles (you must declare war on a peaceful nation first; allies can't be attacked). Battles open a 3D tactical view — pick a <strong>tactic</strong>, place <strong>fortifications</strong> (trenches, towers, artillery, camps) in your build zone, then fight in <strong>real time</strong>: drag to box-select your dots, click to move, <strong>R</strong> to retreat, <strong>Space</strong> selects all.</p>
+
+<h3>🏰 Sieges</h3><p>Attacking a Fort / Town / City / Wall can begin a <strong>Siege</strong> — the garrison bleeds each turn until it breaks.</p>
+
+<h3>🎖️ Generals & Veterancy</h3><p>Recruit a <strong>General</strong> ($120K + 30 iron) and station them on a tile: attacks <em>from</em> it and defence <em>of</em> it gain +35%. Re-station for free. Your army also earns <strong>Veterancy</strong> from battles (Recruits → … → Legendary), +8% damage & +5% defence per rank.</p>
+
+<h3>🚀 Missiles & Defence</h3><p>Build a <strong>Silo</strong> ($5M, req. Rocketry) to launch missiles at war enemies. Build <strong>MDS</strong> ($2M) to auto-intercept incoming missiles. Nuclear/Hydrogen techs boost missile damage.</p>
+
+<h3>🚢 Naval</h3><p>With Navigation, launch naval expeditions from a coastal tile/Port to invade overseas enemies — the only way to reach island foes.</p>
+
+<h3>🏛️ Tech & Ages</h3><p>Build <strong>Labs</strong> for Research Points; spend them in the 🔬 Tech tree. Unlocking techs advances your <strong>Age</strong>: 🏺 Ancient → 🏰 Medieval → 🏭 Industrial → 🚀 Modern — each grants income/research bonuses plus a windfall.</p>
+
+<h3>📜 Ideologies</h3><p>Chosen at game start — Capitalism, Militarism, Fascism, Theocracy, Democracy, Communism, or <strong>🎨 design a custom ideology</strong> with sliders. <strong>⛪ Theocracy can be mixed</strong> into any other primary ideology.</p>
+
+<h3>🗳️ Elections & Leaders</h3><p>Every 10 turns an election opens — pick a leader from candidates with permanent traits (income / research / attack / happiness). Their bonuses last until the next election.</p>
+
+<h3>🤝 Diplomacy</h3><p>Declare War, make Peace, form Alliances, and rally <strong>Coalitions</strong>. Long wars earn a <strong>name</strong>; making peace opens a <strong>treaty</strong> (white peace, demand tribute, or pay to end it). AIs <strong>remember betrayals</strong> and gang up on the map leader. You can also secretly <strong>fund revolts</strong> inside rivals.</p>
+
+<h3>😊 Happiness</h3><p>Wars, mines and power plants lower happiness; cities, services and good leaders raise it. <strong>If happiness drops below the threshold your civilization collapses instantly</strong> — build 🏛️ Services and don't overreach.</p>
+
+<h3>🎮 Training Minigames</h3><p>The <strong>🎯 Train</strong> button opens the Drill Grounds — three minigames, three combat factors:</p>
+<ul>
+<li>🐤 <strong>Flappy Bird</strong> → ATTACK (+5% damage / rank)</li>
+<li>🔢 <strong>2048</strong> → DEFENCE (+5% resistance / rank)</li>
+<li>🧱 <strong>Tetris</strong> → DISCIPLINE (−3% battle losses / rank)</li>
+</ul>
+
+<h3>📜 Random Events</h3><p>Now and then an event presents a choice — mercenaries, plague doctors, refugees, droughts, treasure — each with real consequences.</p>
+
+<h3>🏗️ Buildings</h3>
 <table>
   <tr><th>Building</th><th>Cost</th><th>Effect</th></tr>
   <tr><td>🏰 Fort</td><td>$10K</td><td>+50% defense</td></tr>
   <tr><td>🧱 Wall</td><td>$30K</td><td>+30% defense (req. Fortification)</td></tr>
-  <tr><td>🏘️ Town</td><td>$100K</td><td>Population & income boost</td></tr>
-  <tr><td>🏙️ City</td><td>$1M</td><td>Major growth</td></tr>
-  <tr><td>⛏️ Mine</td><td>$50K</td><td>+$15K/turn, −4% happiness</td></tr>
-  <tr><td>⚡ Power</td><td>$150K</td><td>+$30K/turn, −8% happiness (req. Industry)</td></tr>
-  <tr><td>🔬 Lab</td><td>$200K</td><td>+5 research/turn (max 3)</td></tr>
-  <tr><td>⚓ Port</td><td>$80K</td><td>Trade income (req. Navigation, coastal)</td></tr>
-  <tr><td>🏛️ Services</td><td>$60K</td><td>+8% happiness (req. Civics)</td></tr>
-  <tr><td>🚀 Silo</td><td>$5M</td><td>Launch missiles</td></tr>
-  <tr><td>🛡️ MDS</td><td>$2M</td><td>Auto-intercept enemy missiles</td></tr>
+  <tr><td>🏘️ Town</td><td>$100K</td><td>Population, income & food</td></tr>
+  <tr><td>🏙️ City</td><td>$1M</td><td>Major growth & food</td></tr>
+  <tr><td>⛏️ Mine</td><td>$50K</td><td>+gold & +iron/turn</td></tr>
+  <tr><td>⚡ Power</td><td>$150K</td><td>+$30K/turn, −happiness (req. Industry)</td></tr>
+  <tr><td>🔬 Lab</td><td>$200K</td><td>+research/turn (max 3)</td></tr>
+  <tr><td>⚓ Port</td><td>$80K</td><td>Trade, naval, sea-lane supply hub</td></tr>
+  <tr><td>🏛️ Services</td><td>$60K</td><td>+happiness (req. Civics)</td></tr>
+  <tr><td>🚀 Silo</td><td>$5M</td><td>Launch missiles (req. Rocketry)</td></tr>
+  <tr><td>🛡️ MDS</td><td>$2M</td><td>Auto-intercept missiles</td></tr>
 </table>
-<h3>Tech, Puppets, Coalitions</h3>
-<ul>
-<li><strong>Tech:</strong> Build Labs to earn Research Points; spend in 🔬 Tech. You can also pick up to 4 <strong>Starter Techs</strong> on the menu.</li>
-<li><strong>Puppet states:</strong> Take an enemy's capital and they become your puppet — paying tribute, joining your wars.</li>
-<li><strong>War Coalitions:</strong> Ask other nations to join your war via Diplomacy.</li>
-</ul>
-<h3>Difficulty note</h3><p>The AI is aggressive — it recruits hard, walls its frontier with thousands of troops, and attacks your weakest tiles. Fortify your borders and keep supply lines intact.</p>
-<h3>Action Bar</h3><p>Buttons are grouped into <strong>🏗️ Build</strong>, <strong>⚔️ Military</strong>, and <strong>🏛️ Empire</strong> tabs. Hover any button for a tooltip. End Turn is always visible.</p>
-<h3>Controls</h3><p><strong>W/S</strong> tilt camera, <strong>A/D</strong> rotate camera. In battle: drag to box-select, click to move, <strong>R</strong> retreat, <strong>Space</strong> select all.</p>`,
+<p>Use <strong>🧨 Demolish</strong> to tear down a building (refunds 30% of its cost). Take an enemy capital and they become your <strong>puppet</strong> — paying tribute and joining your wars.</p>
+
+<h3>🤖 The AI</h3><p>The AI is a real opponent — it recruits hard, walls and garrisons its borders, upgrades its buildings, builds Silos/MDS, fires missiles, runs naval invasions, funds revolts, forms coalitions, and gangs up on the leader. Difficulty scales how rich and aggressive it is. Fortify your borders and keep supply lines intact.</p>
+
+<h3>🧭 Interface</h3><p>Action buttons are grouped into <strong>🏗️ Build</strong>, <strong>⚔️ Military</strong> and <strong>🏛️ Empire</strong> tabs — hover any button for a tooltip. The <strong>📜 History</strong> button shows the full game timeline. <strong>Controls:</strong> <strong>W/S</strong> tilt camera, <strong>A/D</strong> rotate.</p>`,
                 instClose: "Close",
                 claim: "Claim", attack: "Attack", buyTroops: "Buy Troops",
                 fort: "Fort", town: "Town", city: "City", mine: "Mine",
