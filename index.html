@@ -6069,12 +6069,19 @@
                 }
             }
             // SEA-LANE HUBS: Ports — and every CAPITAL — act as hubs. Reaching
-            // any hub supplies every other hub, so an island (or an island
-            // capital) is connected through the port/capital network.
+            // any hub supplies every other hub AND every owned COASTAL tile
+            // (a tile touching the ocean) — your navy can resupply any coastal
+            // holding from a port/capital. So an island civilization stays
+            // supplied entirely, and land BFS then carries supply inland from
+            // each coastal tile. Only fully-landlocked pockets with no land
+            // route to a coastal/hub tile actually get cut off.
             const ports = [];
+            const coastal = [];
             for (let i = 0; i < gameState.ownership.length; i++) {
                 if (gameState.ownership[i] !== playerIdx) continue;
                 if (gameState.buildings[i] === 'port' || isCapitalTile(i)) ports.push(i);
+                const ri = Math.floor(i / cols), ci = i % cols;
+                if (isAdjacentToOcean(ri, ci)) coastal.push(i);
             }
             while (q.length) {
                 const idx = q.shift();
@@ -6088,13 +6095,18 @@
                     reach.add(nIdx);
                     q.push(nIdx);
                 }
-                // Reaching any hub (Port OR capital) links every other hub via
-                // sea lanes — islands with a Port get supplied.
+                // Reaching any hub (Port OR capital) links every other hub AND
+                // every owned coastal tile via sea lanes.
                 if (gameState.buildings[idx] === 'port' || isCapitalTile(idx)) {
                     for (const pIdx of ports) {
                         if (reach.has(pIdx)) continue;
                         reach.add(pIdx);
                         q.push(pIdx);
+                    }
+                    for (const cIdx of coastal) {
+                        if (reach.has(cIdx)) continue;
+                        reach.add(cIdx);
+                        q.push(cIdx);
                     }
                 }
             }
@@ -10320,12 +10332,16 @@
                 if (gameState.ownership[cap] === me) { dist[cap] = 0; q.push(cap); }
             }
             // Hubs = this player's Ports + capitals — they link across the sea.
+            // Coastal tiles are also sea-reachable from any hub.
             const hubs = [];
+            const coastalT = [];
             for (let i = 0; i < gameState.ownership.length; i++) {
                 if (gameState.ownership[i] !== me) continue;
                 if (gameState.buildings[i] === 'port' || isCapitalTile(i)) hubs.push(i);
+                const ri = Math.floor(i / cols), ci = i % cols;
+                if (isAdjacentToOcean(ri, ci)) coastalT.push(i);
             }
-            const seaLanes = [];   // {from, to} hub pairs to draw across water
+            const seaLanes = [];   // {from, to} pairs to draw across water
             while (q.length) {
                 const idx = q.shift();
                 const r = Math.floor(idx / cols), c = idx % cols;
@@ -10339,7 +10355,8 @@
                     parent[ni] = idx;
                     q.push(ni);
                 }
-                // Reaching a hub opens sea lanes to every other owned hub.
+                // Reaching a hub opens sea lanes to every other owned hub AND
+                // to every owned coastal tile.
                 if (gameState.buildings[idx] === 'port' || isCapitalTile(idx)) {
                     for (const h of hubs) {
                         if (dist[h] !== -1) continue;
@@ -10347,6 +10364,13 @@
                         parent[h] = idx;
                         seaLanes.push({ from: idx, to: h });
                         q.push(h);
+                    }
+                    for (const ct of coastalT) {
+                        if (dist[ct] !== -1) continue;
+                        dist[ct] = dist[idx] + 1;
+                        parent[ct] = idx;
+                        seaLanes.push({ from: idx, to: ct });
+                        q.push(ct);
                     }
                 }
             }
