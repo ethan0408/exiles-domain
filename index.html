@@ -1126,6 +1126,11 @@
             </div>
 
             <div class="menu-option">
+                <label for="start-research">🔬 Starting Research Points:</label>
+                <input type="number" id="start-research" value="0" min="0" step="10" />
+            </div>
+
+            <div class="menu-option">
                 <label for="difficulty">🎯 Difficulty:</label>
                 <select id="difficulty">
                     <option value="easy">Easy — passive, poorer AI</option>
@@ -1226,6 +1231,7 @@
                 <button class="action-btn" id="btn-heavy" onclick="openTroopShop()" style="display:none">🛡️ Heavy</button>
                 <button class="action-btn" id="btn-naval" onclick="setAction('naval')">🚢 Naval</button>
                 <button class="action-btn" id="btn-general" onclick="setAction('general')">🎖️ General</button>
+                <button class="action-btn" id="btn-demolish" onclick="setAction('demolish')">🧨 Demolish</button>
                 <button class="action-btn" id="btn-tech" onclick="openTechTree()">🔬 Tech</button>
                 <button class="action-btn" id="btn-diplo" onclick="openDiplomacy()">🤝 Diplomacy</button>
                 <button class="action-btn" id="btn-stats" onclick="openStats()">📊 Stats</button>
@@ -2672,6 +2678,8 @@
             const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b'];
             const startGold = parseInt(document.getElementById('start-gold').value, 10) || 200000;
             const startPop = parseInt(document.getElementById('start-pop').value, 10) || 5000;
+            const startResearchEl = document.getElementById('start-research');
+            const startResearch = startResearchEl ? Math.max(0, parseInt(startResearchEl.value, 10) || 0) : 0;
             const gameMode = document.getElementById('game-mode').value;
 
             // Pick names: AI rivals get random ones from the pool; the human (P1)
@@ -2717,7 +2725,7 @@
                     isDefeated: false,
                     ideology: null,
                     theocracyMix: false,
-                    tech: { researchPoints: 0, unlocked: (gameState.starterTechs || []).slice(0, 4) },
+                    tech: { researchPoints: startResearch, unlocked: (gameState.starterTechs || []).slice(0, 4) },
                     puppetMaster: null,
                     puppets: [],
                     lostTerritoryThisTurn: false,
@@ -2834,6 +2842,19 @@
                 gameState.buildings[idx] = 'city';
                 gameState.troops[idx] = 200;
                 gameState.capitalTiles.add(idx);
+                // START WITH A PORT: place a free Port on a coastal tile next to
+                // the capital so island/coastal starts aren't doomed — it links
+                // into the supply network as a sea-lane hub from turn 1.
+                for (const [nr, nc] of [[r-1,c],[r+1,c],[r,c-1],[r,c+1]]) {
+                    if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+                    const nIdx = nr * cols + nc;
+                    if (gameState.ownership[nIdx] !== playerIdx) continue;
+                    if (gameState.terrain[nr][nc] === 'ocean') continue;
+                    if (gameState.buildings[nIdx]) continue;
+                    if (!isAdjacentToOcean(nr, nc)) continue;
+                    gameState.buildings[nIdx] = 'port';
+                    break;
+                }
             });
 
             if (!startCapitalOnly) {
@@ -4777,10 +4798,10 @@
                 const preset = TACTIC_PRESETS[pb.tacticKey] || TACTIC_PRESETS.balanced;
                 const compMult = compositionAttackBonus(pb.attackerIdx, terrain, isFortified(pb.targetIdx));
                 const counterMult = unitCounterMultiplier(pb.attackerIdx, pb.defenderIdx);
-                const vetMult = veterancyDamageMult(pb.attackerIdx);
+                const vetMult = veterancyDamageMult(pb.attackerIdx) * trainAttackMult(pb.attackerIdx);
                 const genMult = generalDamageMult(pb.attackerIdx, pb.sourceIdx);
                 const wxMult  = weatherCombatMult();
-                let baseDmg = (aT * 0.42 + aH * 1.1 * pb.heavyAtk) * preset.dmgMod * pb.attackBonus * compMult * counterMult * vetMult * genMult * wxMult / (pb.def * veterancyDefenceMult(pb.defenderIdx) * generalDefenceMult(pb.defenderIdx, pb.targetIdx));
+                let baseDmg = (aT * 0.42 + aH * 1.1 * pb.heavyAtk) * preset.dmgMod * pb.attackBonus * compMult * counterMult * vetMult * genMult * wxMult / (pb.def * veterancyDefenceMult(pb.defenderIdx) * generalDefenceMult(pb.defenderIdx, pb.targetIdx) * trainDefenceMult(pb.defenderIdx));
                 if ((pb.tacticKey === 'frontal' || pb.tacticKey === 'pincer') && (terrain === 'plains' || terrain === 'desert')) baseDmg *= 1.15;
                 if ((pb.tacticKey === 'frontal' || pb.tacticKey === 'pincer') && (terrain === 'mountain' || terrain === 'hills')) baseDmg *= 0.7;
                 if (pb.tacticKey === 'ambush' && (terrain === 'hills' || terrain === 'mountain' || terrain === 'tundra')) baseDmg *= 1.2;
@@ -5175,6 +5196,7 @@
                 if (gameState.stats[defenderIdx]) {
                     gameState.stats[defenderIdx].troopsLost   += dmg;
                     gameState.stats[defenderIdx].troopsKilled += loss;
+                    gameState.stats[defenderIdx].battlesFought = (gameState.stats[defenderIdx].battlesFought || 0) + 1;
                 }
                 if (gameState.troops[targetIdx] <= 0) {
                     if (gameState.stats[attackerIdx]) gameState.stats[attackerIdx].battlesWon++;
@@ -5658,6 +5680,8 @@
             if (gameState.stats[pb.defenderIdx]) {
                 gameState.stats[pb.defenderIdx].troopsKilled += totalAtkLoss;
                 gameState.stats[pb.defenderIdx].troopsLost   += totalDefLoss;
+                gameState.stats[pb.defenderIdx].battlesFought = (gameState.stats[pb.defenderIdx].battlesFought || 0) + 1;
+                if (defAlive > 0 && atkAlive === 0) gameState.stats[pb.defenderIdx].battlesWon = (gameState.stats[pb.defenderIdx].battlesWon || 0) + 1;
             }
 
             // Capture if defender wiped + attacker still has dots on field.
@@ -5840,13 +5864,26 @@
                 const compMult = compositionAttackBonus(attackerIdx, terrain, isFortified(targetIdx));
                 const counterMult = unitCounterMultiplier(attackerIdx, defenderIdx);
                 const damage = Math.floor(aT * 0.4 * attackBonus * compMult * counterMult
-                    * veterancyDamageMult(attackerIdx) * generalDamageMult(attackerIdx, sourceIdx) * weatherCombatMult()
-                    / (def * veterancyDefenceMult(defenderIdx) * generalDefenceMult(defenderIdx, targetIdx)));
-                const losses = Math.floor(damage * 0.4);
+                    * veterancyDamageMult(attackerIdx) * trainAttackMult(attackerIdx) * generalDamageMult(attackerIdx, sourceIdx) * weatherCombatMult()
+                    / (def * veterancyDefenceMult(defenderIdx) * generalDefenceMult(defenderIdx, targetIdx) * trainDefenceMult(defenderIdx)));
+                const losses = Math.floor(damage * 0.4 * trainDisciplineMult(attackerIdx));
                 gameState.troops[targetIdx] = Math.max(0, dT - damage);
                 applyCasualtyToPlayer(pAttacker, losses, aT, sourceIdx);
                 gameState.troops[sourceIdx] = Math.max(0, aT - Math.min(aT, losses));
+                // STAT TRACKING: AI/direct attacks count toward battle records
+                // for both sides — they were missing, so the end screen showed 0/0.
+                if (gameState.stats[attackerIdx]) {
+                    gameState.stats[attackerIdx].battlesFought = (gameState.stats[attackerIdx].battlesFought || 0) + 1;
+                    gameState.stats[attackerIdx].troopsKilled  = (gameState.stats[attackerIdx].troopsKilled  || 0) + damage;
+                    gameState.stats[attackerIdx].troopsLost    = (gameState.stats[attackerIdx].troopsLost    || 0) + losses;
+                }
+                if (gameState.stats[defenderIdx]) {
+                    gameState.stats[defenderIdx].battlesFought = (gameState.stats[defenderIdx].battlesFought || 0) + 1;
+                    gameState.stats[defenderIdx].troopsKilled  = (gameState.stats[defenderIdx].troopsKilled  || 0) + losses;
+                    gameState.stats[defenderIdx].troopsLost    = (gameState.stats[defenderIdx].troopsLost    || 0) + damage;
+                }
                 if (gameState.troops[targetIdx] <= 0) {
+                    if (gameState.stats[attackerIdx]) gameState.stats[attackerIdx].battlesWon = (gameState.stats[attackerIdx].battlesWon || 0) + 1;
                     captureTile(targetIdx, attackerIdx, defenderIdx, Math.floor(aT * 0.2));
                 } else {
                     logEvent(`${pAttacker.name} attacked. Defenders: ${gameState.troops[targetIdx]}.`);
@@ -5870,6 +5907,14 @@
                     q.push(cIdx); reach.add(cIdx);
                 }
             }
+            // SEA-LANE HUBS: Ports — and every CAPITAL — act as hubs. Reaching
+            // any hub supplies every other hub, so an island (or an island
+            // capital) is connected through the port/capital network.
+            const ports = [];
+            for (let i = 0; i < gameState.ownership.length; i++) {
+                if (gameState.ownership[i] !== playerIdx) continue;
+                if (gameState.buildings[i] === 'port' || isCapitalTile(i)) ports.push(i);
+            }
             while (q.length) {
                 const idx = q.shift();
                 const r = Math.floor(idx / cols), c = idx % cols;
@@ -5881,6 +5926,15 @@
                     if (gameState.ownership[nIdx] !== playerIdx) continue;
                     reach.add(nIdx);
                     q.push(nIdx);
+                }
+                // Reaching any hub (Port OR capital) links every other hub via
+                // sea lanes — islands with a Port get supplied.
+                if (gameState.buildings[idx] === 'port' || isCapitalTile(idx)) {
+                    for (const pIdx of ports) {
+                        if (reach.has(pIdx)) continue;
+                        reach.add(pIdx);
+                        q.push(pIdx);
+                    }
                 }
             }
             return reach;
@@ -6475,6 +6529,9 @@
                 case 'general':
                     stationGeneral(idx, playerIdx);
                     break;
+                case 'demolish':
+                    demolishBuilding(idx, playerIdx);
+                    break;
                 case 'withdraw':
                     if (gameState.ownership[idx] === playerIdx) {
                         if (gameState.troops[idx] > 50) {
@@ -7059,7 +7116,11 @@
             p.tech.researchPoints += rpEarned;
 
             // Happiness — includes elected-leader trait + conscription strain.
-            let happiness = 100 - (getWarCount(gameState.currentPlayer) * 10) - (mines * 4) - (powers * 8) + (cities * 5) + (towns * 2) + (services * 8);
+            // AIs shrug off much of war's unrest (×4 per war vs the human's ×10)
+            // so they can stay aggressive without death-spiralling.
+            // War now costs everyone — human and AI — 4 happiness per war.
+            const _warCostPer = 4;
+            let happiness = 100 - (getWarCount(gameState.currentPlayer) * _warCostPer) - (mines * 4) - (powers * 8) + (cities * 5) + (towns * 2) + (services * 8);
             happiness += (ideo.happinessBase || 0) + (L.happinessBase || 0);
             // Heavy / Total-War conscription angers the populace.
             const _cr = gameState.conscriptionRate !== undefined ? gameState.conscriptionRate : 1;
@@ -7068,24 +7129,12 @@
             if (ideo.happinessFloor !== undefined) happiness = Math.max(ideo.happinessFloor, happiness);
             p.happiness = Math.min(100, Math.max(10, happiness));
 
-            // AI EMERGENCY HAPPINESS PRIORITY: happiness death is INSTANT, so the
-            // AI does whatever it takes to never reach the threshold. If an AI's
-            // happiness would land in the danger zone, it sues for peace with
-            // EVERY war enemy this instant and the populace is calmed back to a
-            // safe level. Survival is its top priority.
-            if (p.isAI && p.happiness < customSettings.happinessThreshold + 12) {
-                let madePeace = 0;
-                for (let j = 0; j < gameState.numPlayers; j++) {
-                    if (j === gameState.currentPlayer || gameState.players[j].isDefeated) continue;
-                    if (getDiploStatus(gameState.currentPlayer, j) === 'war') {
-                        setDiploStatus(gameState.currentPlayer, j, 'peace');
-                        madePeace++;
-                    }
-                }
-                // Emergency decree — calm the people to a safe margin above death.
-                p.happiness = Math.max(p.happiness, customSettings.happinessThreshold + 14);
-                if (madePeace > 0)
-                    logEvent(`🕊️ ${p.name} (AI) made emergency peace with ${madePeace} nation(s) to avert collapse.`);
+            // AI SURVIVAL FLOOR: if an AI would still dip into the danger zone,
+            // an emergency decree calms its people just above the death line —
+            // but it does NOT mass-surrender every war (that made it passive).
+            // It keeps fighting; it just refuses to die to unrest.
+            if (p.isAI && p.happiness < customSettings.happinessThreshold + 6) {
+                p.happiness = customSettings.happinessThreshold + 8;
             }
 
             // Epidemic
@@ -7403,9 +7452,15 @@
             // mid-game and stack them on its borders.
             const tCost = Math.floor(gameState.TROOP_COST * (ideo.troopCostMult || 1));
             let recruits = 0;
-            // Spend down to a $80K reserve; cap at 12 batches/turn so a single
-            // turn can add up to 1,200 troops when the AI is rich.
-            while (p.gold > tCost + 80000 && recruits < 12) {
+            // WAR CHEST: if the AI has the tech for a Silo/MDS but hasn't built
+            // one, it banks most of the cost instead of blowing every coin on
+            // troops — otherwise it never saves the $5M for a silo.
+            let warChest = 80000;
+            const wantsSilo = hasTech(playerIdx, 'rocketry') && countPlayerBuildings(playerIdx, 'silo') < 1;
+            const wantsMDS  = hasTech(playerIdx, 'mds') && countPlayerBuildings(playerIdx, 'mds') < 1;
+            if (wantsSilo) warChest += Math.floor(gameState.BUILDING_COSTS.silo * 0.85);
+            if (wantsMDS)  warChest += Math.floor(gameState.BUILDING_COSTS.mds * 0.85);
+            while (p.gold > tCost + warChest && recruits < 12) {
                 p.gold -= tCost; p.troops += 100; recruits++;
             }
             // Heavy infantry — buy several batches if it has the tech.
@@ -7553,6 +7608,16 @@
                     if (hasTech(playerIdx, 'fortification') && p.gold > 30000) type = 'wall';
                     else if (hasTech(playerIdx, 'construction') && p.gold > 100000) type = 'fort';
                     else type = 'mine';
+                } else if (hasTech(playerIdx, 'mds') && p.gold > gameState.BUILDING_COSTS.mds + 200000
+                           && countPlayerBuildings(playerIdx, 'mds') < 2) {
+                    // PRIORITY: build Missile Defence — it was missing from the
+                    // AI's options entirely, so AIs never defended against missiles.
+                    type = 'mds';
+                } else if (hasTech(playerIdx, 'rocketry') && p.gold > gameState.BUILDING_COSTS.silo + 300000
+                           && countPlayerBuildings(playerIdx, 'silo') < 1) {
+                    // PRIORITY: build a Missile Silo — needed for the AI's own
+                    // missile strikes. Was never in its build list before.
+                    type = 'silo';
                 } else if (p._wantsServices && hasTech(playerIdx, 'civics') && p.gold > 60000) {
                     // Unrest control — drop a 🏛️ Services building to lift happiness.
                     type = 'service';
@@ -7567,6 +7632,63 @@
                 }
                 if (type) { aiBuildStructure(i, playerIdx, type); built++; }
             }
+
+            // === AI BUILDING UPGRADES (demolish low-tier → build better) ===
+            // Once its land fills up, the AI improves itself: it tears down a
+            // low-value building and replaces it with a higher one along a
+            // hierarchy. It keeps essentials, though — at least 2 Mines for
+            // income and never demolishes Labs/Cities/Silos/MDS/Services.
+            (function aiUpgradeBuildings() {
+                let mineCount = 0, labCount2 = 0;
+                for (let i = 0; i < gameState.ownership.length; i++) {
+                    if (gameState.ownership[i] !== playerIdx) continue;
+                    if (gameState.buildings[i] === 'mine') mineCount++;
+                    if (gameState.buildings[i] === 'lab') labCount2++;
+                }
+                // Upgrade hierarchy: each entry = {from, to, requires, gold,
+                //   border:true/false/null, keepMines:n}. Checked in order.
+                const UPGRADES = [
+                    // STRATEGIC: clear a mine to make room for a Silo / MDS when
+                    // the AI's land is full — otherwise it never builds them.
+                    { from:'mine', to:'mds',  req:'mds',      gold:gameState.BUILDING_COSTS.mds,  border:null, keepMines:2, onlyIfNone:'mds' },
+                    { from:'mine', to:'silo', req:'rocketry', gold:gameState.BUILDING_COSTS.silo, border:null, keepMines:2, onlyIfNone:'silo' },
+                    // Border defence ladder.
+                    { from:'mine', to:'wall',  req:'fortification', gold:30000,  border:true },
+                    { from:'wall', to:'fort',  req:'construction',  gold:100000, border:true },
+                    // Interior economy / research ladder.
+                    { from:'mine', to:'lab',   req:null,            gold:200000, border:false, needLabsBelow:3, keepMines:2 },
+                    { from:'mine', to:'town',  req:'urbanization',  gold:100000, border:false, keepMines:2 },
+                    { from:'town', to:'city',  req:'urbanization',  gold:1000000,border:false }
+                ];
+                let upgrades = 0;
+                for (const u of UPGRADES) {
+                    if (upgrades >= 2) break;                       // gradual — max 2/turn
+                    if (u.req && !hasTech(playerIdx, u.req)) continue;
+                    if (p.gold < u.gold + 60000) continue;          // keep a reserve
+                    if (u.needLabsBelow !== undefined && labCount2 >= u.needLabsBelow) continue;
+                    // Silo/MDS: only convert a mine if the AI doesn't already own one.
+                    if (u.onlyIfNone && countPlayerBuildings(playerIdx, u.onlyIfNone) > 0) continue;
+                    // Find a tile matching the "from" building of the right kind.
+                    for (let i = 0; i < gameState.ownership.length; i++) {
+                        if (upgrades >= 2) break;
+                        if (gameState.ownership[i] !== playerIdx) continue;
+                        if (gameState.buildings[i] !== u.from) continue;
+                        if (isCapitalTile(i)) continue;
+                        if (u.border === true  && !isBorder(i)) continue;
+                        if (u.border === false &&  isBorder(i)) continue;
+                        // Protect essential mines.
+                        if (u.from === 'mine' && u.keepMines && mineCount <= u.keepMines) continue;
+                        // Demolish + rebuild.
+                        gameState.buildings[i] = null;
+                        if (u.from === 'mine') mineCount--;
+                        p.gold += Math.floor(((gameState.BUILDING_COSTS[u.from]) || 0) * 0.3); // 30% salvage
+                        aiBuildStructure(i, playerIdx, u.to);
+                        if (u.to === 'lab') labCount2++;
+                        logEvent(`🏗️ ${p.name} (AI) upgraded a ${u.from} into a ${u.to}.`);
+                        upgrades++;
+                    }
+                }
+            })();
 
             // ATTENTIVE DEFENCE: the AI pushes its reserve troops onto border
             // tiles, so its frontier is genuinely thick with thousands of troops
@@ -7591,35 +7713,198 @@
                 }
             }
 
-            // === AI NAVAL INVASIONS ===
-            // If the AI has a coastal Port with troops, and a reachable enemy
-            // coastal tile exists, it launches a naval expedition. Was missing
-            // entirely — AIs never used the sea.
+            // === AI NAVAL INVASIONS (overseas conquest) ===
+            // The AI hunts down enemies it can't reach by land — especially a
+            // foe holed up on an island. It will launch from ANY coastal tile
+            // it owns (port, capital, or plain coast), declare war first if
+            // needed, and prioritise the weakest / most isolated enemy tiles.
             if (hasTech(playerIdx, 'navigation')) {
-                for (let i = 0; i < gameState.ownership.length && (gameState.navalExpeditions.filter(e=>e.ownerIdx===playerIdx).length < 2); i++) {
+                const cols = gameState.boardCols;
+                // Coastal launch tiles the AI owns with a usable landing force.
+                const launchers = [];
+                for (let i = 0; i < gameState.ownership.length; i++) {
                     if (gameState.ownership[i] !== playerIdx) continue;
-                    if (gameState.buildings[i] !== 'port') continue;
-                    const portTroops = gameState.troops[i] || 0;
-                    if (portTroops < 80) continue;            // need a real landing force
-                    if (Math.random() > 0.5) continue;        // not every port, every turn
-                    // Find an enemy coastal tile to invade.
-                    let target = -1;
+                    const r = Math.floor(i / cols), c = i % cols;
+                    if (gameState.terrain[r][c] === 'ocean') continue;
+                    if (!isAdjacentToOcean(r, c)) continue;
+                    if ((gameState.troops[i] || 0) >= 50) launchers.push(i);
+                }
+                // Enemy land tiles reachable only by sea — sorted weakest first
+                // so the AI finishes off near-dead foes (e.g. a 1-tile island).
+                const seaTargets = [];
+                for (let j = 0; j < gameState.ownership.length; j++) {
+                    const o = gameState.ownership[j];
+                    if (o === -1 || o === playerIdx) continue;
+                    const jr = Math.floor(j / cols), jc = j % cols;
+                    if (gameState.terrain[jr][jc] === 'ocean') continue;
+                    if (!isAdjacentToOcean(jr, jc)) continue;
+                    // Only tiles the AI can't already walk to.
+                    if (isAdjacentToOwned(jr, jc, playerIdx)) continue;
+                    seaTargets.push({ j, o, troops: gameState.troops[j] || 0 });
+                }
+                seaTargets.sort((a, b) => a.troops - b.troops);
+                let exp = gameState.navalExpeditions.filter(e => e.ownerIdx === playerIdx).length;
+                for (const tgt of seaTargets) {
+                    if (exp >= 3 || !launchers.length) break;
+                    // Make sure we're at war with the target's owner first.
+                    if (getDiploStatus(playerIdx, tgt.o) !== 'war') {
+                        setDiploStatus(playerIdx, tgt.o, 'war');
+                        logEvent(`⚔️ ${p.name} (AI) declared war on ${gameState.players[tgt.o].name} to invade by sea!`);
+                    }
+                    // Launch from the coastal tile with the most troops.
+                    launchers.sort((a, b) => (gameState.troops[b] || 0) - (gameState.troops[a] || 0));
+                    const src = launchers[0];
+                    const avail = gameState.troops[src] || 0;
+                    if (avail < 50) break;
+                    // Send enough to overwhelm the target; keep 20 home.
+                    const send = Math.min(avail - 20, Math.max(60, tgt.troops * 2 + 60));
+                    const sendH = Math.min(p.heavyTroops || 0, Math.floor(send * 0.2));
+                    p.heavyTroops = Math.max(0, (p.heavyTroops || 0) - sendH);
+                    startNavalExpedition(playerIdx, src, tgt.j, send, sendH);
+                    exp++;
+                }
+            }
+
+            // === AI FUNDS REVOLTS ===
+            // The AI now bankrolls insurgencies inside its enemies — a covert
+            // way to break a rival apart without marching an army.
+            if (p.gold > REVOLT_COST + 250000 && Math.random() < 0.30) {
+                const foes = [];
+                for (let j = 0; j < gameState.numPlayers; j++) {
+                    if (j === playerIdx || gameState.players[j].isDefeated) continue;
+                    if (getDiploStatus(playerIdx, j) === 'war' || !gameState.players[j].isAI) foes.push(j);
+                }
+                if (foes.length) {
+                    const tj = foes[Math.floor(Math.random() * foes.length)];
+                    const target = gameState.players[tj];
+                    p.gold -= REVOLT_COST;
+                    if (gameState.stats[playerIdx]) gameState.stats[playerIdx].revoltsFunded = (gameState.stats[playerIdx].revoltsFunded || 0) + 1;
+                    if (!gameState.revolts) gameState.revolts = [];
+                    let rv = gameState.revolts.find(r => r.fundedBy === playerIdx && r.targetIdx === tj);
+                    if (!rv) {
+                        gameState.revolts.push({ fundedBy: playerIdx, targetIdx: tj, followers: 100, morale: 55, turnsActive: 0 });
+                        logEvent(`💥 ${p.name} (AI) secretly funded a revolt against ${target.name}!`);
+                    } else {
+                        rv.followers += 200; rv.morale = Math.min(100, rv.morale + 12);
+                        logEvent(`💥 ${p.name} (AI) poured more gold into the ${target.name} revolt.`);
+                    }
+                    adjustOpinion(tj, playerIdx, -10);
+                    if (tj === 0 && typeof showToast === 'function')
+                        showToast('💥 Unrest is stirring in your lands — someone is funding rebels!', 'warn');
+                }
+            }
+
+            // === AI WAR COALITIONS (inviting others to battle) ===
+            // The AI rallies friends into its wars: it asks a nation it is at
+            // peace/allied with to join the fight against a shared-style enemy.
+            if (Math.random() < 0.25) {
+                let warEnemy = -1;
+                for (let j = 0; j < gameState.numPlayers; j++) {
+                    if (j !== playerIdx && !gameState.players[j].isDefeated && getDiploStatus(playerIdx, j) === 'war') { warEnemy = j; break; }
+                }
+                if (warEnemy >= 0) {
+                    for (let k = 0; k < gameState.numPlayers; k++) {
+                        if (k === playerIdx || k === warEnemy || gameState.players[k].isDefeated) continue;
+                        const rel = getDiploStatus(playerIdx, k);
+                        if (rel !== 'peace' && rel !== 'ally') continue;
+                        if (getDiploStatus(k, warEnemy) === 'war') continue;
+                        const ally = gameState.players[k];
+                        if (ally.isAI) {
+                            // Fellow AI joins if reasonably strong.
+                            if (Math.random() < 0.55) {
+                                setDiploStatus(k, warEnemy, 'war');
+                                logEvent(`🤝 ${p.name} (AI) rallied ${ally.name} into the war on ${gameState.players[warEnemy].name}!`);
+                            }
+                        } else {
+                            // Ask the human — they're paid to join.
+                            if (confirm(`${p.name} asks you to join their war on ${gameState.players[warEnemy].name}. They offer $60,000. Accept?`)) {
+                                setDiploStatus(0, warEnemy, 'war');
+                                gameState.players[0].gold += 60000;
+                                p.gold = Math.max(0, p.gold - 60000);
+                                logEvent(`🤝 You joined ${p.name}'s war on ${gameState.players[warEnemy].name} for $60K.`);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // === AI GENERALS ===
+            // If the AI has no general and can afford one, it commissions one
+            // and stations them on its strongest enemy-facing tile (the spot it
+            // will attack from) — +35% attack/defence where it matters most.
+            if ((p.generalTile === undefined || p.generalTile === null)
+                && p.gold > 120000 + 90000 && (p.iron || 0) >= 30) {
+                let bestTile = -1, bestScore = -1;
+                for (let i = 0; i < gameState.ownership.length; i++) {
+                    if (gameState.ownership[i] !== playerIdx) continue;
+                    if (!isBorder(i)) continue;
+                    const score = gameState.troops[i] || 0;
+                    if (score > bestScore) { bestScore = score; bestTile = i; }
+                }
+                if (bestTile >= 0) {
+                    p.gold -= 120000; p.iron = Math.max(0, (p.iron || 0) - 30);
+                    p.generalTile = bestTile;
+                    logEvent(`🎖️ ${p.name} (AI) commissioned a General to command the front.`);
+                }
+            }
+
+            // === AI MISSILE STRIKES ===
+            // The AI now FIRES its silos. If it owns a Missile Silo, has a war
+            // enemy, and can afford the strike, it launches at an enemy tile —
+            // preferring the enemy's heaviest garrison. MDS adjacent to the
+            // target still intercepts.
+            (function aiLaunchMissiles() {
+                let launched = 0;
+                const maxL = gameState.maxMissilesPerTurn || 1;
+                for (let i = 0; i < gameState.ownership.length && launched < maxL; i++) {
+                    if (gameState.ownership[i] !== playerIdx) continue;
+                    if (gameState.buildings[i] !== 'silo') continue;
+                    if (p.gold < gameState.MISSILE_COST) break;
+                    // Pick the juiciest enemy-at-war tile.
+                    let target = -1, bestT = -1;
                     for (let j = 0; j < gameState.ownership.length; j++) {
                         const o = gameState.ownership[j];
                         if (o === -1 || o === playerIdx) continue;
                         if (getDiploStatus(playerIdx, o) !== 'war') continue;
-                        const jr = Math.floor(j / gameState.boardCols), jc = j % gameState.boardCols;
-                        if (gameState.terrain[jr][jc] === 'ocean') continue;
-                        if (!isAdjacentToOcean(jr, jc)) continue;
-                        target = j; break;
+                        const t = (gameState.troops[j] || 0) + (gameState.buildings[j] ? 120 : 0);
+                        if (t > bestT) { bestT = t; target = j; }
                     }
-                    if (target < 0) continue;
-                    const send = Math.min(portTroops - 20, Math.max(60, Math.floor(portTroops * 0.7)));
-                    const sendH = Math.min(p.heavyTroops || 0, Math.floor(send * 0.2));
-                    p.heavyTroops = Math.max(0, (p.heavyTroops || 0) - sendH);
-                    startNavalExpedition(playerIdx, i, target, send, sendH);
+                    if (target < 0) break;
+                    p.gold -= gameState.MISSILE_COST;
+                    launched++;
+                    if (gameState.stats[playerIdx]) gameState.stats[playerIdx].missilesLaunched = (gameState.stats[playerIdx].missilesLaunched || 0) + 1;
+                    // MDS interception — any MDS on/adjacent to the target.
+                    const tr = Math.floor(target / gameState.boardCols), tc = target % gameState.boardCols;
+                    let intercepted = false;
+                    for (let dr = -1; dr <= 1 && !intercepted; dr++)
+                        for (let dc = -1; dc <= 1; dc++) {
+                            const nr = tr + dr, nc = tc + dc;
+                            if (nr < 0 || nr >= gameState.boardRows || nc < 0 || nc >= gameState.boardCols) continue;
+                            if (gameState.buildings[nr * gameState.boardCols + nc] === 'mds') { intercepted = true; break; }
+                        }
+                    const tOwner = gameState.ownership[target];
+                    let dmgMult = 1;
+                    if (hasTech(playerIdx, 'nuclear')) dmgMult = 1.5;
+                    if (hasTech(playerIdx, 'hydrogen')) dmgMult = 2.25;
+                    const dmg = Math.floor(150 * dmgMult);
+                    const siloIdx = i;
+                    // Fly the missile across the board, then resolve the hit —
+                    // same animation the player's launches use.
+                    animateMissile(siloIdx, target, intercepted).then(() => {
+                        if (intercepted) {
+                            logEvent(`🚀 ${p.name} (AI) fired a missile — intercepted by MDS!`);
+                            if (tOwner === 0 && typeof showToast === 'function') showToast('🛡️ Your MDS intercepted an enemy missile!', 'good');
+                        } else {
+                            gameState.troops[target] = Math.max(0, (gameState.troops[target] || 0) - dmg);
+                            if (gameState.buildings[target] && !isCapitalTile(target)) gameState.buildings[target] = null;
+                            logEvent(`🚀 ${p.name} (AI) launched a missile — ${dmg} damage to enemy territory!`);
+                            if (tOwner === 0 && typeof showToast === 'function') showToast(`🚀 ${p.name} hit your territory with a missile! −${dmg} troops.`, 'danger');
+                        }
+                        renderGame();
+                    });
                 }
-            }
+            })();
 
             endTurn();
         }
@@ -8221,7 +8506,23 @@
             const portrait = LEADER_PORTRAITS[Math.floor(Math.random() * LEADER_PORTRAITS.length)];
             const goods = LEADER_TRAITS.filter(t => t.good);
             const t1 = goods[Math.floor(Math.random() * goods.length)];
-            let t2; do { t2 = LEADER_TRAITS[Math.floor(Math.random() * LEADER_TRAITS.length)]; } while (t2.id === t1.id);
+            // Two traits must not CANCEL each other (e.g. Merchant +15% income
+            // paired with Corrupt −15% income → a pointless net-zero leader).
+            // Reject any t2 that pushes a stat the opposite way to t1.
+            const opposes = (a, b) => {
+                for (const k of ['incomeMult', 'researchMult', 'attackMult']) {
+                    const av = a[k], bv = b[k];
+                    if (av !== undefined && bv !== undefined && ((av - 1) * (bv - 1) < 0)) return true;
+                }
+                // Happiness: one trait raising it, the other lowering it.
+                if ((a.happinessBase || 0) * (b.happinessBase || 0) < 0) return true;
+                return false;
+            };
+            let t2, tries = 0;
+            do {
+                t2 = LEADER_TRAITS[Math.floor(Math.random() * LEADER_TRAITS.length)];
+                tries++;
+            } while ((t2.id === t1.id || opposes(t1, t2)) && tries < 40);
             return {
                 name: `${first} ${last}`, portrait, traits: [t1, t2],
                 traitText: `${t1.text}, ${t2.text}`,
@@ -9125,18 +9426,28 @@
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             const W = canvas.width, H = canvas.height;
+            // FRAME-RATE INDEPENDENT: physics now scale by real elapsed time, so
+            // the game runs at the same speed even if the browser drops frames
+            // (e.g. while the page is scrolling). Was: fixed per-frame steps,
+            // which made the bird crawl whenever the frame rate dipped.
+            const now = performance.now();
+            if (f.lastT === undefined) f.lastT = now;
+            // dt in 60fps-frame units, clamped so a big hitch can't teleport the bird.
+            let s = (now - f.lastT) / 16.667;
+            f.lastT = now;
+            if (s > 3) s = 3;
+            if (s < 0) s = 0;
             // Physics
             if (f.started && !f.dead) {
-                f.vy += 0.35; f.y += f.vy;
-                // spawn pipes every 80 frames
-                f.lastPipe++;
+                f.vy += 0.35 * s; f.y += f.vy * s;
+                // spawn pipes on a time accumulator (~95 frame-units apart)
+                f.lastPipe += s;
                 if (f.lastPipe > 95) {
-                    // Medium difficulty — gap 130, spawns every 95 frames.
                     f.lastPipe = 0;
                     const gap = 130, top = 40 + Math.random() * (H - gap - 80);
                     f.pipes.push({ x:W, top, gap, passed:false });
                 }
-                for (const p of f.pipes) p.x -= 2.2;  // medium pipe speed
+                for (const p of f.pipes) p.x -= 2.2 * s;
                 f.pipes = f.pipes.filter(p => p.x > -60);
                 for (const p of f.pipes) {
                     if (!p.passed && p.x + 30 < f.x) { p.passed = true; f.score++; sfx.click(); }
@@ -9179,18 +9490,23 @@
             document.getElementById('flap-score').textContent = f.score;
             if (f.dead) {
                 const status = document.getElementById('flap-status');
-                if (f.score >= 12) {   // medium: 12 pipes to rank up
+                // SCALING REWARD: 1 training rank per 12 pipes cleared —
+                // 12 → +1, 24 → +2, 36 → +3, and so on (capped at TRAIN_MAX).
+                const earned = Math.floor(f.score / 12);
+                if (earned >= 1) {
                     const p = gameState.players[gameState.currentPlayer];
-                    if ((p.trainingRank || 0) < TRAIN_MAX) {
-                        p.trainingRank = (p.trainingRank || 0) + 1;
-                        status.textContent = `✅ Rank up! Now ⭐ ${p.trainingRank}. +5% damage, +2% defence.`;
+                    const before = p.trainingRank || 0;
+                    if (before < TRAIN_MAX) {
+                        p.trainingRank = Math.min(TRAIN_MAX, before + earned);
+                        const gained = p.trainingRank - before;
+                        status.textContent = `✅ ${f.score} pipes — +${gained} rank${gained > 1 ? 's' : ''}! Now ⭐ ${p.trainingRank}. +${gained*5}% dmg, +${gained*2}% def this run.`;
                         document.getElementById('flap-rank').textContent = '⭐ ' + p.trainingRank;
                         sfx.build && sfx.build();
                     } else {
                         status.textContent = `🏆 Already maxed at ⭐ ${TRAIN_MAX}.`;
                     }
                 } else {
-                    status.textContent = `💀 Crashed at ${f.score} pipes. Need 12 to rank up. Click to retry.`;
+                    status.textContent = `💀 Crashed at ${f.score} pipes. Need 12 to rank up (24 = 2 ranks, etc). Click to retry.`;
                     sfx.error();
                 }
                 return;
@@ -9203,13 +9519,357 @@
             if (!actions || document.getElementById('btn-train')) return;
             const btn = document.createElement('button');
             btn.className = 'action-btn'; btn.id = 'btn-train';
-            btn.onclick = openFlappy;
-            btn.textContent = '🐤 Train';
-            // Insert it before the end-turn button.
+            btn.onclick = openTrainingHub;
+            btn.textContent = '🎯 Train';
             const eot = document.getElementById('btn-end-turn');
             if (eot && eot.parentElement === actions) actions.insertBefore(btn, eot);
             else actions.appendChild(btn);
         })();
+
+        // =============================================================
+        // === TRAINING — 3 FACTORS, 3 MINIGAMES =======================
+        // =============================================================
+        // Each minigame trains a different combat factor:
+        //   🐤 Flappy Bird  → ATTACK     (p.trainingRank)  +5% damage / rank
+        //   🔢 2048         → DEFENCE    (p.trainDefence)  +5% resist / rank
+        //   🧱 Tetris       → DISCIPLINE (p.trainDiscipline) −3% losses / rank
+        function trainAttackMult(idx)     { const p = gameState.players[idx]; return 1 + ((p && p.trainingRank)   || 0) * 0.05; }
+        function trainDefenceMult(idx)    { const p = gameState.players[idx]; return 1 + ((p && p.trainDefence)    || 0) * 0.05; }
+        function trainDisciplineMult(idx) { const p = gameState.players[idx]; return Math.max(0.55, 1 - ((p && p.trainDiscipline) || 0) * 0.03); }
+
+        function openTrainingHub() {
+            sfx.click();
+            let modal = document.getElementById('training-hub-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.className = 'modal'; modal.id = 'training-hub-modal';
+                document.body.appendChild(modal);
+            }
+            const p = gameState.players[gameState.currentPlayer];
+            const card = (icon, name, stat, val, perk, fn) => `
+                <div onclick="${fn}" style="background:var(--bg-element); border:1px solid var(--border-color); border-radius:12px; padding:0.9rem 1rem; cursor:pointer; transition:all 0.15s;"
+                     onmouseover="this.style.borderColor='var(--border-active)'; this.style.background='rgba(99,102,241,0.1)';"
+                     onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='var(--bg-element)';">
+                    <div style="font-size:1.6rem;">${icon}</div>
+                    <div style="font-weight:800; color:#a5b4fc; margin-top:0.2rem;">${name}</div>
+                    <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.15rem;">Trains <strong>${stat}</strong> — ${perk}</div>
+                    <div style="font-size:0.8rem; margin-top:0.3rem;">Current: <strong style="color:#fbbf24;">⭐ ${val}</strong> / ${TRAIN_MAX}</div>
+                </div>`;
+            modal.innerHTML = `
+              <div class="modal-content" style="max-width:560px;">
+                <h2 class="modal-title">🎯 Drill Grounds</h2>
+                <p style="color:var(--text-muted); font-size:0.84rem; margin-bottom:0.8rem;">Three drills, three combat factors. Score in a minigame to earn permanent ranks.</p>
+                <div style="display:flex; flex-direction:column; gap:0.6rem;">
+                    ${card('🐤','Flappy Bird — Offence Drill','ATTACK', (p.trainingRank||0), '+5% damage dealt per rank', "openFlappy()")}
+                    ${card('🔢','2048 — Logistics Drill','DEFENCE', (p.trainDefence||0), '+5% damage resistance per rank', "open2048()")}
+                    ${card('🧱','Tetris — Discipline Drill','DISCIPLINE', (p.trainDiscipline||0), '−3% battle losses per rank', "openTetris()")}
+                </div>
+                <button class="close-modal" onclick="document.getElementById('training-hub-modal').style.display='none'">Close</button>
+              </div>`;
+            modal.style.display = 'flex';
+        }
+        function _closeTrainingHub() { const m = document.getElementById('training-hub-modal'); if (m) m.style.display = 'none'; }
+
+        // ===== 2048 — DEFENCE DRILL =====
+        // Reach a 256 tile to earn 1 Defence rank; 512 → 2, 1024 → 3, 2048 → 4.
+        let _g2048 = null;
+        function open2048() {
+            sfx.click();
+            _closeTrainingHub();
+            let modal = document.getElementById('g2048-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.className = 'modal'; modal.id = 'g2048-modal';
+                modal.innerHTML = `
+                  <div class="modal-content" style="max-width:420px; text-align:center;">
+                    <h2 class="modal-title">🔢 2048 — Logistics Drill</h2>
+                    <p style="color:var(--text-muted); font-size:0.8rem;">Arrow keys / WASD to merge. Reach <strong>256</strong> for a Defence rank — 512, 1024, 2048 give more.</p>
+                    <div style="font-size:0.85rem; margin:0.4rem 0;">Best tile: <strong id="g2048-best" style="color:#fbbf24;">0</strong> · Defence rank: <strong id="g2048-rank">⭐ 0</strong></div>
+                    <canvas id="g2048-canvas" width="320" height="320" style="display:block; margin:0 auto; background:#1e293b; border-radius:8px;"></canvas>
+                    <div id="g2048-status" style="font-size:0.84rem; color:#a5b4fc; margin-top:0.5rem; min-height:1.2em;"></div>
+                    <div style="display:flex; gap:0.5rem; margin-top:0.7rem;">
+                        <button class="action-btn" onclick="reset2048()" style="flex:1;">↻ Restart</button>
+                        <button class="close-modal" onclick="document.getElementById('g2048-modal').style.display='none'" style="margin-top:0;">Close</button>
+                    </div>
+                  </div>`;
+                document.body.appendChild(modal);
+                window.addEventListener('keydown', (e) => {
+                    if (document.getElementById('g2048-modal').style.display !== 'flex' || !_g2048 || _g2048.done) return;
+                    const k = e.key.toLowerCase();
+                    let dir = null;
+                    if (k === 'arrowleft'  || k === 'a') dir = 'L';
+                    else if (k === 'arrowright' || k === 'd') dir = 'R';
+                    else if (k === 'arrowup'    || k === 'w') dir = 'U';
+                    else if (k === 'arrowdown'  || k === 's') dir = 'D';
+                    if (dir) { e.preventDefault(); move2048(dir); }
+                });
+            }
+            const p = gameState.players[gameState.currentPlayer];
+            document.getElementById('g2048-rank').textContent = '⭐ ' + (p.trainDefence || 0);
+            reset2048();
+            modal.style.display = 'flex';
+        }
+        function reset2048() {
+            _g2048 = { grid: Array(16).fill(0), done: false };
+            spawn2048(); spawn2048();
+            document.getElementById('g2048-status').textContent = '';
+            draw2048();
+        }
+        function spawn2048() {
+            const empty = [];
+            _g2048.grid.forEach((v, i) => { if (v === 0) empty.push(i); });
+            if (!empty.length) return;
+            _g2048.grid[empty[Math.floor(Math.random() * empty.length)]] = Math.random() < 0.9 ? 2 : 4;
+        }
+        function move2048(dir) {
+            const g = _g2048.grid;
+            const line = (idxs) => {
+                let vals = idxs.map(i => g[i]).filter(v => v);
+                for (let i = 0; i < vals.length - 1; i++) {
+                    if (vals[i] === vals[i + 1]) { vals[i] *= 2; vals.splice(i + 1, 1); }
+                }
+                while (vals.length < idxs.length) vals.push(0);
+                return vals;
+            };
+            let moved = false;
+            for (let n = 0; n < 4; n++) {
+                let idxs;
+                if (dir === 'L') idxs = [0,1,2,3].map(c => n*4 + c);
+                else if (dir === 'R') idxs = [3,2,1,0].map(c => n*4 + c);
+                else if (dir === 'U') idxs = [0,1,2,3].map(r => r*4 + n);
+                else idxs = [3,2,1,0].map(r => r*4 + n);
+                const before = idxs.map(i => g[i]);
+                const after = line(idxs);
+                idxs.forEach((i, k) => { if (g[i] !== after[k]) moved = true; g[i] = after[k]; });
+            }
+            if (moved) { spawn2048(); draw2048(); check2048(); }
+        }
+        function check2048() {
+            const g = _g2048.grid;
+            const best = Math.max(...g);
+            document.getElementById('g2048-best').textContent = best;
+            // Rank thresholds: 256→1, 512→2, 1024→3, 2048→4.
+            let earned = 0;
+            if (best >= 2048) earned = 4;
+            else if (best >= 1024) earned = 3;
+            else if (best >= 512) earned = 2;
+            else if (best >= 256) earned = 1;
+            if (earned > 0) {
+                const p = gameState.players[gameState.currentPlayer];
+                if ((p.trainDefence || 0) < earned) {
+                    const gain = earned - (p.trainDefence || 0);
+                    p.trainDefence = Math.min(TRAIN_MAX, earned);
+                    document.getElementById('g2048-status').textContent = `✅ Defence rank ${p.trainDefence}! +${gain*5}% damage resistance.`;
+                    document.getElementById('g2048-rank').textContent = '⭐ ' + p.trainDefence;
+                    sfx.build && sfx.build();
+                }
+            }
+            // Loss check — no moves left.
+            if (g.every(v => v !== 0)) {
+                let canMove = false;
+                for (let i = 0; i < 16 && !canMove; i++) {
+                    const r = Math.floor(i/4), c = i%4;
+                    if (c < 3 && g[i] === g[i+1]) canMove = true;
+                    if (r < 3 && g[i] === g[i+4]) canMove = true;
+                }
+                if (!canMove) {
+                    _g2048.done = true;
+                    document.getElementById('g2048-status').textContent += '  💀 No moves left — Restart.';
+                }
+            }
+        }
+        function draw2048() {
+            const cv = document.getElementById('g2048-canvas');
+            if (!cv) return;
+            const ctx = cv.getContext('2d');
+            ctx.clearRect(0, 0, 320, 320);
+            const cols = { 2:'#475569',4:'#5b6b82',8:'#f59e0b',16:'#f97316',32:'#ef4444',64:'#dc2626',128:'#a855f7',256:'#8b5cf6',512:'#6366f1',1024:'#3b82f6',2048:'#10b981' };
+            for (let i = 0; i < 16; i++) {
+                const r = Math.floor(i/4), c = i%4;
+                const x = c*78 + 8, y = r*78 + 8, v = _g2048.grid[i];
+                ctx.fillStyle = v ? (cols[v] || '#10b981') : 'rgba(255,255,255,0.05)';
+                ctx.fillRect(x, y, 70, 70);
+                if (v) {
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold ' + (v >= 1024 ? 20 : 26) + 'px system-ui';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(v, x + 35, y + 36);
+                }
+            }
+        }
+        // ===== TETRIS — DISCIPLINE DRILL =====
+        // Clear lines to earn Discipline ranks: 2 lines → 1, 4 → 2, 6 → 3,
+        // 8 → 4, 10 → 5. Each rank shaves 3% off your battle losses.
+        const TETRIS_COLS = 10, TETRIS_ROWS = 18, TETRIS_CELL = 18;
+        const TETROMINOES = {
+            I: { color:'#22d3ee', cells:[[0,1],[1,1],[2,1],[3,1]] },
+            O: { color:'#fbbf24', cells:[[1,0],[2,0],[1,1],[2,1]] },
+            T: { color:'#a855f7', cells:[[1,0],[0,1],[1,1],[2,1]] },
+            S: { color:'#10b981', cells:[[1,0],[2,0],[0,1],[1,1]] },
+            Z: { color:'#ef4444', cells:[[0,0],[1,0],[1,1],[2,1]] },
+            J: { color:'#3b82f6', cells:[[0,0],[0,1],[1,1],[2,1]] },
+            L: { color:'#f97316', cells:[[2,0],[0,1],[1,1],[2,1]] }
+        };
+        let _tetris = null;
+        function openTetris() {
+            sfx.click();
+            _closeTrainingHub();
+            let modal = document.getElementById('tetris-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.className = 'modal'; modal.id = 'tetris-modal';
+                modal.innerHTML = `
+                  <div class="modal-content" style="max-width:380px; text-align:center;">
+                    <h2 class="modal-title">🧱 Tetris — Discipline Drill</h2>
+                    <p style="color:var(--text-muted); font-size:0.78rem;">←/→ move · ↑/W rotate · ↓ soft drop · Space hard drop. Clear lines for Discipline ranks (2 lines = 1 rank).</p>
+                    <div style="font-size:0.85rem; margin:0.35rem 0;">Lines: <strong id="tetris-lines" style="color:#fbbf24;">0</strong> · Discipline: <strong id="tetris-rank">⭐ 0</strong></div>
+                    <canvas id="tetris-canvas" width="${TETRIS_COLS*TETRIS_CELL}" height="${TETRIS_ROWS*TETRIS_CELL}" style="display:block; margin:0 auto; background:#0f172a; border:2px solid var(--border-color); border-radius:6px;"></canvas>
+                    <div id="tetris-status" style="font-size:0.84rem; color:#a5b4fc; margin-top:0.5rem; min-height:1.2em;"></div>
+                    <div style="display:flex; gap:0.5rem; margin-top:0.7rem;">
+                        <button class="action-btn" onclick="resetTetris()" style="flex:1;">↻ Restart</button>
+                        <button class="close-modal" onclick="closeTetris()" style="margin-top:0;">Close</button>
+                    </div>
+                  </div>`;
+                document.body.appendChild(modal);
+                window.addEventListener('keydown', (e) => {
+                    if (document.getElementById('tetris-modal').style.display !== 'flex' || !_tetris || _tetris.done) return;
+                    const k = e.key.toLowerCase();
+                    if (k === 'arrowleft'  || k === 'a') { e.preventDefault(); tetrisMove(-1); }
+                    else if (k === 'arrowright' || k === 'd') { e.preventDefault(); tetrisMove(1); }
+                    else if (k === 'arrowup'   || k === 'w') { e.preventDefault(); tetrisRotate(); }
+                    else if (k === 'arrowdown' || k === 's') { e.preventDefault(); tetrisStep(true); }
+                    else if (k === ' ') { e.preventDefault(); tetrisHardDrop(); }
+                });
+            }
+            const p = gameState.players[gameState.currentPlayer];
+            document.getElementById('tetris-rank').textContent = '⭐ ' + (p.trainDiscipline || 0);
+            resetTetris();
+            modal.style.display = 'flex';
+        }
+        function closeTetris() {
+            sfx.click();
+            if (_tetris) _tetris.done = true;
+            if (_tetris && _tetris.timer) clearInterval(_tetris.timer);
+            _tetris = null;
+            document.getElementById('tetris-modal').style.display = 'none';
+        }
+        function resetTetris() {
+            if (_tetris && _tetris.timer) clearInterval(_tetris.timer);
+            _tetris = { board: Array(TETRIS_COLS*TETRIS_ROWS).fill(null), piece: null, lines: 0, done: false, timer: null };
+            tetrisSpawn();
+            document.getElementById('tetris-status').textContent = '';
+            document.getElementById('tetris-lines').textContent = '0';
+            _tetris.timer = setInterval(() => { if (_tetris && !_tetris.done) tetrisStep(false); }, 550);
+            drawTetris();
+        }
+        function tetrisSpawn() {
+            const keys = Object.keys(TETROMINOES);
+            const key = keys[Math.floor(Math.random() * keys.length)];
+            const t = TETROMINOES[key];
+            _tetris.piece = { color: t.color, cells: t.cells.map(c => c.slice()), x: 3, y: 0 };
+            if (tetrisCollides(_tetris.piece.cells, _tetris.piece.x, _tetris.piece.y)) {
+                _tetris.done = true;
+                if (_tetris.timer) clearInterval(_tetris.timer);
+                document.getElementById('tetris-status').textContent = '💀 Board full — Restart to try again.';
+                sfx.error && sfx.error();
+            }
+        }
+        function tetrisCollides(cells, px, py) {
+            for (const [cx, cy] of cells) {
+                const x = px + cx, y = py + cy;
+                if (x < 0 || x >= TETRIS_COLS || y >= TETRIS_ROWS) return true;
+                if (y >= 0 && _tetris.board[y*TETRIS_COLS + x]) return true;
+            }
+            return false;
+        }
+        function tetrisMove(dx) {
+            const p = _tetris.piece;
+            if (!tetrisCollides(p.cells, p.x + dx, p.y)) { p.x += dx; drawTetris(); }
+        }
+        function tetrisRotate() {
+            const p = _tetris.piece;
+            // Rotate cells 90° around (1.5,1.5) — works for the 4×4-ish bounding box.
+            const rot = p.cells.map(([cx, cy]) => [3 - cy, cx]);
+            if (!tetrisCollides(rot, p.x, p.y)) { p.cells = rot; drawTetris(); }
+        }
+        function tetrisStep(soft) {
+            const p = _tetris.piece;
+            if (!tetrisCollides(p.cells, p.x, p.y + 1)) {
+                p.y++;
+            } else {
+                tetrisLock();
+            }
+            drawTetris();
+        }
+        function tetrisHardDrop() {
+            const p = _tetris.piece;
+            while (!tetrisCollides(p.cells, p.x, p.y + 1)) p.y++;
+            tetrisLock();
+            drawTetris();
+        }
+        function tetrisLock() {
+            const p = _tetris.piece;
+            for (const [cx, cy] of p.cells) {
+                const x = p.x + cx, y = p.y + cy;
+                if (y >= 0) _tetris.board[y*TETRIS_COLS + x] = p.color;
+            }
+            // Clear full rows.
+            let cleared = 0;
+            for (let r = TETRIS_ROWS - 1; r >= 0; r--) {
+                let full = true;
+                for (let c = 0; c < TETRIS_COLS; c++) if (!_tetris.board[r*TETRIS_COLS + c]) { full = false; break; }
+                if (full) {
+                    cleared++;
+                    for (let rr = r; rr > 0; rr--)
+                        for (let c = 0; c < TETRIS_COLS; c++)
+                            _tetris.board[rr*TETRIS_COLS + c] = _tetris.board[(rr-1)*TETRIS_COLS + c];
+                    for (let c = 0; c < TETRIS_COLS; c++) _tetris.board[c] = null;
+                    r++; // recheck this row
+                }
+            }
+            if (cleared > 0) {
+                _tetris.lines += cleared;
+                document.getElementById('tetris-lines').textContent = _tetris.lines;
+                sfx.build && sfx.build();
+                // 1 Discipline rank per 2 lines cleared.
+                const earned = Math.floor(_tetris.lines / 2);
+                const pl = gameState.players[gameState.currentPlayer];
+                if (earned > (pl.trainDiscipline || 0)) {
+                    const gain = Math.min(TRAIN_MAX, earned) - (pl.trainDiscipline || 0);
+                    pl.trainDiscipline = Math.min(TRAIN_MAX, earned);
+                    document.getElementById('tetris-status').textContent = `✅ Discipline rank ${pl.trainDiscipline}! −${gain*3}% battle losses.`;
+                    document.getElementById('tetris-rank').textContent = '⭐ ' + pl.trainDiscipline;
+                }
+            }
+            tetrisSpawn();
+        }
+        function drawTetris() {
+            const cv = document.getElementById('tetris-canvas');
+            if (!cv) return;
+            const ctx = cv.getContext('2d');
+            ctx.clearRect(0, 0, cv.width, cv.height);
+            // Locked blocks.
+            for (let i = 0; i < _tetris.board.length; i++) {
+                if (!_tetris.board[i]) continue;
+                const x = (i % TETRIS_COLS) * TETRIS_CELL, y = Math.floor(i / TETRIS_COLS) * TETRIS_CELL;
+                tetrisCell(ctx, x, y, _tetris.board[i]);
+            }
+            // Active piece.
+            const p = _tetris.piece;
+            if (p) for (const [cx, cy] of p.cells) {
+                tetrisCell(ctx, (p.x+cx)*TETRIS_CELL, (p.y+cy)*TETRIS_CELL, p.color);
+            }
+            // Grid lines.
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            for (let c = 0; c <= TETRIS_COLS; c++) { ctx.beginPath(); ctx.moveTo(c*TETRIS_CELL,0); ctx.lineTo(c*TETRIS_CELL,cv.height); ctx.stroke(); }
+            for (let r = 0; r <= TETRIS_ROWS; r++) { ctx.beginPath(); ctx.moveTo(0,r*TETRIS_CELL); ctx.lineTo(cv.width,r*TETRIS_CELL); ctx.stroke(); }
+        }
+        function tetrisCell(ctx, x, y, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x+1, y+1, TETRIS_CELL-2, TETRIS_CELL-2);
+            ctx.fillStyle = 'rgba(255,255,255,0.25)';
+            ctx.fillRect(x+1, y+1, TETRIS_CELL-2, 3);
+        }
 
         // =============================================================
         // === BETTER FLAG DESIGNER (freehand drawing layer) ===========
@@ -9471,13 +10131,23 @@
             // Remove any previous overlay so we don't stack SVGs.
             const prev = board.querySelector('.supply-svg');
             if (prev) prev.remove();
-            // BFS distance-from-capital for the current player.
+            // BFS distance-from-capital, WITH sea lanes. Each reached tile also
+            // records a `parent` so we can draw the route — land routes hop to
+            // an adjacent tile, sea lanes hop port→port/capital across water.
             const rows = gameState.boardRows, cols = gameState.boardCols;
             const dist = new Array(rows * cols).fill(-1);
+            const parent = new Array(rows * cols).fill(-1);
             const q = [];
             for (const cap of gameState.capitalTiles) {
                 if (gameState.ownership[cap] === me) { dist[cap] = 0; q.push(cap); }
             }
+            // Hubs = this player's Ports + capitals — they link across the sea.
+            const hubs = [];
+            for (let i = 0; i < gameState.ownership.length; i++) {
+                if (gameState.ownership[i] !== me) continue;
+                if (gameState.buildings[i] === 'port' || isCapitalTile(i)) hubs.push(i);
+            }
+            const seaLanes = [];   // {from, to} hub pairs to draw across water
             while (q.length) {
                 const idx = q.shift();
                 const r = Math.floor(idx / cols), c = idx % cols;
@@ -9488,7 +10158,18 @@
                     if (dist[ni] !== -1) continue;
                     if (gameState.ownership[ni] !== me) continue;
                     dist[ni] = dist[idx] + 1;
+                    parent[ni] = idx;
                     q.push(ni);
+                }
+                // Reaching a hub opens sea lanes to every other owned hub.
+                if (gameState.buildings[idx] === 'port' || isCapitalTile(idx)) {
+                    for (const h of hubs) {
+                        if (dist[h] !== -1) continue;
+                        dist[h] = dist[idx] + 1;
+                        parent[h] = idx;
+                        seaLanes.push({ from: idx, to: h });
+                        q.push(h);
+                    }
                 }
             }
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -9525,26 +10206,30 @@
                         nodes.push(ring);
                     }
                     if (isCapitalTile(idx)) continue;
-                    // Find a neighbor closer to the capital.
-                    let nx = -1, ny = -1;
-                    for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
-                        const nr = r + dr, nc = c + dc;
-                        if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
-                        const ni = nr * cols + nc;
-                        if (gameState.ownership[ni] === me && dist[ni] === dist[idx] - 1) {
-                            nx = nc; ny = nr; break;
-                        }
-                    }
-                    if (nx < 0) continue;
-                    const x2 = nx * 60 + 30, y2 = ny * 60 + 30;
-                    // Dark outline UNDER a bright core line — high contrast on any
-                    // terrain, even through the 3D tilt.
+                    // Draw a land route to this tile's BFS parent (if adjacent).
+                    const par = parent[idx];
+                    if (par < 0) continue;
+                    const pr = Math.floor(par / cols), pc = par % cols;
+                    const adjacent = (Math.abs(pr - r) + Math.abs(pc - c)) === 1;
+                    if (!adjacent) continue;   // sea-lane parents drawn separately below
+                    const x2 = pc * 60 + 30, y2 = pr * 60 + 30;
                     outlines.push(mkLine(cx, cy, x2, y2, 'rgba(2,30,18,0.95)', 9, null));
                     cores.push(mkLine(cx, cy, x2, y2, '#34f08a', 5, '10,5'));
                 }
             }
-            // Layer order: outlines, then bright cores, then node dots on top.
+            // SEA LANES — blue dashed routes linking ports/capitals across water.
+            const seaLines = [], seaOutlines = [];
+            for (const lane of seaLanes) {
+                const fr = Math.floor(lane.from / cols), fc = lane.from % cols;
+                const tr = Math.floor(lane.to / cols),   tc = lane.to % cols;
+                const x1 = fc*60+30, y1 = fr*60+30, x2 = tc*60+30, y2 = tr*60+30;
+                seaOutlines.push(mkLine(x1, y1, x2, y2, 'rgba(2,18,40,0.95)', 9, null));
+                seaLines.push(mkLine(x1, y1, x2, y2, '#38bdf8', 5, '8,6'));
+            }
+            // Layer: sea-lane outlines, land outlines, sea cores, land cores, nodes.
+            seaOutlines.forEach(l => svg.appendChild(l));
             outlines.forEach(l => svg.appendChild(l));
+            seaLines.forEach(l => svg.appendChild(l));
             cores.forEach(l => svg.appendChild(l));
             nodes.forEach(n => svg.appendChild(n));
             board.appendChild(svg);
@@ -10042,26 +10727,50 @@
             window.endTurn = function() {
                 const idx = gameState.currentPlayer;
                 const p = gameState.players[idx];
+                const popBefore = (p && !p.isDefeated) ? p.population : 0;
+                orig.apply(this, arguments);   // base endTurn first (adds population growth)
                 if (p && !p.isDefeated) {
                     const yld = computeResourceYield(idx);
                     p.iron = (p.iron || 0) + yld.iron;
                     // Food: yield minus population upkeep (1 food per 250 people).
                     const upkeep = Math.floor((p.population || 0) / 250);
                     p.food = (p.food || 0) + yld.food - upkeep;
+                    // How much the base turn just GREW the population.
+                    const growth = Math.max(0, p.population - popBefore);
                     if (p.food < 0) {
-                        // Famine — population shrinks, morale suffers.
-                        const starve = Math.min(p.population - 100, Math.floor(-p.food * 12));
+                        // FAMINE — deaths ESCALATE the longer it lasts, and ALL
+                        // this turn's population growth is cancelled (you can't
+                        // grow while starving).
+                        p.population -= growth;
+                        p.famineTurns = (p.famineTurns || 0) + 1;
+                        const deficitFactor = Math.min(0.30, (-p.food) / Math.max(200, p.population) * 4);
+                        const rampRate = 1 - Math.pow(0.78, p.famineTurns);   // 0.22, 0.39, 0.53, 0.63…
+                        const deathRate = Math.min(0.75, rampRate + deficitFactor);
+                        const starve = Math.min(p.population - 100, Math.floor(p.population * deathRate));
                         p.population = Math.max(100, p.population - starve);
                         p.food = 0;
+                        p.happiness = Math.max(0, p.happiness - (5 + p.famineTurns * 3));
                         if (idx === 0 && typeof showToast === 'function')
-                            showToast(`🌾 FAMINE! ${starve} people starved. Claim plains/oasis tiles or build Towns.`, 'danger');
-                        else if (idx === 0) logEvent(`🌾 Famine — ${starve} starved.`);
-                    } else if (p.food > 200) {
-                        // Surplus — a baby boom.
-                        p.population += Math.floor(p.food * 0.15);
+                            showToast(`🌾 FAMINE (year ${p.famineTurns})! ${starve.toLocaleString()} starved (${Math.round(deathRate*100)}%). Get food NOW or it worsens!`, 'danger');
+                        else if (idx === 0) logEvent(`🌾 Famine year ${p.famineTurns} — ${starve.toLocaleString()} starved.`);
+                    } else {
+                        // The famine (if any) has broken.
+                        if (p.famineTurns) { p.famineTurns = 0; if (idx === 0) logEvent('🌾 The famine has ended.'); }
+                        // FOOD GATES GROWTH: the population can only grow as far as
+                        // the food stockpile allows. A near-empty larder means a
+                        // near-flat population — no more "1 food, full growth".
+                        if (p.food < 40 && growth > 0) {
+                            // Almost no spare food — cancel ~85% of this turn's growth.
+                            p.population -= Math.floor(growth * 0.85);
+                        } else if (p.food < 120 && growth > 0) {
+                            // Tight rations — slow growth by half.
+                            p.population -= Math.floor(growth * 0.5);
+                        }
+                        // A real surplus feeds a baby boom on top.
+                        if (p.food > 200) p.population += Math.floor(p.food * 0.15);
                     }
                 }
-                orig.apply(this, arguments);
+                return;
             };
             window.endTurn._resWrapped = true;
         })();
@@ -10196,6 +10905,23 @@
             p.generalTile = idx;
             const r = Math.floor(idx / gameState.boardCols), c = idx % gameState.boardCols;
             logEvent(`🎖️ ${p.name}'s General now commands (${r}, ${c}). +35% attack from / defence on this tile.`);
+            sfx.build && sfx.build();
+            renderGame();
+        }
+        // Demolish a building on your own tile, refunding 30% of its cost.
+        // The capital city can't be demolished.
+        function demolishBuilding(idx, playerIdx) {
+            if (gameState.ownership[idx] !== playerIdx) { sfx.error(); alert('You can only demolish on your own tiles.'); return; }
+            const b = gameState.buildings[idx];
+            if (!b) { sfx.error(); alert('There is no building here to demolish.'); return; }
+            if (isCapitalTile(idx)) { sfx.error(); alert('You cannot demolish your capital.'); return; }
+            const p = gameState.players[playerIdx];
+            const cost = (gameState.BUILDING_COSTS && gameState.BUILDING_COSTS[b]) || 0;
+            const refund = Math.floor(cost * 0.3);
+            if (!confirm(`Demolish the ${b.toUpperCase()}? You'll recover $${refund.toLocaleString()} (30% of build cost).`)) return;
+            gameState.buildings[idx] = null;
+            p.gold += refund;
+            logEvent(`🧨 ${p.name} demolished a ${b} — recovered $${refund.toLocaleString()}.`);
             sfx.build && sfx.build();
             renderGame();
         }
@@ -10389,6 +11115,7 @@
             'btn-launch':'Launch a missile from a Silo.',
             'btn-naval':'Launch a naval expedition from a Port.',
             'btn-general':'Recruit/station a General (+35% attack & defence on that tile).',
+            'btn-demolish':'Demolish a building on your tile — refunds 30% of its cost.',
             'btn-train':'Flappy-Bird drill — clear pipes for permanent +damage.',
             'btn-election':'Hold an election to pick a new leader (every 10 turns).',
             'btn-tech':'Open the technology tree.',
@@ -10400,7 +11127,7 @@
             'btn-end-turn':'End your turn.'
         };
         const BTN_TABS = {
-            Build:   ['btn-claim','btn-fort','btn-town','btn-city','btn-mine','btn-lab','btn-port','btn-power','btn-wall','btn-service','btn-silo','btn-mds'],
+            Build:   ['btn-claim','btn-fort','btn-town','btn-city','btn-mine','btn-lab','btn-port','btn-power','btn-wall','btn-service','btn-silo','btn-mds','btn-demolish'],
             Military:['btn-attack','btn-buy-troops','btn-deploy','btn-withdraw','btn-naval','btn-general','btn-launch','btn-train'],
             Empire:  ['btn-election','btn-tech','btn-diplo','btn-stats','btn-history','btn-save','btn-menu']
         };
