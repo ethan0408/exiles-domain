@@ -24528,7 +24528,7 @@
                         m.style.display = 'none';
                         if (typeof showToast === 'function') showToast('Militia uniform updated.', 'good');
                         if (typeof renderGame === 'function') renderGame();
-                        decoratePlayerCard();
+                        if (typeof window._refreshUniformBtn === 'function') window._refreshUniformBtn();
                     };
                 }
 
@@ -24536,55 +24536,54 @@
                 m.style.display = 'flex';
             };
 
-            // Decorate the human player's card with a small uniform preview.
-            function decoratePlayerCard() {
-                const cards = document.querySelectorAll('#players-grid .player-card');
-                if (!cards.length) return;
-                // First card is player 0
-                const card = cards[0];
-                const p = gameState.players[0];
-                if (!p) return;
-                const u = getUniform(p);
-                let host = card.querySelector('.uniform-mini');
-                if (!host) {
-                    host = document.createElement('div');
-                    host.className = 'uniform-mini';
-                    host.style.cssText = 'position:absolute; top:8px; right:8px; padding:3px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); border-radius:3px; cursor:pointer;';
-                    host.title = 'Click to redesign your militia uniform';
-                    host.onclick = () => window.openUniformDesigner();
-                    card.style.position = 'relative';
-                    card.appendChild(host);
-                }
-                host.innerHTML = renderSoldierSVG(u, 40);
-            }
-            // Refresh after each renderPlayerCards
-            const origRender = window.renderPlayerCards;
-            if (typeof origRender === 'function' && !origRender._uniformWrapped) {
-                window.renderPlayerCards = function() {
-                    const r = origRender.apply(this, arguments);
-                    setTimeout(decoratePlayerCard, 10);
-                    return r;
-                };
-                window.renderPlayerCards._uniformWrapped = true;
+            // Strip any previously-rendered player-card mini soldier
+            // (lives from older versions); we now render the preview
+            // inside the UNIFORM action button instead.
+            function stripOldMini() {
+                document.querySelectorAll('.uniform-mini').forEach(n => n.remove());
             }
 
-            // Inject button
+            // Build a button that contains a small soldier SVG + label
+            function paintButtonPreview(btn) {
+                if (!btn) return;
+                const p = gameState && gameState.players && gameState.players[0];
+                const u = p ? getUniform(p) : defaultUniform();
+                btn.innerHTML =
+                    `<span style="display:inline-flex; align-items:center; justify-content:center; gap:0.4rem; width:100%;">` +
+                    `<span style="display:inline-flex; width:18px; height:22px;">${renderSoldierSVG(u, 18)}</span>` +
+                    `<span>UNIFORM</span>` +
+                    `</span>`;
+            }
+
+            // Inject the action-bar button
             function injectBtn() {
-                if (document.getElementById('btn-uniform')) return;
+                stripOldMini();
+                if (document.getElementById('btn-uniform')) { paintButtonPreview(document.getElementById('btn-uniform')); return; }
                 const bar = document.querySelector('.action-buttons');
                 if (!bar) return;
                 const b = document.createElement('button');
                 b.className = 'action-btn'; b.id = 'btn-uniform';
-                b.innerHTML = 'UNIFORM';
                 b.title = 'Design your militia uniform — colours, sash, sigil.';
                 b.onclick = window.openUniformDesigner;
+                paintButtonPreview(b);
                 bar.appendChild(b);
                 if (window.BTN_TABS && BTN_TABS.System && !BTN_TABS.System.includes('btn-uniform'))
                     BTN_TABS.System.push('btn-uniform');
             }
+            // Expose so the designer can call after DONE
+            window._refreshUniformBtn = () => {
+                stripOldMini();
+                paintButtonPreview(document.getElementById('btn-uniform'));
+            };
+
             setTimeout(injectBtn, 900);
             setTimeout(injectBtn, 2100);
-            setTimeout(decoratePlayerCard, 1500);
+            // Periodic re-paint covers re-renders that wipe the button content
+            setInterval(() => {
+                const b = document.getElementById('btn-uniform');
+                if (b && !b.querySelector('svg')) paintButtonPreview(b);
+                stripOldMini();
+            }, 2000);
         })();
 
         // =============================================================
