@@ -19893,7 +19893,7 @@
                 let opts = '';
                 Object.keys(PANTHEONS).forEach(k => {
                     const pt = PANTHEONS[k];
-                    opts += `<button data-pt="${k}" class="diplo-btn" style="text-align:left; padding:0.7rem 0.85rem; line-height:1.35;"><div style="font-weight:700;">${pt.icon} ${pt.name}</div><div style="font-size:0.74rem; color:var(--text-muted); margin-top:0.2rem;">${pt.blurb}</div></button>`;
+                    opts += `<button data-pt="${k}" class="diplo-btn pantheon-btn" style="-webkit-appearance:none; appearance:none; text-align:left; padding:0.75rem 0.9rem; line-height:1.4; background:rgba(20,26,38,0.85); color:var(--text-main); border:1px solid rgba(245,241,232,0.18);"><div style="font-weight:700; color:var(--text-main); font-size:0.92rem;">${pt.icon} ${pt.name}</div><div style="font-size:0.85rem; color:#dfe6f0; margin-top:0.28rem; font-weight:500;">${pt.blurb}</div></button>`;
                 });
                 m.innerHTML = `
                   <div class="modal-content" style="max-width:520px;">
