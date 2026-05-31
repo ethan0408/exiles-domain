@@ -12608,8 +12608,8 @@
                         p.food = 0;
                         p.happiness = Math.max(0, p.happiness - (5 + p.famineTurns * 3));
                         if (idx === 0 && typeof showToast === 'function')
-                            showToast(`🌾 FAMINE (year ${p.famineTurns})! ${starve.toLocaleString()} starved (${Math.round(deathRate*100)}%). Get food NOW or it worsens!`, 'danger');
-                        else if (idx === 0) logEvent(`🌾 Famine year ${p.famineTurns} — ${starve.toLocaleString()} starved.`);
+                            showToast(`FAMINE (month ${p.famineTurns})! ${starve.toLocaleString()} starved (${Math.round(deathRate*100)}%). Get food NOW or it worsens!`, 'danger');
+                        else if (idx === 0) logEvent(`Famine month ${p.famineTurns} — ${starve.toLocaleString()} starved.`);
                     } else {
                         // The famine (if any) has broken.
                         if (p.famineTurns) { p.famineTurns = 0; if (idx === 0) logEvent('🌾 The famine has ended.'); }
@@ -17249,7 +17249,7 @@
                   ]},
                 { id:'famine_omen',
                   title:'🌾 Omen of Famine',
-                  body:'Seers warn of a poor harvest this year. Stockpile grain or trust the gods?',
+                  body:'Seers warn of a poor harvest this season. Stockpile grain or trust the gods?',
                   cond: (p) => true,
                   choices: [
                     { label:'Stockpile (−$30,000, +500 food)', apply:(p)=>{ p.gold = Math.max(0, p.gold - 30000); p.food = (p.food||0) + 500; } },
@@ -21336,71 +21336,120 @@
                 }
             };
 
-            // -- Tutorial: adaptive Year One -- skips steps that aren't possible
+            // -- Full guided tutorial: modal-driven, step-by-step, with
+            // a lesson counter, highlight hints, and action buttons.
+            const TUTORIAL_STEPS = [
+                {
+                    title: 'LESSON 1 — YOUR EMPIRE',
+                    body: `This is <strong>Exile's Domain</strong>, a turn-based grand strategy game. You control a civilisation. Your goal: lead it to one of five victory conditions — Domination, Science, Culture, Diplomacy, or Score.<br><br>
+                    Look at the <strong>top bar</strong>: it shows your gold, troops, population, food, iron, research, happiness, and territory count. These are your vital signs. If any drop to zero, bad things happen.<br><br>
+                    The <strong>Victory Tracks</strong> widget (top-right, retractable) shows your progress toward each victory path.`,
+                    tab: null
+                },
+                {
+                    title: 'LESSON 2 — CLAIMING LAND',
+                    body: `Switch to the <strong>WAR</strong> tab. Click <strong>CLAIM</strong>, then click any unclaimed tile next to one you already own. You'll spend troops + gold to take it.<br><br>
+                    Wild tiles may have garrisons you have to defeat first. Claimed land gives income every turn. Expand early and fast — land is everything.`,
+                    tab: 'War'
+                },
+                {
+                    title: 'LESSON 3 — BUILDING',
+                    body: `Switch to the <strong>BUILD</strong> tab. Early priorities:<br><br>
+                    <strong>TOWN</strong> — boosts income + food + population on a tile.<br>
+                    <strong>BARRACKS</strong> — trains troops each turn.<br>
+                    <strong>MINE</strong> — produces iron (needed for heavy units later).<br>
+                    <strong>WALL</strong> — defensive bonus. Chain 3+ walls for a Defensive Line (+15% def across the chain).<br><br>
+                    Later you'll unlock Forts, Cities, Ports, Silos, Airbases, and Districts via research.`,
+                    tab: 'Build'
+                },
+                {
+                    title: 'LESSON 4 — RECRUITING TROOPS',
+                    body: `In the <strong>WAR</strong> tab, click <strong>RECRUIT</strong>. The troop shop lets you train Militia (cheap infantry), Heavy Infantry (tanky, needs tech), and other specialist units.<br><br>
+                    Troops cost gold + manpower. Manpower comes from population — it grows each turn. Rush-training is faster but produces green troops.<br><br>
+                    Troops are placed on your tiles. Deploy them to the front before attacking.`,
+                    tab: 'War'
+                },
+                {
+                    title: 'LESSON 5 — RESEARCH',
+                    body: `In the <strong>EMPIRE</strong> tab, click <strong>TECH</strong>. Pick one tech to research at a time. Each costs Research Points (RP) that you earn per turn.<br><br>
+                    Key early techs: <strong>Construction</strong> (Forts), <strong>Fortification</strong> (Walls), <strong>Urbanization</strong> (Cities). Late-game: Rocketry (nukes, airbases, ISS), Navigation (ports, navy), Espionage (spy ops).`,
+                    tab: 'Empire'
+                },
+                {
+                    title: 'LESSON 6 — COMBAT',
+                    body: `Click <strong>ATTACK</strong> in the WAR tab, then click one of your border tiles (the source), then the adjacent enemy tile (the target). The Battle Planner opens.<br><br>
+                    Pick a <strong>tactic</strong> (line, flanking, blitz, defensive). Unit classes counter each other: light beats cavalry, cavalry beats heavy, heavy beats light. Terrain, walls, generals, and doctrines all modify damage.<br><br>
+                    Losing a battle costs troops. Winning captures the tile and <strong>loots</strong> the enemy's stockpiles if it's a town/city.`,
+                    tab: 'War'
+                },
+                {
+                    title: 'LESSON 7 — DIPLOMACY',
+                    body: `Click <strong>DIPLOMACY</strong> in the EMPIRE tab. You can propose peace, alliances, or war with any civ.<br><br>
+                    <strong>Always file a Casus Belli</strong> before declaring war — it takes 2-4 turns to justify but saves you a huge opinion hit with everyone else.<br><br>
+                    Peace terms let you annex tiles, install puppets, demand reparations, or force tribute. Trade routes and defensive pacts add steady gold and auto-join allies in wars.`,
+                    tab: 'Empire'
+                },
+                {
+                    title: 'LESSON 8 — GOVERNMENT',
+                    body: `Your empire has layers of governance:<br><br>
+                    <strong>Ideology</strong> — Democracy, Communism, Theocracy, Fascism. Picked at start + after elections.<br>
+                    <strong>Policies</strong> (3 slots) — Economy, Conscription, Culture. Big tradeoffs. Set every election.<br>
+                    <strong>National Focus</strong> — Long-term project for permanent bonuses.<br>
+                    <strong>Cabinet</strong> — 3 advisor slots with passive buffs.<br>
+                    <strong>Elections</strong> every 12 turns — pick a new leader from 3 candidates. Leader traits matter.<br>
+                    <strong>Espionage</strong> — spy on rivals, sabotage mines, plot assassinations, plant capital spies.`,
+                    tab: 'Empire'
+                },
+                {
+                    title: 'LESSON 9 — SUPPLY & MAP',
+                    body: `Troops more than 4 tiles from a City, Town, Capital, or Fort bleed 6% per turn to <strong>attrition</strong>. Build Forts or Watchtowers to project supply.<br><br>
+                    The <strong>map filter bar</strong> (bottom-left) lets you toggle overlays: Opinion, Culture, Tension, Supply, Resources. Use them to spot threats and plan.<br><br>
+                    Toggle <strong>FOG</strong> (System tab) for fog of war — only tiles near your cities, troops, and watchtowers are visible.`,
+                    tab: null
+                },
+                {
+                    title: 'LESSON 10 — WINNING',
+                    body: `Five victory paths:<br><br>
+                    <strong>Domination</strong> — Hold 60%+ of the map or capture every capital.<br>
+                    <strong>Science</strong> — Build the ISS wonder + complete the 30-turn Stellar Mission.<br>
+                    <strong>Culture</strong> — Push culture above 80 and flip enemy border tiles.<br>
+                    <strong>Diplomacy</strong> — Chair the United Nations for 10 straight turns.<br>
+                    <strong>Espionage</strong> — Plant a spy in every rival's capital.<br><br>
+                    Or just go for the highest <strong>Score</strong> at the turn cap. Good luck, Commander.`,
+                    tab: null
+                }
+            ];
+
             window.startTutorial = function() {
-                if (typeof showToast !== 'function') return;
-                // Generate context-aware steps
-                function hasUnclaimedAdjacent() {
-                    if (!gameState.ownership) return false;
-                    const cols = gameState.boardCols;
-                    for (let i = 0; i < gameState.ownership.length; i++) {
-                        if (gameState.ownership[i] !== 0) continue;
-                        const r = Math.floor(i/cols), c = i % cols;
-                        for (const [dr, dc] of [[1,0],[-1,0],[0,1],[0,-1]]) {
-                            const nr = r+dr, nc = c+dc;
-                            if (nr<0||nc<0||nr>=gameState.boardRows||nc>=cols) continue;
-                            const ni = nr*cols + nc;
-                            if (gameState.ownership[ni] === -1) {
-                                // Must be claimable land (not ocean)
-                                const terrain = gameState.terrain && gameState.terrain[nr] && gameState.terrain[nr][nc];
-                                if (terrain && terrain !== 'ocean') return true;
-                            }
-                        }
+                let idx = 0;
+                function show() {
+                    const step = TUTORIAL_STEPS[idx];
+                    let m = document.getElementById('tutorial-modal');
+                    if (!m) { m = document.createElement('div'); m.className='modal'; m.id='tutorial-modal'; document.body.appendChild(m); }
+                    // If the step wants a tab visible, switch to it
+                    if (step.tab && typeof window.refreshActionTab === 'function') {
+                        gameState._actionTab = step.tab;
+                        window.refreshActionTab();
                     }
-                    return false;
+                    m.innerHTML = `
+                      <div class="modal-content" style="max-width:620px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.7rem;">
+                            <h2 class="modal-title" style="margin-bottom:0;">${step.title}</h2>
+                            <span style="color:var(--text-dim); font-size:0.72rem; font-weight:700;">${idx+1} / ${TUTORIAL_STEPS.length}</span>
+                        </div>
+                        <div style="color:var(--text-main); font-size:0.88rem; line-height:1.55; margin-bottom:1rem;">${step.body}</div>
+                        <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                            ${idx > 0 ? '<button id="tut-prev" class="close-modal" style="margin-top:0;">BACK</button>' : ''}
+                            ${idx < TUTORIAL_STEPS.length-1 ? '<button id="tut-next" class="close-modal" style="margin-top:0; background:rgba(230,57,70,0.20); color:#ff6b78; border-color:#ff6b78;">NEXT</button>' : ''}
+                            <button id="tut-close" class="close-modal" style="margin-top:0;">${idx === TUTORIAL_STEPS.length-1 ? 'FINISH' : 'SKIP'}</button>
+                        </div>
+                      </div>`;
+                    if (m.querySelector('#tut-prev')) m.querySelector('#tut-prev').onclick = () => { idx--; show(); };
+                    if (m.querySelector('#tut-next')) m.querySelector('#tut-next').onclick = () => { idx++; show(); };
+                    m.querySelector('#tut-close').onclick = () => { m.style.display = 'none'; };
+                    m.style.display = 'flex';
                 }
-                function hasEnemyAdjacent() {
-                    if (!gameState.ownership) return false;
-                    const cols = gameState.boardCols;
-                    for (let i = 0; i < gameState.ownership.length; i++) {
-                        if (gameState.ownership[i] !== 0) continue;
-                        const r = Math.floor(i/cols), c = i % cols;
-                        for (const [dr, dc] of [[1,0],[-1,0],[0,1],[0,-1]]) {
-                            const nr = r+dr, nc = c+dc;
-                            if (nr<0||nc<0||nr>=gameState.boardRows||nc>=cols) continue;
-                            const ni = nr*cols + nc;
-                            const o = gameState.ownership[ni];
-                            if (o >= 0 && o !== 0) return true;
-                        }
-                    }
-                    return false;
-                }
-                const steps = [];
-                steps.push('👋 Welcome to Exile\'s Domain! Look at the top-right for your Victory Tracks and top-center for the season.');
-                if (hasUnclaimedAdjacent()) {
-                    steps.push('🏳️ Click 🏳️ Claim, then click an unclaimed tile next to one you own to expand.');
-                } else {
-                    steps.push('🌍 Your borders already touch other civs or coast — no free land nearby. Time to deal with neighbours instead.');
-                }
-                steps.push('💰 You earn gold from every owned tile each turn. Open 🛒 Buy Troops to recruit your first stack.');
-                steps.push('🏘️ Build a Town next to your capital with the Town action — it boosts income, food, and population.');
-                steps.push('🔬 Open 🔬 Research and pick a tech. Construction unlocks Forts, Fortification unlocks Walls.');
-                if (hasEnemyAdjacent()) {
-                    steps.push('⚔️ When ready, click ⚔️ Attack, click your border tile (the source), then click the enemy tile (the target).');
-                } else {
-                    steps.push('🚢 No enemies nearby — research Navigation and build a Port to reach them by sea.');
-                }
-                steps.push('🤝 Diplomacy opens trade routes, alliances, and defensive pacts. Wars without a Casus Belli hit your global opinion.');
-                steps.push('🌟 Watch your happiness — Golden Ages and Great People only emerge from a happy realm.');
-                steps.push('🏆 Open the Victory widget (top-right) to see all paths to winning: Domination, Science, Culture, Diplomacy, Score.');
-                let step = 0;
-                const tick = () => {
-                    if (step >= steps.length) return;
-                    showToast(steps[step], 'info');
-                    step++;
-                    setTimeout(tick, 7000);
-                };
-                tick();
+                show();
             };
 
             // -- Replay log --
@@ -23695,6 +23744,93 @@
                 const lines = [];
                 const me = gameState.players[0];
                 if (!me) return lines;
+                // ---- SERIOUS TERMINAL DISPATCHES from real game state ----
+                // Wars
+                if (gameState.diplomacy) {
+                    for (const k of Object.keys(gameState.diplomacy)) {
+                        if (gameState.diplomacy[k] !== 'war') continue;
+                        const [a, b] = k.split('_').map(Number);
+                        const pa = gameState.players[a], pb = gameState.players[b];
+                        if (!pa || !pb || pa.isDefeated || pb.isDefeated) continue;
+                        const dealName = (window.getDealName && window.getDealName(a, b, 'war')) || `${pa.name} vs ${pb.name}`;
+                        const templates = [
+                            `DISPATCH: ${dealName} continues — no ceasefire in sight`,
+                            `FRONTLINE: ${pa.name} and ${pb.name} exchange fire along the border`,
+                            `WAR REPORT: Casualties mount in ${dealName}`,
+                            `FIELD COMMAND: ${pa.name} repositions forces against ${pb.name}`,
+                            `INTEL BRIEF: ${pb.name} fortifying positions — ${dealName} enters new phase`
+                        ];
+                        lines.push(templates[Math.floor(Math.random()*templates.length)]);
+                    }
+                }
+                // Recent constructions
+                const recentLog = (gameState.replayLog || []).slice(-20);
+                for (const e of recentLog) {
+                    if (!e.msg) continue;
+                    if (e.msg.includes('constructing') || e.msg.includes('built') || e.msg.includes('construction')) {
+                        const clean = e.msg.replace(/[—•·]+/g, '·').slice(0, 110);
+                        lines.push(`CONSTRUCTION: ${clean}`);
+                    }
+                    if (e.msg.includes('declared War') || e.msg.includes('declared war')) {
+                        lines.push(`BREAKING: ${e.msg.replace(/[—•·]+/g, '·').slice(0, 110)}`);
+                    }
+                    if (e.msg.includes('peace') || e.msg.includes('Peace')) {
+                        lines.push(`DIPLOMATIC WIRE: ${e.msg.replace(/[—•·]+/g, '·').slice(0, 110)}`);
+                    }
+                    if (e.msg.includes('assassinated') || e.msg.includes('COUP')) {
+                        lines.push(`URGENT: ${e.msg.replace(/[—•·]+/g, '·').slice(0, 110)}`);
+                    }
+                }
+                // Troop movements / attrition
+                gameState.players.forEach((p, i) => {
+                    if (!p || p.isDefeated) return;
+                    const cn = p.name;
+                    if ((p.troops||0) > 2000 && Math.random() < 0.3) lines.push(`MILITARY: ${cn} field armies exceed 2,000 — regional powers alarmed`);
+                    if ((p.troops||0) < 100 && Math.random() < 0.3) lines.push(`INTEL: ${cn} military depleted — vulnerability window open`);
+                });
+                // Sanctions / embargoes
+                gameState.players.forEach((p, i) => {
+                    if (!p || p.isDefeated) return;
+                    if ((p._sanctionUntil||0) > gameState.turn) lines.push(`UN BULLETIN: Sanctions remain in effect against ${p.name}`);
+                    if ((p._embargoUntil||0) > gameState.turn) lines.push(`TRADE ALERT: Embargo on ${p.name} — markets disrupted`);
+                });
+                // Era shifts from replay log
+                for (const e of recentLog) {
+                    if (e.msg && e.msg.includes('enters the')) {
+                        lines.push(`ERA SHIFT: ${e.msg.replace(/[—•·]+/g, '·').slice(0, 110)}`);
+                    }
+                }
+                // Research completions
+                for (const e of recentLog) {
+                    if (e.msg && (e.msg.includes('completed research') || e.msg.includes('began researching'))) {
+                        lines.push(`SCIENCE DESK: ${e.msg.replace(/[—•·]+/g, '·').slice(0, 110)}`);
+                    }
+                }
+                // ---- YOUR OWN ACTIONS from the replay log ----
+                // Pull recent entries that mention the human player's
+                // name and format them as command dispatches.
+                const myName = me.name || 'Player 1';
+                const myLog = (gameState.replayLog || [])
+                    .filter(e => e.turn >= (gameState.turn||0) - 3 && e.msg && e.msg.includes(myName))
+                    .slice(-8);
+                for (const e of myLog) {
+                    const clean = e.msg.replace(/[—•·]+/g, '·').slice(0, 110);
+                    // Classify the action for a terminal-style prefix
+                    let prefix = 'ACTION';
+                    if (/claim/i.test(clean))                       prefix = 'TERRITORY';
+                    else if (/attack|engag|battle|damage/i.test(clean)) prefix = 'COMBAT';
+                    else if (/construct|built|build|town|city|fort|wall|mine|barracks|port|silo/i.test(clean)) prefix = 'CONSTRUCTION';
+                    else if (/research|tech|unlocked/i.test(clean)) prefix = 'SCIENCE';
+                    else if (/recruit|troops|conscript|train/i.test(clean)) prefix = 'MILITARY';
+                    else if (/diplom|peace|war|ally|pact|treaty/i.test(clean)) prefix = 'DIPLOMATIC';
+                    else if (/trade|route|merchant/i.test(clean))   prefix = 'COMMERCE';
+                    else if (/spy|espionage|plot|assassin/i.test(clean)) prefix = 'COVERT OPS';
+                    else if (/wonder|project/i.test(clean))         prefix = 'MONUMENT';
+                    else if (/election|leader|ideology|coup/i.test(clean)) prefix = 'GOVERNMENT';
+                    else if (/general|hero/i.test(clean))           prefix = 'COMMAND';
+                    lines.push(`${prefix}: ${clean}`);
+                }
+
                 // From inbox: last 6 events become headlines (skip empties)
                 const recent = (gameState._inbox || []).slice(-6);
                 for (const it of recent) {
