@@ -507,12 +507,21 @@
 
             --rot-x: 55deg;
             --rot-z: -45deg;
-            transform: rotateX(var(--rot-x)) rotateZ(var(--rot-z));
+            --pan-x: 0px;
+            --pan-y: 0px;
+            --zoom: 1;
+            transform: translate(var(--pan-x), var(--pan-y)) scale(var(--zoom)) rotateX(var(--rot-x)) rotateZ(var(--rot-z));
 
             transform-origin: center center;
             transform-style: preserve-3d;
-            transition: transform 0.1s linear;
+            transition: transform 0.05s linear;
+            touch-action: none;
         }
+
+        .game-board-container { touch-action: none; }
+        .game-board-container.is-panning  { cursor: grabbing; }
+        .game-board-container.is-rotating { cursor: move; }
+        .game-board-container.is-zooming  { cursor: zoom-in; }
 
         .game-board.no-borders .face-top { box-shadow: none !important; }
 
@@ -1557,6 +1566,9 @@
             stats: {},
             boardRotationX: 55,
             boardRotationZ: -45,
+            boardPanX: 0,
+            boardPanY: 0,
+            boardZoom: 1,
             BUILDING_COSTS: {
                 fort: 10000,
                 town: 100000,
@@ -2062,9 +2074,30 @@
                     default: return;
                 }
                 e.preventDefault();
-                board.style.setProperty('--rot-x', gameState.boardRotationX + 'deg');
-                board.style.setProperty('--rot-z', gameState.boardRotationZ + 'deg');
+                applyBoardTransform();
             });
+        });
+
+        // ============== MAP TRANSFORM HELPER ==============
+        // Single source of truth for writing rot/pan/zoom CSS vars on the board.
+        function applyBoardTransform() {
+            const board = document.getElementById('game-board');
+            if (!board) return;
+            if (gameState.boardPanX === undefined) gameState.boardPanX = 0;
+            if (gameState.boardPanY === undefined) gameState.boardPanY = 0;
+            if (gameState.boardZoom === undefined) gameState.boardZoom = 1;
+            board.style.setProperty('--rot-x', gameState.boardRotationX + 'deg');
+            board.style.setProperty('--rot-z', gameState.boardRotationZ + 'deg');
+            board.style.setProperty('--pan-x', gameState.boardPanX + 'px');
+            board.style.setProperty('--pan-y', gameState.boardPanY + 'px');
+            board.style.setProperty('--zoom', gameState.boardZoom);
+        }
+        window.applyBoardTransform = applyBoardTransform;
+
+        // Re-wrap the DOMContentLoaded callback close — leftover after extracting
+        // applyBoardTransform. We need a no-op IIFE here so the original
+        // outer addEventListener('DOMContentLoaded', ...) call still parses.
+        (function _mapHelperFooter(){
         });
 
         async function playMusic() {
@@ -2186,11 +2219,7 @@
                 document.getElementById('menu-screen').style.display = 'none';
                 document.getElementById('game-screen').style.display = 'block';
 
-                const board = document.getElementById('game-board');
-                if (board) {
-                    board.style.setProperty('--rot-x', gameState.boardRotationX + 'deg');
-                    board.style.setProperty('--rot-z', gameState.boardRotationZ + 'deg');
-                }
+                applyBoardTransform();
                 if (gameState.musicEnabled) playMusic(); else stopMusic();
                 renderGame();
                 setTimeout(() => sfx.war(), 300);   // opening war-horn fanfare
@@ -2747,6 +2776,9 @@
             gameState.capitalTiles = new Set();
             gameState.boardRotationX = 55;
             gameState.boardRotationZ = -45;
+            gameState.boardPanX = 0;
+            gameState.boardPanY = 0;
+            gameState.boardZoom = 1;
             gameState.dayCounter = 0;
             gameState.currentDay = 1;
             gameState.currentMonth = 1;
@@ -2987,11 +3019,7 @@
                 gameState.capitalTiles = new Set(Array.isArray(data.capitalTiles) ? data.capitalTiles : []);
                 document.getElementById('menu-screen').style.display = 'none';
                 document.getElementById('game-screen').style.display = 'block';
-                const board = document.getElementById('game-board');
-                if (board) {
-                    board.style.setProperty('--rot-x', gameState.boardRotationX + 'deg');
-                    board.style.setProperty('--rot-z', gameState.boardRotationZ + 'deg');
-                }
+                applyBoardTransform();
                 if (gameState.musicEnabled) playMusic(); else stopMusic();
                 renderGame();
                 logEvent(`📂 Loaded "${data.saveName || 'Slot ' + slot}".`);
@@ -9919,6 +9947,9 @@
             const rotX = gameState.boardRotationX * Math.PI / 180;
             const rotZ = gameState.boardRotationZ * Math.PI / 180;
             const P = 2400; // must match .game-board-stage CSS `perspective`
+            const zoom = gameState.boardZoom || 1;
+            const panX = gameState.boardPanX || 0;
+            const panY = gameState.boardPanY || 0;
 
             // The stage is centered around the board (flex centering) and
             // perspective-origin is 50% 50%, so the perspective origin in
@@ -9931,8 +9962,11 @@
             const W = gameState.boardCols * cellSize;
             const H = gameState.boardRows * cellSize;
 
-            const dx = clientX - ox;
-            const dy = clientY - oy;
+            // Undo screen-space pan, then undo uniform scale so the remaining
+            // (dx, dy) lives in the pre-translate, pre-scale space the existing
+            // perspective inverse expects.
+            const dx = (clientX - ox - panX) / zoom;
+            const dy = (clientY - oy - panY) / zoom;
 
             const cosRX = Math.cos(rotX);
             const sinRX = Math.sin(rotX);
@@ -9960,22 +9994,164 @@
         }
 
         let _boardInteractionsBound = false;
+        // Map gesture system:
+        //   • Default drag (mouse / 1 finger)  → rotate (X axis from vertical drag, Z axis from horizontal)
+        //   • Q + drag                         → pan
+        //   • E + mouse wheel                  → zoom (up = in, down = out)
+        //   • 2-finger touch                   → pinch-zoom + 2-finger pan
+        //   • Plain tap / click (no drag)      → forwarded to handleCellClick
+        const _mapKeys = { q: false, e: false };
+        window.addEventListener('keydown', (e) => {
+            const ae = document.activeElement;
+            if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'SELECT' || ae.tagName === 'TEXTAREA')) return;
+            const k = e.key.toLowerCase();
+            if (k === 'q') _mapKeys.q = true;
+            if (k === 'e') _mapKeys.e = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            const k = e.key.toLowerCase();
+            if (k === 'q') _mapKeys.q = false;
+            if (k === 'e') _mapKeys.e = false;
+        });
+        // Release modifier state if window loses focus mid-hold.
+        window.addEventListener('blur', () => { _mapKeys.q = false; _mapKeys.e = false; });
+
+        function _clampZoom(z) { return Math.max(0.35, Math.min(3.5, z)); }
+        function _clampRotX(x) { return Math.max(15, Math.min(85, x)); }
+
         function bindBoardInteractions() {
             if (_boardInteractionsBound) return;
             const container = document.querySelector('.game-board-container');
             if (!container) return;
             _boardInteractionsBound = true;
 
-            container.addEventListener('click', (e) => {
-                const cell = getCellFromScreenPoint(e.clientX, e.clientY);
-                if (cell) handleCellClick(cell.row, cell.col);
-            });
+            // Tooltip on hover (mouse only — touch has no hover).
             container.addEventListener('mousemove', (e) => {
+                if (_drag.active || _pointers.size > 0) return; // suppress tooltip during gesture
                 const cell = getCellFromScreenPoint(e.clientX, e.clientY);
                 if (cell) showTooltip(e, cell.row, cell.col);
                 else hideTooltip();
             });
             container.addEventListener('mouseleave', hideTooltip);
+
+            // Wheel = zoom when E is held. Without E we let the page scroll.
+            container.addEventListener('wheel', (e) => {
+                if (!_mapKeys.e) return;
+                e.preventDefault();
+                const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+                gameState.boardZoom = _clampZoom((gameState.boardZoom || 1) * factor);
+                applyBoardTransform();
+            }, { passive: false });
+
+            // ---- Pointer gesture tracking ----
+            const _pointers = new Map(); // pointerId -> {x, y}
+            const _drag = { active: false, mode: null, lastX: 0, lastY: 0, startX: 0, startY: 0, moved: 0, pointerId: null };
+            let _pinch = null;           // { cx, cy, dist }
+            let _suppressNextClick = false;
+
+            function _setCursorClass() {
+                container.classList.toggle('is-panning',   _drag.active && _drag.mode === 'pan');
+                container.classList.toggle('is-rotating',  _drag.active && _drag.mode === 'rotate');
+                container.classList.toggle('is-zooming',   !!_pinch);
+            }
+
+            container.addEventListener('pointerdown', (e) => {
+                _pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                try { container.setPointerCapture(e.pointerId); } catch (_) {}
+                hideTooltip();
+
+                if (_pointers.size === 2) {
+                    // Begin 2-finger pinch + pan; cancel any single-finger drag.
+                    const pts = Array.from(_pointers.values());
+                    const cx = (pts[0].x + pts[1].x) / 2;
+                    const cy = (pts[0].y + pts[1].y) / 2;
+                    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+                    _pinch = { cx, cy, dist };
+                    _drag.active = false;
+                    _suppressNextClick = true;
+                } else if (_pointers.size === 1) {
+                    _drag.active = true;
+                    _drag.pointerId = e.pointerId;
+                    _drag.startX = _drag.lastX = e.clientX;
+                    _drag.startY = _drag.lastY = e.clientY;
+                    _drag.moved = 0;
+                    _drag.mode = _mapKeys.q ? 'pan' : 'rotate';
+                }
+                _setCursorClass();
+            });
+
+            container.addEventListener('pointermove', (e) => {
+                if (!_pointers.has(e.pointerId)) return;
+                _pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+                if (_pinch && _pointers.size >= 2) {
+                    const pts = Array.from(_pointers.values());
+                    const cx = (pts[0].x + pts[1].x) / 2;
+                    const cy = (pts[0].y + pts[1].y) / 2;
+                    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+                    // Pan with centroid delta, zoom with distance ratio.
+                    gameState.boardPanX = (gameState.boardPanX || 0) + (cx - _pinch.cx);
+                    gameState.boardPanY = (gameState.boardPanY || 0) + (cy - _pinch.cy);
+                    if (_pinch.dist > 0) {
+                        gameState.boardZoom = _clampZoom((gameState.boardZoom || 1) * (dist / _pinch.dist));
+                    }
+                    _pinch.cx = cx; _pinch.cy = cy; _pinch.dist = dist;
+                    applyBoardTransform();
+                    return;
+                }
+
+                if (!_drag.active || _drag.pointerId !== e.pointerId) return;
+                const dx = e.clientX - _drag.lastX;
+                const dy = e.clientY - _drag.lastY;
+                _drag.moved = Math.max(_drag.moved, Math.hypot(e.clientX - _drag.startX, e.clientY - _drag.startY));
+
+                // Allow switching modes mid-drag by pressing/releasing Q.
+                const wantMode = _mapKeys.q ? 'pan' : 'rotate';
+                if (wantMode !== _drag.mode) {
+                    _drag.mode = wantMode;
+                    _setCursorClass();
+                }
+
+                if (_drag.mode === 'pan') {
+                    gameState.boardPanX = (gameState.boardPanX || 0) + dx;
+                    gameState.boardPanY = (gameState.boardPanY || 0) + dy;
+                } else {
+                    // Rotate: horizontal drag spins around Z, vertical tilts X.
+                    gameState.boardRotationZ += dx * 0.4;
+                    gameState.boardRotationX = _clampRotX(gameState.boardRotationX - dy * 0.4);
+                }
+                _drag.lastX = e.clientX;
+                _drag.lastY = e.clientY;
+                if (_drag.moved > 5) _suppressNextClick = true;
+                applyBoardTransform();
+            });
+
+            function _endPointer(e) {
+                if (_pointers.has(e.pointerId)) _pointers.delete(e.pointerId);
+                if (_pointers.size < 2) _pinch = null;
+                if (_pointers.size === 0) {
+                    _drag.active = false;
+                    _drag.mode = null;
+                }
+                _setCursorClass();
+            }
+            container.addEventListener('pointerup', _endPointer);
+            container.addEventListener('pointercancel', _endPointer);
+
+            // Click-on-tile: only fire when the press wasn't part of a drag.
+            container.addEventListener('click', (e) => {
+                if (_suppressNextClick) {
+                    _suppressNextClick = false;
+                    e.stopPropagation();
+                    return;
+                }
+                const cell = getCellFromScreenPoint(e.clientX, e.clientY);
+                if (cell) handleCellClick(cell.row, cell.col);
+            });
+
+            // Disable browser pinch-zoom / double-tap zoom on the map area.
+            container.addEventListener('gesturestart', (e) => e.preventDefault());
+            container.addEventListener('dblclick', (e) => { if (_suppressNextClick) e.preventDefault(); });
         }
 
         function renderBoard() {
