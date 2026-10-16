@@ -1078,6 +1078,87 @@
 
         .tech-row.unlocked { border-color: rgba(16, 185, 129, 0.5); }
         .tech-row.locked { opacity: 0.5; }
+        /* === HOI-STYLE TECH TREE ============================================ */
+        #tech-modal .modal-content.ht-shell {
+            max-width: 1200px; width: 96vw; height: 90vh; max-height: 90vh;
+            display: flex; flex-direction: column; overflow: hidden; padding: 0;
+            background: linear-gradient(180deg, #2b2f21 0%, #1c1f15 100%);
+            border: 2px solid #8a7a46; border-radius: 6px; color: #e6dcc0;
+            box-shadow: 0 0 0 1px #000, 0 18px 50px rgba(0,0,0,0.7);
+            font-family: 'Inter','Segoe UI',system-ui,sans-serif;
+        }
+        .ht-head { display:flex; align-items:center; gap:1rem; padding:0.7rem 1rem;
+            background: linear-gradient(180deg, #3a3f2b, #262a1c); border-bottom: 2px solid #8a7a46; flex-wrap: wrap; }
+        .ht-title { font-weight:900; letter-spacing:0.22em; text-transform:uppercase; font-size:1.05rem; color:#f1e4b8; }
+        .ht-stat { font-size:0.78rem; color:#a59e84; }
+        .ht-stat b { color:#f1e4b8; font-weight:800; }
+        .ht-slots { display:flex; gap:0.5rem; margin-left:auto; flex-wrap:wrap; }
+        .ht-slot { min-width:150px; padding:0.3rem 0.5rem; border:1px solid #6b6040; background:#1a1c14; border-radius:3px; font-size:0.72rem; }
+        .ht-slot.empty { color:#6e6a58; font-style:italic; border-style:dashed; }
+        .ht-slot-bar { height:5px; background:#0e0f0a; margin-top:3px; border:1px solid #3b3a2a; }
+        .ht-slot-bar > div { height:100%; background: linear-gradient(90deg,#b8860b,#e8c35a); }
+        .ht-close { background:#5a2a22; color:#f1e4b8; border:1px solid #a0523f; padding:0.35rem 0.8rem; font-weight:800;
+            letter-spacing:0.1em; cursor:pointer; border-radius:3px; }
+        .ht-close:hover { background:#7a382c; }
+        .ht-tabs { display:flex; gap:2px; padding:0.5rem 1rem 0; background:#1a1c14; border-bottom:1px solid #8a7a46; overflow-x:auto; }
+        .ht-tab { padding:0.45rem 0.9rem; background:#2d3123; color:#a59e84; border:1px solid #5b5438; border-bottom:none;
+            border-radius:5px 5px 0 0; cursor:pointer; font-weight:700; font-size:0.82rem; white-space:nowrap; }
+        .ht-tab:hover { color:#e6dcc0; background:#363b2a; }
+        .ht-tab.on { background: linear-gradient(180deg,#5c5434,#3a3f2b); color:#fff3c8; border-color:#c9b26a; }
+        .ht-tab small { opacity:0.75; font-weight:600; margin-left:0.35rem; }
+        .ht-body { flex:1; display:flex; min-height:0; }
+        .ht-tree { flex:1; overflow:auto; position:relative; min-height:0;
+            background:
+              repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 40px),
+              repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 40px),
+              radial-gradient(ellipse at 50% 0%, #2f3424 0%, #191b13 75%); }
+        .ht-canvas { position:relative; margin:18px 24px 30px 0; }
+        .ht-rail { position:absolute; left:0; top:0; width:56px; }
+        .ht-rail div { position:absolute; left:0; width:56px; text-align:center; font-weight:900; color:#8a7a46;
+            font-size:0.95rem; letter-spacing:0.08em; border-right:2px solid #4a4530; }
+        .ht-svg { position:absolute; left:0; top:0; pointer-events:none; overflow:visible; }
+        .ht-card { position:absolute; display:flex; align-items:stretch; cursor:pointer; user-select:none;
+            border:1px solid #4a4530; background:#24271c; border-radius:3px; overflow:hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5); transition: transform .08s, box-shadow .08s; }
+        .ht-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.6), 0 0 0 1px #c9b26a; }
+        .ht-card.sel { box-shadow: 0 0 0 2px #f1e4b8, 0 4px 14px rgba(0,0,0,0.7); }
+        .ht-ico { width:46px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.45rem;
+            background: linear-gradient(180deg,#3a3f2b,#24271c); border-right:1px solid #4a4530; }
+        .ht-txt { flex:1; padding:0.32rem 0.5rem; display:flex; flex-direction:column; justify-content:center; min-width:0; }
+        .ht-name { font-weight:800; font-size:0.8rem; color:#f1e4b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .ht-meta { font-size:0.68rem; color:#a59e84; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .ht-ext { font-size:0.62rem; color:#c98a5a; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .ht-bar { height:4px; background:#0e0f0a; margin-top:4px; }
+        .ht-bar > div { height:100%; background: linear-gradient(90deg,#b8860b,#e8c35a); }
+        .ht-card.done { background: linear-gradient(180deg,#3d5a2c,#2b4220); border-color:#7fbf5a; }
+        .ht-card.done .ht-ico { background: linear-gradient(180deg,#4f7339,#33502a); border-color:#7fbf5a; }
+        .ht-card.done .ht-meta { color:#bfe0a8; }
+        .ht-card.active { border-color:#e8c35a; background: linear-gradient(180deg,#4a4325,#2e2a18); }
+        .ht-card.avail { border-color:#c9b26a; background: linear-gradient(180deg,#3d4230,#2a2d20); }
+        .ht-card.poor  { border-color:#7a6c40; }
+        .ht-card.poor .ht-meta { color:#d07a5a; }
+        .ht-card.locked { filter: grayscale(0.85) brightness(0.62); }
+        .ht-info { width:300px; flex-shrink:0; border-left:2px solid #8a7a46; background:#1f2218; padding:0.9rem; overflow:auto; font-size:0.82rem; }
+        .ht-info h3 { margin:0 0 0.3rem; font-size:1.05rem; color:#f1e4b8; }
+        .ht-info .ht-desc { color:#d8cfb2; margin:0.5rem 0 0.8rem; line-height:1.4; }
+        .ht-info .ht-k { color:#8a7a46; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.14em; margin-top:0.7rem; font-weight:800; }
+        .ht-info ul { margin:0.25rem 0 0; padding-left:1.1rem; }
+        .ht-info li { margin:0.15rem 0; }
+        .ht-ok { color:#7fbf5a; } .ht-no { color:#d07a5a; }
+        .ht-go { width:100%; margin-top:1rem; padding:0.6rem; font-weight:900; letter-spacing:0.12em; text-transform:uppercase;
+            background: linear-gradient(180deg,#6b5a20,#4a3e14); color:#fff3c8; border:1px solid #e8c35a; border-radius:3px; cursor:pointer; }
+        .ht-go:hover { background: linear-gradient(180deg,#86702a,#5c4d19); }
+        .ht-go[disabled] { opacity:0.45; cursor:not-allowed; }
+        .ht-legend { display:flex; gap:0.8rem; flex-wrap:wrap; margin-top:1.2rem; font-size:0.68rem; color:#a59e84; }
+        .ht-legend span::before { content:''; display:inline-block; width:10px; height:10px; margin-right:4px; vertical-align:-1px; border:1px solid; }
+        .ht-legend .l-done::before { background:#3d5a2c; border-color:#7fbf5a; }
+        .ht-legend .l-act::before  { background:#4a4325; border-color:#e8c35a; }
+        .ht-legend .l-av::before   { background:#3d4230; border-color:#c9b26a; }
+        .ht-legend .l-lock::before { background:#24271c; border-color:#4a4530; }
+        @media (max-width: 760px) {
+            .ht-body { flex-direction: column; }
+            .ht-info { width:auto; border-left:none; border-top:2px solid #8a7a46; max-height:38%; }
+        }
 
         .battle-row { cursor: pointer; transition: all 0.2s; }
         .battle-row:hover { border-color: var(--border-active); background: rgba(99, 102, 241, 0.1); }
@@ -2462,6 +2543,18 @@
             if (gameState.turnSummary.length > 12) gameState.turnSummary.shift();
         }
 
+        // Is the given player a HUMAN seat? Lets the "What Happened" recap and
+        // its per-turn lines reach every human (Pass & Play), not just player 0.
+        // In Player-vs-AI games this is only ever player 0, so nothing changes.
+        function isHumanSeat(idx) {
+            const pl = gameState.players && gameState.players[idx];
+            return !!pl && !pl.isAI;
+        }
+        // Does this game include any AI seats? (false in all-human Pass & Play.)
+        function gameHasAISeat() {
+            return !!(gameState.players && gameState.players.some(pl => pl.isAI));
+        }
+
         // === TURN SUMMARY MODAL ===
         function showTurnSummary() {
             const buf = gameState.turnSummary || [];
@@ -2920,6 +3013,10 @@
             gameState.revolts = [];
             gameState.rebellionCounter = 0;
             gameState.turnSummary = [];
+            // Reset the on-screen event-log panel so a fresh game doesn't show
+            // stale entries carried over from the previous game.
+            const _elog = document.getElementById('event-log');
+            if (_elog) _elog.innerHTML = '';
             gameState.projects = [];
             gameState.barracks = {};
             gameState.barracksProgress = {};
@@ -4032,7 +4129,7 @@
             if (p.greenSoldiersHeavy) p.greenSoldiersHeavy = Math.floor((p.greenSoldiersHeavy || 0) * GREEN_DECAY);
             if (delivered > 0) {
                 logEvent(`👥 ${p.name} received ${delivered} new soldier(s)${deliveredGreen ? ` (${deliveredGreen} green)` : ''}.`);
-                if (playerIdx === 0) {
+                if (isHumanSeat(playerIdx)) {
                     pushSummary(`👥 ${delivered} new soldier(s) joined your ranks${deliveredGreen ? ` (${deliveredGreen} green)` : ''}.`);
                     sfx.trainDone && sfx.trainDone();
                 }
@@ -4631,13 +4728,17 @@
                 ctx.arc(d.x, d.y, haloR + 1, 0, Math.PI * 2);
                 ctx.fill();
             }
+            // Resolve each side's designed uniform once per frame (the human's
+            // from the designer; AI nations get one derived from their colour).
+            const defUni = window._resolveUniform ? window._resolveUniform(scene.defenderIdx) : null;
+            const atkUni = window._resolveUniform ? window._resolveUniform(scene.attackerIdx) : null;
             for (const d of defDots) {
                 if (!d.alive) continue;
-                drawDot(ctx, d.x, d.y, d.color, d.heavy, r, d.kind);
+                drawDot(ctx, d.x, d.y, d.color, d.heavy, r, d.kind, d.uniform || defUni);
             }
             for (const d of atkDots) {
                 if (!d.alive) continue;
-                drawDot(ctx, d.x, d.y, d.color, d.heavy, r, d.kind);
+                drawDot(ctx, d.x, d.y, d.color, d.heavy, r, d.kind, d.uniform || atkUni);
             }
 
             // Selection box (during a drag-select).
@@ -4665,80 +4766,294 @@
             }
         }
 
-        // Each unit kind gets a distinct silhouette. Shape choices match the
-        // recruit modal so visual identity is consistent across the game.
-        function drawDot(ctx, x, y, color, heavy, r, kind) {
-            r = r || 7;
-            const u = kind && UNIT_TYPES[kind];
-            // 'heavy' (heavy infantry) and 'militia' fall back to a plain circle.
-            const shape = u ? u.shape : 'circle';
-            const stroke = 'rgba(0,0,0,0.7)';
-            const sw = Math.max(0.6, r * 0.2);
-
-            // Optional kind-coloured tint inside the dot — keeps the player
-            // colour visible at the border so allegiance stays readable.
-            ctx.strokeStyle = stroke;
-            ctx.lineWidth = sw;
-            ctx.fillStyle = color;
+        // Rounded-rectangle path helper (used for coats and headgear).
+        function roundRectPath(ctx, x, y, w, h, rad) {
+            rad = Math.min(rad, w / 2, h / 2);
             ctx.beginPath();
-            if (shape === 'circle') {
-                ctx.arc(x, y, r, 0, Math.PI * 2);
-            } else if (shape === 'triangle') {
-                ctx.moveTo(x, y - r);
-                ctx.lineTo(x + r, y + r * 0.85);
-                ctx.lineTo(x - r, y + r * 0.85);
-                ctx.closePath();
-            } else if (shape === 'square') {
-                ctx.rect(x - r, y - r, r * 2, r * 2);
-            } else if (shape === 'diamond') {
-                ctx.moveTo(x, y - r * 1.05);
-                ctx.lineTo(x + r * 1.05, y);
-                ctx.lineTo(x, y + r * 1.05);
-                ctx.lineTo(x - r * 1.05, y);
-                ctx.closePath();
-            } else if (shape === 'star') {
-                for (let i = 0; i < 10; i++) {
-                    const rr = (i % 2 === 0) ? r * 1.15 : r * 0.55;
-                    const a = (i * Math.PI) / 5 - Math.PI / 2;
-                    const px = x + rr * Math.cos(a);
-                    const py = y + rr * Math.sin(a);
-                    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-                }
-                ctx.closePath();
-            } else if (shape === 'plus') {
-                const t = r * 0.55;
-                ctx.rect(x - t, y - r, t * 2, r * 2);
-                ctx.rect(x - r, y - t, r * 2, t * 2);
-            } else {
-                ctx.arc(x, y, r, 0, Math.PI * 2);
-            }
-            ctx.fill();
-            ctx.stroke();
+            ctx.moveTo(x + rad, y);
+            ctx.arcTo(x + w, y, x + w, y + h, rad);
+            ctx.arcTo(x + w, y + h, x, y + h, rad);
+            ctx.arcTo(x, y + h, x, y, rad);
+            ctx.arcTo(x, y, x + w, y, rad);
+            ctx.closePath();
+        }
 
-            // Cannon barrel-mark (small white pip) so cannons read at a glance.
-            if (kind === 'lightCannon' || kind === 'heavyCannon') {
-                ctx.fillStyle = '#fef3c7';
+        // Headgear varies by unit type, banded in the nation's colour so each
+        // soldier still reads as the branch he belongs to.
+        function drawHeadgear(ctx, x, cy, headR, r, shape, color, dark, trim) {
+            ctx.lineWidth = Math.max(0.4, r * 0.13);
+            ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+            if (shape === 'diamond') {
+                // Cavalry — crested helmet with a nation-colour plume.
+                ctx.fillStyle = dark;
                 ctx.beginPath();
-                ctx.arc(x, y, Math.max(0.8, r * 0.32), 0, Math.PI * 2);
+                ctx.arc(x, cy - headR * 0.2, headR * 1.05, Math.PI, 0);
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(x, cy - headR * 1.55);
+                ctx.lineTo(x - headR * 0.4, cy - headR * 0.35);
+                ctx.lineTo(x + headR * 0.4, cy - headR * 0.35);
+                ctx.closePath(); ctx.fill();
+            } else if (shape === 'star') {
+                // Artillery — bicorne hat.
+                ctx.fillStyle = dark;
+                ctx.beginPath();
+                ctx.moveTo(x - headR * 1.35, cy - headR * 0.55);
+                ctx.lineTo(x + headR * 1.35, cy - headR * 0.55);
+                ctx.lineTo(x, cy - headR * 1.45);
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+            } else if (shape === 'triangle') {
+                // Mountaineer — feathered slouch hat.
+                ctx.fillStyle = dark;
+                ctx.beginPath();
+                ctx.ellipse(x, cy - headR * 0.65, headR * 1.4, headR * 0.42, 0, 0, Math.PI * 2);
+                ctx.fill(); ctx.stroke();
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(x, cy - headR, headR * 0.55, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = trim; ctx.lineWidth = Math.max(0.5, r * 0.13);
+                ctx.beginPath();
+                ctx.moveTo(x + headR * 0.6, cy - headR * 0.9);
+                ctx.lineTo(x + headR * 1.3, cy - headR * 1.7);
+                ctx.stroke();
+            } else if (shape === 'square') {
+                // Engineer — flat forage cap.
+                ctx.fillStyle = dark;
+                roundRectPath(ctx, x - headR * 1.1, cy - headR * 1.2, headR * 2.2, headR * 0.85, headR * 0.2);
+                ctx.fill(); ctx.stroke();
+                ctx.fillStyle = color;
+                ctx.fillRect(x - headR * 1.1, cy - headR * 0.55, headR * 2.2, headR * 0.2);
+            } else {
+                // Infantry & default — tall shako with nation band + plume.
+                const hw = headR * 1.5, hh = headR * 1.5, topY = cy - headR * 0.55 - hh;
+                ctx.fillStyle = dark;
+                roundRectPath(ctx, x - hw / 2, topY, hw, hh, headR * 0.18);
+                ctx.fill(); ctx.stroke();
+                ctx.fillStyle = color;                       // regimental band
+                ctx.fillRect(x - hw / 2, topY + hh * 0.66, hw, hh * 0.34);
+                ctx.fillStyle = trim;                        // plume
+                ctx.beginPath();
+                ctx.arc(x, topY, headR * 0.32, 0, Math.PI * 2);
                 ctx.fill();
             }
-            // Doctor cross — extra white tick to be unmistakable.
-            if (kind === 'doctor') {
-                ctx.fillStyle = '#ffffff';
-                const t2 = r * 0.22;
-                ctx.fillRect(x - t2, y - r * 0.55, t2 * 2, r * 1.1);
-                ctx.fillRect(x - r * 0.55, y - t2, r * 1.1, t2 * 2);
-            }
+        }
 
-            // Heavy units (heavy inf, heavy cav, heavy cannon) get a dark ring
-            // to keep the old visual cue.
-            if (heavy) {
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = Math.max(1, r * 0.32);
+        // A side-on warhorse for cavalry units. The saddle-cloth picks up the
+        // rider's nation colours so mounted troops read as the same army.
+        function drawHorse(ctx, x, y, r, uniform) {
+            const body  = '#5a3d2b';                  // bay brown
+            const dark  = '#3a2619';
+            const cloth = (uniform && uniform.jacket) || '#7a1f1f';
+            const trim  = (uniform && uniform.trim) || '#f5f1e8';
+            ctx.save();
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            ctx.fillStyle = 'rgba(0,0,0,0.22)';       // ground shadow
+            ctx.beginPath();
+            ctx.ellipse(x, y + r * 1.5, r * 1.8, r * 0.4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            const by = y + r * 0.55;                  // body centre
+            ctx.strokeStyle = dark;                   // four legs
+            ctx.lineWidth = Math.max(1, r * 0.28);
+            const legTop = by + r * 0.2, legBot = y + r * 1.45;
+            [-r * 0.95, -r * 0.4, r * 0.5, r * 1.05].forEach(dx => {
+                ctx.beginPath(); ctx.moveTo(x + dx, legTop); ctx.lineTo(x + dx, legBot); ctx.stroke();
+            });
+
+            ctx.fillStyle = body;                     // barrel / body
+            ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+            ctx.lineWidth = Math.max(0.6, r * 0.16);
+            ctx.beginPath();
+            ctx.ellipse(x, by, r * 1.5, r * 0.72, 0, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+
+            ctx.strokeStyle = dark;                   // tail
+            ctx.lineWidth = Math.max(1, r * 0.3);
+            ctx.beginPath();
+            ctx.moveTo(x - r * 1.4, by - r * 0.15);
+            ctx.quadraticCurveTo(x - r * 1.95, by + r * 0.25, x - r * 1.7, by + r * 0.95);
+            ctx.stroke();
+
+            ctx.fillStyle = body;                     // neck + head (facing right)
+            ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+            ctx.lineWidth = Math.max(0.6, r * 0.16);
+            ctx.beginPath();
+            ctx.moveTo(x + r * 1.0, by - r * 0.45);
+            ctx.lineTo(x + r * 1.65, by - r * 1.35);
+            ctx.lineTo(x + r * 2.15, by - r * 1.2);
+            ctx.lineTo(x + r * 1.95, by - r * 0.55);
+            ctx.lineTo(x + r * 1.3, by + r * 0.1);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+
+            ctx.strokeStyle = dark;                   // mane
+            ctx.lineWidth = Math.max(0.8, r * 0.2);
+            ctx.beginPath();
+            ctx.moveTo(x + r * 1.05, by - r * 0.5);
+            ctx.lineTo(x + r * 1.6, by - r * 1.3);
+            ctx.stroke();
+
+            ctx.fillStyle = body;                     // ear
+            ctx.beginPath();
+            ctx.moveTo(x + r * 1.7, by - r * 1.35);
+            ctx.lineTo(x + r * 1.8, by - r * 1.65);
+            ctx.lineTo(x + r * 1.92, by - r * 1.25);
+            ctx.closePath(); ctx.fill();
+
+            ctx.fillStyle = '#000';                   // eye
+            ctx.beginPath();
+            ctx.arc(x + r * 1.85, by - r * 1.0, Math.max(0.5, r * 0.08), 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = cloth;                    // saddle-cloth in nation colours
+            ctx.strokeStyle = trim;
+            ctx.lineWidth = Math.max(0.5, r * 0.12);
+            ctx.beginPath();
+            ctx.moveTo(x - r * 0.75, by - r * 0.5);
+            ctx.lineTo(x + r * 0.7, by - r * 0.5);
+            ctx.lineTo(x + r * 0.55, by + r * 0.4);
+            ctx.lineTo(x - r * 0.9, by + r * 0.4);
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // Small unit-type / heavy markers, shared by the sprite and the vector
+        // fallback so unit kinds stay readable at a glance over any uniform.
+        function drawUnitMarkers(ctx, x, y, r, kind, heavy) {
+            const u = kind && UNIT_TYPES[kind];
+            const shape = u ? u.shape : 'circle';
+            if (shape === 'star') {                       // artillery crew pip
+                ctx.fillStyle = '#fef3c7';
                 ctx.beginPath();
-                ctx.arc(x, y, r + Math.max(2, r * 0.55), 0, Math.PI * 2);
+                ctx.arc(x, y + r * 0.12, Math.max(0.8, r * 0.24), 0, Math.PI * 2);
+                ctx.fill();
+            }
+            if (kind === 'doctor') {                      // red cross on white
+                ctx.fillStyle = '#ffffff';
+                const t2 = r * 0.16;
+                ctx.fillRect(x - t2, y - r * 0.15, t2 * 2, r * 0.85);
+                ctx.fillRect(x - r * 0.42, y + r * 0.12, r * 0.84, t2 * 2);
+                ctx.fillStyle = '#dc2626';
+                const t3 = r * 0.09;
+                ctx.fillRect(x - t3, y - r * 0.05, t3 * 2, r * 0.6);
+                ctx.fillRect(x - r * 0.28, y + r * 0.2, r * 0.56, t3 * 2);
+            }
+            if (heavy) {                                  // heavy marker ring
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = Math.max(1, r * 0.26);
+                ctx.beginPath();
+                ctx.ellipse(x, y + r * 0.15, r * 1.2, r * 1.55, 0, 0, Math.PI * 2);
                 ctx.stroke();
             }
+        }
+
+        // Each dot is a soldier wearing his NATION'S designed uniform. When the
+        // player has a uniform (from the uniform designer) we rasterise that exact
+        // SVG soldier into a cached sprite and stamp it here — so what you design
+        // is exactly what marches into battle. Without a uniform we fall back to a
+        // generic coloured soldier (also used for the first frame before the
+        // sprite finishes decoding).
+        function drawDot(ctx, x, y, color, heavy, r, kind, uniform) {
+            r = r || 7;
+            const ut = kind && UNIT_TYPES[kind];
+            const mounted = !!(ut && ut.shape === 'diamond');   // cavalry ride horses
+            const riderDY = mounted ? -r * 0.95 : 0;            // seat the rider up
+
+            // Preferred path: the designed uniform, drawn as a cached sprite.
+            const sprite = (uniform && window.getUniformSprite) ? window.getUniformSprite(uniform) : null;
+            if (sprite) {
+                const h = r * 3.7, w = h * 0.8;
+                ctx.save();
+                if (mounted) {
+                    drawHorse(ctx, x, y, r, uniform);
+                } else {
+                    ctx.fillStyle = 'rgba(0,0,0,0.2)';        // ground shadow
+                    ctx.beginPath();
+                    ctx.ellipse(x, y + r * 1.35, r * 0.85, r * 0.3, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.drawImage(sprite, x - w / 2, (y + riderDY) - h * 0.61, w, h);
+                ctx.restore();
+                drawUnitMarkers(ctx, x, y, r, kind, heavy);
+                return;
+            }
+
+            const shape = ut ? ut.shape : 'circle';
+            const coat  = (uniform && uniform.jacket) || color;
+            const shade = window._shadeColor || ((h) => h);
+            const dark  = shade(coat, -0.45);    // coat shadow / facings
+            const light = shade(coat, 0.28);     // shoulder highlight
+            const skin  = '#e8b48c';
+            const boots = '#2b2622';
+            const trim  = (uniform && uniform.trim) || '#f4f1e8';
+
+            ctx.save();
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = Math.max(0.5, r * 0.16);
+            ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+
+            if (mounted) {                                // cavalry: horse, then seat rider
+                drawHorse(ctx, x, y, r, uniform);
+                ctx.translate(0, riderDY);
+            } else {
+                ctx.fillStyle = 'rgba(0,0,0,0.18)';       // ground shadow
+                ctx.beginPath();
+                ctx.ellipse(x, y + r * 1.35, r * 0.85, r * 0.3, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.fillStyle = boots;                        // legs / boots
+            const legH = r * 0.7, legY = y + r * 0.55, legW = r * 0.34;
+            ctx.fillRect(x - r * 0.42, legY, legW, legH);
+            ctx.fillRect(x + r * 0.08, legY, legW, legH);
+
+            if (kind !== 'doctor') {                      // musket + bayonet
+                ctx.strokeStyle = '#3a2a1a';
+                ctx.lineWidth = Math.max(0.8, r * 0.18);
+                ctx.beginPath();
+                ctx.moveTo(x + r * 0.55, y - r * 1.0);
+                ctx.lineTo(x + r * 0.9, y + r * 0.9);
+                ctx.stroke();
+                ctx.strokeStyle = '#d8d8d8';
+                ctx.beginPath();
+                ctx.moveTo(x + r * 0.55, y - r * 1.0);
+                ctx.lineTo(x + r * 0.46, y - r * 1.4);
+                ctx.stroke();
+                ctx.lineWidth = Math.max(0.5, r * 0.16);
+                ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+            }
+
+            const tw = r * 1.3, th = r * 1.15, tx = x - tw / 2, ty = y - r * 0.35, rad = r * 0.3;
+            roundRectPath(ctx, tx, ty, tw, th, rad);      // coat / torso
+            ctx.fillStyle = coat; ctx.fill(); ctx.stroke();
+            roundRectPath(ctx, tx, ty, tw, th * 0.34, rad);
+            ctx.fillStyle = light; ctx.fill();
+            ctx.fillStyle = dark;
+            ctx.fillRect(tx, ty + th * 0.72, tw, th * 0.28);
+
+            ctx.strokeStyle = trim;                       // sash / cross-belt
+            ctx.lineWidth = Math.max(0.8, r * 0.2);
+            ctx.beginPath();
+            ctx.moveTo(tx + r * 0.06, ty + th * 0.06);
+            ctx.lineTo(tx + tw - r * 0.06, ty + th * 0.78);
+            ctx.stroke();
+
+            ctx.lineWidth = Math.max(0.5, r * 0.16);      // head
+            ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+            const headR = r * 0.52, headCy = y - r * 0.7;
+            ctx.fillStyle = skin;
+            ctx.beginPath();
+            ctx.arc(x, headCy, headR, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+
+            drawHeadgear(ctx, x, headCy, headR, r, shape, coat, dark, trim);
+            ctx.restore();
+
+            drawUnitMarkers(ctx, x, y, r, kind, heavy);
         }
 
         function drawStar(ctx, cx, cy, points, outerR, innerR, fill, stroke) {
@@ -6815,7 +7130,7 @@
             const r = Math.floor(best / gameState.boardCols), c = best % gameState.boardCols;
             const bn = gameState.buildings[best] ? gameState.buildings[best].toUpperCase() : 'settlement';
             logEvent(`👑 ${p.name} declared a new provisional capital at the ${bn} (${r}, ${c}).`);
-            if (playerIdx === 0) {
+            if (playerIdx === 0 && gameHasAISeat()) {
                 sfx.alert && sfx.alert();
                 if (typeof showToast === 'function') showToast(`👑 Your capital fell! A ${bn} is now your provisional capital. Use 👑 Capital to relocate, or reclaim your throne.`, 'warn');
                 if (typeof pushSummary === 'function') pushSummary(`👑 Capital lost — a ${bn} became your provisional capital.`);
@@ -6857,7 +7172,7 @@
             if (gameState.stats[attackerIdx]) gameState.stats[attackerIdx].tilesCaptured++;
             if (gameState.stats[defenderIdx]) gameState.stats[defenderIdx].tilesLost++;
             // If the human (player 0) was attacked, log it for next-turn summary.
-            if (defenderIdx === 0 && attackerIdx !== 0) {
+            if (defenderIdx === 0 && attackerIdx !== 0 && gameHasAISeat()) {
                 pushSummary(`⚔️ ${pAttacker.name} captured one of your tiles!`);
             }
 
@@ -6962,6 +7277,31 @@
         // tiles connects it to one of that owner's capitals. Tiles that lose
         // their connection bleed troops, drag happiness, and after
         // CUT_OFF_COLLAPSE_TURNS they collapse to neutral (building destroyed).
+        // True if any of the player's capitals can reach one of their Ports by
+        // land (own or allied tiles). If not, a coastal capital itself acts as
+        // a sea-lane hub — so an island capital is never marooned, and building
+        // a port somewhere unreachable can't make supply worse.
+        function capitalReachesPortByLand(playerIdx) {
+            const rows = gameState.boardRows, cols = gameState.boardCols;
+            const seen = new Set(), q = [];
+            for (const cIdx of gameState.capitalTiles) {
+                if (gameState.ownership[cIdx] === playerIdx) { seen.add(cIdx); q.push(cIdx); }
+            }
+            while (q.length) {
+                const idx = q.shift();
+                if (gameState.ownership[idx] === playerIdx && gameState.buildings[idx] === 'port') return true;
+                const r = Math.floor(idx / cols), c = idx % cols;
+                for (const [nr, nc] of [[r-1,c],[r+1,c],[r,c-1],[r,c+1]]) {
+                    if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+                    const n = nr * cols + nc;
+                    if (seen.has(n)) continue;
+                    const o = gameState.ownership[n];
+                    if (o === playerIdx || (o >= 0 && getDiploStatus(playerIdx, o) === 'ally')) { seen.add(n); q.push(n); }
+                }
+            }
+            return false;
+        }
+
         function getOwnedSupplySet(playerIdx) {
             // Multi-source BFS from every capital this player still owns.
             const rows = gameState.boardRows, cols = gameState.boardCols;
@@ -6993,6 +7333,11 @@
                 const ri = Math.floor(i / cols), ci = i % cols;
                 if (isAdjacentToOcean(ri, ci)) coastal.push(i);
             }
+            // MAROONED-CAPITAL LIFELINE: if no port can be reached from the
+            // capital by land, a coastal capital (e.g. one that spawned on an
+            // island) acts as a sea-lane hub so the nation isn't cut off from
+            // its own land and starved out.
+            const noPorts = !capitalReachesPortByLand(playerIdx);
             while (q.length) {
                 const idx = q.shift();
                 const r = Math.floor(idx / cols), c = idx % cols;
@@ -7011,7 +7356,8 @@
                 // Reaching one of YOUR PORTS opens sea lanes to every other
                 // port and every coastal tile you own. No port → no sea lanes.
                 if (gameState.ownership[idx] === playerIdx &&
-                    gameState.buildings[idx] === 'port') {
+                    (gameState.buildings[idx] === 'port' ||
+                     (noPorts && isCapitalTile(idx) && isAdjacentToOcean(r, c)))) {
                     for (const pIdx of ports) {
                         if (visited.has(pIdx)) continue;
                         visited.add(pIdx); reach.add(pIdx); q.push(pIdx);
@@ -7122,11 +7468,11 @@
             }
             if (collapsedThisTurn > 0 && p) {
                 logEvent(`⛓️ ${p.name} lost ${collapsedThisTurn} cut-off tile(s) to collapse.`);
-                if (playerIdx === 0) pushSummary(`⛓️ ${collapsedThisTurn} of your cut-off tiles collapsed.`);
-            } else if (cutCount > 0 && p && playerIdx === 0) {
+                if (isHumanSeat(playerIdx)) pushSummary(`⛓️ ${collapsedThisTurn} of your cut-off tiles collapsed.`);
+            } else if (cutCount > 0 && p && isHumanSeat(playerIdx)) {
                 pushSummary(`⛓️ ${cutCount} tile(s) cut off from your supply lines.`);
             }
-            if (starvedTiles > 0 && p && playerIdx === 0) {
+            if (starvedTiles > 0 && p && isHumanSeat(playerIdx)) {
                 pushSummary(`🌾 ${starvedTiles} of your tile(s) starved — garrisons too big for local food.`);
             }
         }
@@ -7309,7 +7655,7 @@
                 if (hasTech(victim.id, 'sanitation')) happLoss = Math.ceil(happLoss * 0.5);
                 victim.happiness = Math.max(0, victim.happiness - happLoss);
                 logEvent(`${ev.glyph} CIVILIAN DISASTER: ${victim.name} — ${ev.text} (-${happLoss}% happiness)`);
-                if (victim.id === 0) {
+                if (victim.id === 0 && gameHasAISeat()) {
                     pushSummary(`${ev.glyph} CIVILIAN DISASTER: ${ev.text} (-${happLoss}% happiness)`);
                 }
                 sfx.disaster();
@@ -7467,7 +7813,7 @@
                     sfx.cannon && sfx.cannon();
                     sfx.explode && sfx.explode();
                     logEvent(`⚓💥 Naval battle: ${nA} (-${lossA + hA}) vs ${nB} (-${lossB + hB}) — ${aWinning ? nA : nB} prevailed.`);
-                    if (A.ownerIdx === 0 || B.ownerIdx === 0) {
+                    if ((A.ownerIdx === 0 || B.ownerIdx === 0) && gameHasAISeat()) {
                         const youWin = (A.ownerIdx === 0 && aWinning) || (B.ownerIdx === 0 && !aWinning);
                         if (typeof pushSummary === 'function') {
                             pushSummary(`⚓💥 Naval battle vs ${A.ownerIdx === 0 ? nB : nA} — ${youWin ? 'WON' : 'LOST'}.`);
@@ -8006,9 +8352,9 @@
             logEvent(`💥 REVOLT SUCCESS! ${newPlayer.name} have seized ${claimed.length + 1} tiles and declared independence!`);
             logChat(newIdx, `We are FREE! ${target.name} no longer rules over us!`);
             // Tell the human about it on next-turn summary.
-            if (revolt.targetIdx === 0) {
+            if (revolt.targetIdx === 0 && gameHasAISeat()) {
                 pushSummary(`💥 REVOLT! ${newPlayer.name} broke off ${claimed.length + 1} of your tiles!`);
-            } else if (revolt.fundedBy === 0) {
+            } else if (revolt.fundedBy === 0 && gameHasAISeat()) {
                 pushSummary(`✨ The revolt you funded SUCCEEDED — ${newPlayer.name} have risen!`);
             }
             return true;
@@ -8187,10 +8533,10 @@
                                 if (gameState.buildings[targetIdx] && !isCapitalTile(targetIdx)) {
                                     gameState.buildings[targetIdx] = null;
                                     logEvent(`🚀 Missile destroyed structure at tile ${targetIdx}.`);
-                                    if (targetOwner === 0) pushSummary(`🚀 A missile destroyed your building at tile ${targetIdx}.`);
+                                    if (targetOwner === 0 && gameHasAISeat()) pushSummary(`🚀 A missile destroyed your building at tile ${targetIdx}.`);
                                 } else {
                                     logEvent(`🚀 Missile hit tile ${targetIdx} for ${baseDmg} damage.`);
-                                    if (targetOwner === 0) pushSummary(`🚀 A missile hit your tile (-${baseDmg} troops).`);
+                                    if (targetOwner === 0 && gameHasAISeat()) pushSummary(`🚀 A missile hit your tile (-${baseDmg} troops).`);
                                 }
                                 // Hydrogen splashes neighbors.
                                 if (hasTech(playerIdx, 'hydrogen')) {
@@ -8557,42 +8903,230 @@
             renderGame();
         }
 
-        // === TECH TREE UI ===
+        // === TECH TREE UI (Hearts-of-Iron style) ===
+        // Tabbed research folders, tiered rows, connector lines between
+        // prerequisites, research slots in the header and a detail panel.
+        // Re-renders always go through window.openTechTree() so wrappers
+        // (e.g. the game-mode tech-cost multiplier) keep applying.
+        const TECH_FOLDERS = [
+            { id:'construction', name:'Construction', icon:'🏰', techs:['construction','urbanization','metropolis','fortification','bastions','siegecraft','artillery'] },
+            { id:'industry',     name:'Industry',     icon:'🏭', techs:['industry','chemistry','electronics','rocketry','mds','nuclear','hydrogen'] },
+            { id:'military',     name:'Military',     icon:'⚔️', techs:['military','heavy_infantry','heavy_cavalry','mech_infantry'] },
+            { id:'naval',        name:'Naval',        icon:'⚓', techs:['navigation','seafaring','navalDoctrine','cartography','marines'] },
+            { id:'society',      name:'Society',      icon:'🏛️', techs:['civics','bureaucracy','propaganda','medicine','sanitation','espionage','counter_intel'] }
+        ];
+        const TECH_TIER_LABELS = ['I','II','III','IV','V','VI','VII','VIII'];
+        let _techTab = null, _techSel = null;
+
+        function _techFolders() {
+            // Any tech not assigned to a folder lands in "Other" so nothing is hidden.
+            const listed = new Set();
+            const out = TECH_FOLDERS.map(f => {
+                const techs = f.techs.filter(k => TECH_TREE[k]);
+                techs.forEach(k => listed.add(k));
+                return Object.assign({}, f, { techs });
+            });
+            const extra = Object.keys(TECH_TREE).filter(k => !listed.has(k));
+            if (extra.length) out.push({ id:'other', name:'Other', icon:'📦', techs: extra });
+            return out.filter(f => f.techs.length);
+        }
+        function _techFolderOf(key) {
+            const f = _techFolders().find(ff => ff.techs.includes(key));
+            return f ? f.id : null;
+        }
+        function _techEsc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+        }
+        function _techSplitName(name) {
+            const m = /^(\S+)\s+(.*)$/.exec(name || '');
+            // Only treat the first token as an icon if it isn't plain letters.
+            if (m && !/^[A-Za-z]/.test(m[1])) return { icon: m[1], label: m[2] };
+            return { icon: '🔬', label: name || '' };
+        }
+
+        // Lay out one folder: rows = depth from in-folder prerequisites,
+        // columns = barycentre of parents, resolved left-to-right.
+        function _techLayout(keys) {
+            const inTab = new Set(keys);
+            const depth = {};
+            const getDepth = (k, seen) => {
+                if (depth[k] !== undefined) return depth[k];
+                if (seen.has(k)) return 0;
+                seen.add(k);
+                const parents = (TECH_TREE[k].requires || []).filter(r => inTab.has(r));
+                const d = parents.length ? 1 + Math.max(...parents.map(p => getDepth(p, seen))) : 0;
+                depth[k] = d;
+                return d;
+            };
+            keys.forEach(k => getDepth(k, new Set()));
+            const rows = [];
+            keys.forEach(k => { (rows[depth[k]] = rows[depth[k]] || []).push(k); });
+            const col = {};
+            rows.forEach((row, r) => {
+                if (!row) return;
+                const want = row.map((k, i) => {
+                    const ps = (TECH_TREE[k].requires || []).filter(p => inTab.has(p) && col[p] !== undefined);
+                    return { k, w: ps.length ? ps.reduce((s, p) => s + col[p], 0) / ps.length : i };
+                }).sort((a, b) => a.w - b.w);
+                let next = -Infinity;
+                want.forEach(o => {
+                    const c = Math.max(Math.round(o.w * 2) / 2, next + 1);
+                    col[o.k] = c; next = c;
+                });
+            });
+            const minC = Math.min(...Object.values(col));
+            Object.keys(col).forEach(k => col[k] -= minC);
+            return { depth, col, rows: rows.length, cols: Math.max(...Object.values(col)) + 1 };
+        }
+
         function openTechTree() {
             sfx.click();
-            const p = gameState.players[gameState.currentPlayer];
-            const grid = document.getElementById('tech-grid');
-            const rpDisp = document.getElementById('tech-rp-display');
-            rpDisp.textContent = `Research Points: ${p.tech.researchPoints} | Labs: ${countPlayerBuildings(gameState.currentPlayer, 'lab')}/3 | 🏗️ Build capacity: ${buildCapacity(gameState.currentPlayer)}/turn`;
-            grid.innerHTML = '';
+            const pIdx = gameState.currentPlayer;
+            const p = gameState.players[pIdx];
+            const modal = document.getElementById('tech-modal');
+            const shell = modal.querySelector('.modal-content');
+            shell.classList.add('ht-shell');
+            const folders = _techFolders();
+            if (!_techTab || !folders.some(f => f.id === _techTab)) _techTab = folders[0].id;
+            const folder = folders.find(f => f.id === _techTab);
 
-            for (const key of Object.keys(TECH_TREE)) {
-                const t = TECH_TREE[key];
-                const unlocked = p.tech.unlocked.includes(key);
-                const reqMet = t.requires.every(r => p.tech.unlocked.includes(r));
-                const proj = (gameState.projects || []).find(pr =>
-                    pr.kind === 'tech' && pr.ownerIdx === gameState.currentPlayer && pr.what === key);
-                const row = document.createElement('div');
-                row.className = `tech-row ${unlocked ? 'unlocked' : (reqMet ? '' : 'locked')}`;
-                let statusTag = '';
-                if (unlocked) statusTag = '<span style="color:#10b981;">✓ Researched</span>';
-                else if (proj) statusTag = `<span style="color:#fbbf24;">🔬 Researching — ${proj.totalTurns - proj.turnsDone} turn(s) left</span>`;
-                row.innerHTML = `
-                    <div style="font-weight:700; font-size:1rem;">${t.name} ${statusTag}</div>
-                    <div style="color:var(--text-muted); font-size:0.82rem; margin:0.3rem 0;">${t.desc}</div>
-                    <div style="font-size:0.78rem;">Cost: ${t.cost} RP ${t.requires.length ? `· Requires: ${t.requires.map(r => TECH_TREE[r].name).join(', ')}` : ''}</div>
-                `;
-                if (!unlocked && !proj && reqMet) {
-                    const btn = document.createElement('button');
-                    btn.className = 'diplo-btn ally';
-                    btn.style.marginTop = '0.6rem';
-                    btn.textContent = `Research (${t.cost} RP)`;
-                    btn.onclick = () => researchTech(key);
-                    row.appendChild(btn);
-                }
-                grid.appendChild(row);
+            const unlocked = (p.tech && p.tech.unlocked) || [];
+            const rp = (p.tech && p.tech.researchPoints) || 0;
+            const projects = (gameState.projects || []).filter(pr => pr.kind === 'tech' && pr.ownerIdx === pIdx);
+            const stateOf = (k) => {
+                const t = TECH_TREE[k];
+                if (unlocked.includes(k)) return 'done';
+                if (projects.some(pr => pr.what === k)) return 'active';
+                if (!(t.requires || []).every(r => unlocked.includes(r))) return 'locked';
+                return rp >= t.cost ? 'avail' : 'poor';
+            };
+            const turnsFor = (t) => Math.max(1, Math.round(t.cost / 40));
+
+            // ---- Header: RP, age, capacity, research slots ----
+            const age = (typeof getPlayerAge === 'function') ? getPlayerAge(pIdx) : null;
+            const cap = (typeof buildCapacity === 'function') ? buildCapacity(pIdx) : 1;
+            const labs = (typeof countPlayerBuildings === 'function') ? countPlayerBuildings(pIdx, 'lab') : 0;
+            let slots = projects.map(pr => {
+                const t = TECH_TREE[pr.what] || { name: pr.what };
+                const pct = Math.round(pr.turnsDone / Math.max(1, pr.totalTurns) * 100);
+                return `<div class="ht-slot"><div>${_techEsc(t.name)} · ${pr.totalTurns - pr.turnsDone}T</div><div class="ht-slot-bar"><div style="width:${pct}%"></div></div></div>`;
+            }).join('');
+            if (!projects.length) slots = '<div class="ht-slot empty">No active research</div>';
+
+            // ---- Tabs ----
+            const tabs = folders.map(f => {
+                const done = f.techs.filter(k => unlocked.includes(k)).length;
+                return `<button class="ht-tab${f.id === _techTab ? ' on' : ''}" data-tab="${f.id}">${f.icon} ${f.name}<small>${done}/${f.techs.length}</small></button>`;
+            }).join('');
+
+            // ---- Tree canvas ----
+            const W = 196, H = 66, GX = 34, GY = 54, RAIL = 64;
+            const L = _techLayout(folder.techs);
+            const pos = {};
+            folder.techs.forEach(k => { pos[k] = { x: RAIL + L.col[k] * (W + GX), y: L.depth[k] * (H + GY) }; });
+            const cw = RAIL + L.cols * (W + GX), ch = L.rows * (H + GY) - GY;
+
+            let lines = '';
+            folder.techs.forEach(k => {
+                (TECH_TREE[k].requires || []).forEach(r => {
+                    if (!pos[r]) return;
+                    const a = pos[r], b = pos[k];
+                    const x1 = a.x + W / 2, y1 = a.y + H, x2 = b.x + W / 2, y2 = b.y;
+                    const my = y2 - GY / 2;
+                    const lit = unlocked.includes(r);
+                    const both = lit && unlocked.includes(k);
+                    const color = both ? '#7fbf5a' : lit ? '#c9a227' : '#4a4530';
+                    lines += `<path d="M${x1},${y1} V${my} H${x2} V${y2}" fill="none" stroke="#000" stroke-opacity="0.55" stroke-width="5"/>`;
+                    lines += `<path d="M${x1},${y1} V${my} H${x2} V${y2}" fill="none" stroke="${color}" stroke-width="2.5"/>`;
+                    lines += `<polygon points="${x2-5},${y2-7} ${x2+5},${y2-7} ${x2},${y2-1}" fill="${color}"/>`;
+                });
+            });
+
+            let rail = '';
+            for (let r = 0; r < L.rows; r++) rail += `<div style="top:${r * (H + GY)}px; height:${H}px; line-height:${H}px;">${TECH_TIER_LABELS[r] || (r + 1)}</div>`;
+
+            let cards = '';
+            folder.techs.forEach(k => {
+                const t = TECH_TREE[k], st = stateOf(k), n = _techSplitName(t.name);
+                const pr = projects.find(x => x.what === k);
+                const ext = (t.requires || []).filter(r => !folder.techs.includes(r) && TECH_TREE[r]);
+                let meta;
+                if (st === 'done') meta = '✓ Researched';
+                else if (st === 'active') meta = `Researching · ${pr.totalTurns - pr.turnsDone}T left`;
+                else if (st === 'poor') meta = `${t.cost} RP · need ${t.cost - rp} more`;
+                else meta = `${t.cost} RP · ${turnsFor(t)}T`;
+                const extLine = ext.length ? `<div class="ht-ext">+ ${ext.map(r => _techEsc(_techSplitName(TECH_TREE[r].name).label)).join(', ')}</div>` : '';
+                const bar = (st === 'active') ? `<div class="ht-bar"><div style="width:${Math.round(pr.turnsDone / Math.max(1, pr.totalTurns) * 100)}%"></div></div>` : '';
+                cards += `<div class="ht-card ${st}${k === _techSel ? ' sel' : ''}" data-tech="${k}" title="${_techEsc(t.desc)}" style="left:${pos[k].x}px; top:${pos[k].y}px; width:${W}px; height:${H}px;">
+                    <div class="ht-ico">${n.icon}</div>
+                    <div class="ht-txt"><div class="ht-name">${_techEsc(n.label)}</div><div class="ht-meta">${meta}</div>${extLine}${bar}</div>
+                </div>`;
+            });
+
+            // ---- Detail panel ----
+            if (!_techSel || !TECH_TREE[_techSel] || _techFolderOf(_techSel) !== _techTab) {
+                _techSel = folder.techs.find(k => stateOf(k) === 'avail') || folder.techs.find(k => stateOf(k) === 'poor') || folder.techs[0];
             }
-            document.getElementById('tech-modal').style.display = 'flex';
+            const s = _techSel, ts = TECH_TREE[s], sst = stateOf(s), sn = _techSplitName(ts.name);
+            const reqList = (ts.requires || []).map(r => {
+                const ok = unlocked.includes(r);
+                return `<li class="${ok ? 'ht-ok' : 'ht-no'}">${ok ? '✓' : '✗'} ${_techEsc(TECH_TREE[r] ? TECH_TREE[r].name : r)}</li>`;
+            }).join('') || '<li style="color:#a59e84;">None</li>';
+            const unlocks = Object.keys(TECH_TREE).filter(k => (TECH_TREE[k].requires || []).includes(s));
+            const unlockList = unlocks.map(k => `<li>${_techEsc(TECH_TREE[k].name)}</li>`).join('') || '<li style="color:#a59e84;">Nothing further</li>';
+            let btnLabel = 'Research', btnOff = false;
+            if (sst === 'done') { btnLabel = '✓ Researched'; btnOff = true; }
+            else if (sst === 'active') { btnLabel = 'In progress'; btnOff = true; }
+            else if (sst === 'locked') { btnLabel = 'Prerequisites missing'; btnOff = true; }
+            else if (sst === 'poor') { btnLabel = `Need ${ts.cost - rp} more RP`; btnOff = true; }
+            else btnLabel = `Research · ${ts.cost} RP`;
+
+            shell.innerHTML = `
+              <div class="ht-head">
+                <div class="ht-title">🔬 Research</div>
+                <div class="ht-stat">Research points <b>${rp}</b></div>
+                ${age ? `<div class="ht-stat">Age <b>${age.icon} ${_techEsc(age.name)}</b></div>` : ''}
+                <div class="ht-stat">Labs <b>${labs}/3</b> · Capacity <b>${cap}/turn</b></div>
+                <div class="ht-slots">${slots}</div>
+                <button class="ht-close" id="ht-close">✕ Close</button>
+              </div>
+              <div class="ht-tabs">${tabs}</div>
+              <div class="ht-body">
+                <div class="ht-tree" id="ht-tree">
+                  <div class="ht-canvas" style="width:${cw}px; height:${ch}px;">
+                    <div class="ht-rail" style="height:${ch}px;">${rail}</div>
+                    <svg class="ht-svg" width="${cw}" height="${ch}">${lines}</svg>
+                    ${cards}
+                  </div>
+                </div>
+                <div class="ht-info">
+                  <div class="ht-ico-big" style="font-size:2rem; line-height:1;">${sn.icon}</div>
+                  <h3>${_techEsc(sn.label)}</h3>
+                  <div class="ht-stat">${ts.cost} RP · ${turnsFor(ts)} turn(s) of research</div>
+                  <div class="ht-desc">${_techEsc(ts.desc)}</div>
+                  <div class="ht-k">Requires</div><ul>${reqList}</ul>
+                  <div class="ht-k">Leads to</div><ul>${unlockList}</ul>
+                  <button class="ht-go" id="ht-go" ${btnOff ? 'disabled' : ''}>${btnLabel}</button>
+                  <div class="ht-legend"><span class="l-done">Researched</span><span class="l-act">Researching</span><span class="l-av">Available</span><span class="l-lock">Locked</span></div>
+                </div>
+              </div>`;
+
+            // Keep the scroll position when re-rendering inside the same tab.
+            const tree = shell.querySelector('#ht-tree');
+            if (openTechTree._scroll && openTechTree._scroll.tab === _techTab) {
+                tree.scrollLeft = openTechTree._scroll.x; tree.scrollTop = openTechTree._scroll.y;
+            }
+            tree.addEventListener('scroll', () => { openTechTree._scroll = { tab: _techTab, x: tree.scrollLeft, y: tree.scrollTop }; });
+
+            shell.querySelector('#ht-close').onclick = closeTechTree;
+            shell.querySelectorAll('.ht-tab').forEach(b => b.onclick = () => { _techTab = b.dataset.tab; _techSel = null; window.openTechTree(); });
+            shell.querySelectorAll('.ht-card').forEach(c => {
+                c.onclick = () => { _techSel = c.dataset.tech; window.openTechTree(); };
+                c.ondblclick = () => { if (stateOf(c.dataset.tech) === 'avail') researchTech(c.dataset.tech); };
+            });
+            const go = shell.querySelector('#ht-go');
+            if (go && !btnOff) go.onclick = () => researchTech(s);
+            modal.style.display = 'flex';
         }
 
         function closeTechTree() { sfx.click(); document.getElementById('tech-modal').style.display = 'none'; }
@@ -8746,7 +9280,7 @@
                     p.manpower = Math.max(0, (p.manpower || 0) - drafted);
                     if (gameState.currentPlayer === 0 || !p.isAI)
                         logEvent(`🪖 ${p.name} conscripted ${drafted} militia from the population.`);
-                } else if (conRate > 0 && gameState.currentPlayer === 0) {
+                } else if (conRate > 0 && !p.isAI) {
                     pushSummary(`🪖 The draft found no eligible citizens — manpower exhausted.`);
                 }
             }
@@ -8887,9 +9421,13 @@
 
             if (gameState.players[gameState.currentPlayer].isAI) {
                 setTimeout(executeAITurn, 500);
-            } else if (gameState.currentPlayer === 0) {
-                // Control returned to the human. First play any naval-battle
-                // screens, THEN show the turn summary.
+            } else if (gameState.currentPlayer === 0 || !gameHasAISeat()) {
+                // Show the "What Happened" recap to a human.
+                //  • Player-vs-AI: control returned to player 0 after the AI
+                //    rounds — show their accumulated recap.
+                //  • Pass & Play (all human): the buffer holds the turn of the
+                //    human who just ended, so they read it, then hand off.
+                // First play any naval-battle screens, THEN show the summary.
                 setTimeout(() => {
                     playPendingNavalBattles(() => {
                         if (gameState.turnSummary && gameState.turnSummary.length) showTurnSummary();
@@ -9101,6 +9639,9 @@
             const playerIdx = gameState.currentPlayer;
             const p = gameState.players[playerIdx];
             const ideo = getEffectiveIdeology(p);
+
+            // The AI occasionally redesigns its national uniform.
+            if (window._maybeAIChangeUniform) window._maybeAIChangeUniform(p, playerIdx);
 
             // HARD AI: recruit a real army. The AI keeps a war chest in reserve
             // and pours the rest into troops — it WILL field thousands of soldiers
@@ -10704,74 +11245,11 @@
         (function install3DDotRenderer() {
             if (typeof drawDot !== 'function') return;
             window._origDrawDot = drawDot;
-            window.drawDot = function(ctx, x, y, color, heavy, r, kind) {
-                r = r || 7;
-                const u = (typeof UNIT_TYPES !== 'undefined' && kind) ? UNIT_TYPES[kind] : null;
-                const shape = u ? u.shape : 'circle';
-                const isHeavy = heavy || kind === 'heavy';
-                const height = isHeavy ? r * 1.8 : r * 1.2;
-                // Ground shadow ellipse (drawn first)
-                ctx.fillStyle = 'rgba(0,0,0,0.32)';
-                ctx.beginPath();
-                ctx.ellipse(x + 3, y + 2, r * 1.1, r * 0.5, 0, 0, Math.PI * 2);
-                ctx.fill();
-                // Side wall (darker shade of the player's color)
-                ctx.fillStyle = _shadeColor(color, -0.35);
-                ctx.strokeStyle = 'rgba(0,0,0,0.7)';
-                ctx.lineWidth = Math.max(0.6, r * 0.18);
-                ctx.beginPath();
-                ctx.moveTo(x - r * 0.7, y);
-                ctx.lineTo(x - r * 0.7, y - height);
-                ctx.lineTo(x + r * 0.7, y - height);
-                ctx.lineTo(x + r * 0.7, y);
-                ctx.closePath();
-                ctx.fill(); ctx.stroke();
-                // Top of pillar — shape depends on unit kind
-                const ty = y - height;
-                ctx.fillStyle = color;
-                ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-                ctx.beginPath();
-                if (shape === 'triangle') {
-                    ctx.moveTo(x, ty - r); ctx.lineTo(x + r, ty + r * 0.85); ctx.lineTo(x - r, ty + r * 0.85); ctx.closePath();
-                } else if (shape === 'square') {
-                    ctx.rect(x - r, ty - r, r * 2, r * 2);
-                } else if (shape === 'diamond') {
-                    ctx.moveTo(x, ty - r * 1.05); ctx.lineTo(x + r * 1.05, ty); ctx.lineTo(x, ty + r * 1.05); ctx.lineTo(x - r * 1.05, ty); ctx.closePath();
-                } else if (shape === 'star') {
-                    for (let i = 0; i < 10; i++) {
-                        const rr = (i % 2 === 0) ? r * 1.15 : r * 0.55;
-                        const a = (i * Math.PI) / 5 - Math.PI / 2;
-                        const px = x + rr * Math.cos(a), py = ty + rr * Math.sin(a);
-                        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-                    }
-                    ctx.closePath();
-                } else if (shape === 'plus') {
-                    const t = r * 0.55;
-                    ctx.rect(x - t, ty - r, t * 2, r * 2);
-                    ctx.rect(x - r, ty - t, r * 2, t * 2);
-                } else {
-                    ctx.arc(x, ty, r, 0, Math.PI * 2);
-                }
-                ctx.fill(); ctx.stroke();
-                // Top highlight
-                ctx.fillStyle = 'rgba(255,255,255,0.25)';
-                ctx.beginPath();
-                ctx.arc(x - r * 0.35, ty - r * 0.25, Math.max(0.8, r * 0.35), 0, Math.PI * 2);
-                ctx.fill();
-                // Heavy dark ring
-                if (isHeavy) {
-                    ctx.strokeStyle = '#000';
-                    ctx.lineWidth = Math.max(1, r * 0.32);
-                    ctx.beginPath();
-                    ctx.arc(x, ty, r + Math.max(2, r * 0.55), 0, Math.PI * 2);
-                    ctx.stroke();
-                }
-                if (kind === 'lightCannon' || kind === 'heavyCannon') {
-                    ctx.fillStyle = '#fef3c7';
-                    ctx.beginPath();
-                    ctx.arc(x, ty, Math.max(0.8, r * 0.32), 0, Math.PI * 2);
-                    ctx.fill();
-                }
+            // Render each combatant as a uniformed soldier of his nation (the
+            // base drawDot already does this); we just delegate so the live
+            // battle, replays and placements all share the same look.
+            window.drawDot = function(ctx, x, y, color, heavy, r, kind, uniform) {
+                return window._origDrawDot(ctx, x, y, color, heavy, r, kind, uniform);
             };
             function _shadeColor(hex, lum) {
                 let c = hex.replace('#', '');
@@ -12090,6 +12568,7 @@
                 if (isAdjacentToOcean(ri, ci)) coastalT.push(i);
             }
             const seaLanes = [];   // {from, to} pairs to draw across water
+            const _noPorts = !capitalReachesPortByLand(me);   // marooned-capital lifeline
             while (q.length) {
                 const idx = q.shift();
                 const r = Math.floor(idx / cols), c = idx % cols;
@@ -12105,7 +12584,8 @@
                 }
                 // Reaching one of your PORTS opens sea lanes to every other
                 // port and every coastal tile you own.
-                if (gameState.buildings[idx] === 'port') {
+                if (gameState.buildings[idx] === 'port' ||
+                    (_noPorts && isCapitalTile(idx) && isAdjacentToOcean(r, c))) {
                     for (const h of hubs) {
                         if (dist[h] !== -1) continue;
                         dist[h] = dist[idx] + 1;
@@ -13729,7 +14209,7 @@
                 if (pr.ownerIdx === playerIdx && pr.kind === 'building' &&
                     gameState.ownership[pr.tileIdx] !== playerIdx) {
                     logEvent(`🏗️ ${p.name}'s ${pr.what} project was abandoned — the site was lost.`);
-                    if (playerIdx === 0) pushSummary(`🏗️ Your ${pr.what} project was lost with its tile.`);
+                    if (isHumanSeat(playerIdx)) pushSummary(`🏗️ Your ${pr.what} project was lost with its tile.`);
                     continue;
                 }
                 kept.push(pr);
@@ -13755,14 +14235,14 @@
                     const rr = Math.floor(pr.tileIdx / gameState.boardCols);
                     const cc = pr.tileIdx % gameState.boardCols;
                     logEvent(`🏗️ ${p.name} completed a ${pr.what} at (${rr}, ${cc}).`);
-                    if (playerIdx === 0) { sfx.build(); pushSummary(`🏗️ Your ${pr.what} is complete.`); }
+                    if (isHumanSeat(playerIdx)) { sfx.build(); pushSummary(`🏗️ Your ${pr.what} is complete.`); }
                 } else if (pr.kind === 'tech') {
                     if (p.tech.unlocked.includes(pr.what)) continue;
                     const ageBefore = (typeof getPlayerAge === 'function') ? getPlayerAge(playerIdx).idx : 0;
                     p.tech.unlocked.push(pr.what);
                     const tname = (TECH_TREE[pr.what] && TECH_TREE[pr.what].name) || pr.what;
                     logEvent(`🔬 ${p.name} completed research: ${tname}!`);
-                    if (playerIdx === 0) { sfx.tech(); pushSummary(`🔬 Research complete: ${tname}.`); }
+                    if (isHumanSeat(playerIdx)) { sfx.tech(); pushSummary(`🔬 Research complete: ${tname}.`); }
                     if (typeof checkAgeAdvance === 'function') checkAgeAdvance(playerIdx, ageBefore);
                 }
             }
@@ -13809,7 +14289,7 @@
                     p.manpower = Math.max(0, (p.manpower || 0) - afford);
                     gameState.troops[idx] = (gameState.troops[idx] || 0) + afford;
                     trained += afford; batches++;
-                } else if (playerIdx === 0) {
+                } else if (isHumanSeat(playerIdx)) {
                     pushSummary(`🪖 Barracks couldn't graduate a batch — out of eligible recruits (manpower).`);
                 }
                 // Start the next batch regardless of whether this one was at
@@ -13818,7 +14298,7 @@
             }
             if (trained > 0) {
                 logEvent(`🪖 ${p.name}'s barracks graduated ${trained} troop(s) from ${batches} batch(es).`);
-                if (playerIdx === 0) { sfx.trainDone && sfx.trainDone(); }
+                if (isHumanSeat(playerIdx)) { sfx.trainDone && sfx.trainDone(); }
             }
         }
 
@@ -17203,6 +17683,13 @@
                     const r = origEnd.apply(this, arguments);
                     for (const key of Object.keys(gameState.justifications)) {
                         const j = gameState.justifications[key];
+                        // Older/AI entries may lack indices — recover them from "a_b".
+                        if (j.attackerIdx == null || j.targetIdx == null) {
+                            const [a, b] = key.split('_').map(Number);
+                            j.attackerIdx = a; j.targetIdx = b;
+                        }
+                        const ja = gameState.players[j.attackerIdx], jt = gameState.players[j.targetIdx];
+                        if (!ja || !jt || ja.isDefeated || jt.isDefeated) { delete gameState.justifications[key]; continue; }
                         if (gameState.turn >= j.fireTurn) {
                             try { setDiploStatus(j.attackerIdx, j.targetIdx, 'war'); } catch(e){}
                             if (typeof showToast === 'function')
@@ -19573,7 +20060,8 @@
                 'named-feature','siege-marker','heavy-badge','fog-icon',
                 'role-marker','supply-marker','wall','face-top',
                 'wonder-marker','disaster-overlay','disaster-prop','flag-svg',
-                'general-portrait','event-glyph','barb-camp','ruin-prop'
+                'general-portrait','event-glyph','barb-camp','ruin-prop',
+                'ht-ico','ht-ico-big','ht-tab'
             ]);
             const PROTECT_PARENTS = ['.cell', '.game-board', '.battle-scene',
                 '.missile-layer', '.tactical-overlay', '#battlefield',
@@ -24433,7 +24921,7 @@
                             if ((p.troops||0) > (pj.troops||0) * 1.3 && Math.random() < 0.3) {
                                 const key = i+'_'+j;
                                 if (!gameState.justifications[key]) {
-                                    gameState.justifications[key] = { cbType: 'annex', goalLabel:'🏳️ Annex Tile', fireTurn: gameState.turn + 2 };
+                                    gameState.justifications[key] = { attackerIdx: i, targetIdx: j, cbType: 'annex', goalLabel:'🏳️ Annex Tile', startTurn: gameState.turn, fireTurn: gameState.turn + 2 };
                                     if (typeof logEvent === 'function')
                                         logEvent(`📜 ${p.name} files a casus belli against ${pj.name}.`);
                                 }
@@ -24675,6 +25163,7 @@
                 {key:'cross',  draw:(g,c)=>`<path d="M${c.x-2},${c.y-8} L${c.x+2},${c.y-8} L${c.x+2},${c.y-2} L${c.x+8},${c.y-2} L${c.x+8},${c.y+2} L${c.x+2},${c.y+2} L${c.x+2},${c.y+8} L${c.x-2},${c.y+8} L${c.x-2},${c.y+2} L${c.x-8},${c.y+2} L${c.x-8},${c.y-2} L${c.x-2},${c.y-2} Z" fill="${g.sigilColor}"/>`},
                 {key:'lion',   draw:(g,c)=>`<circle cx="${c.x}" cy="${c.y-1}" r="6" fill="${g.sigilColor}"/><circle cx="${c.x-2}" cy="${c.y-2}" r="0.9" fill="${g.jacket}"/><circle cx="${c.x+2}" cy="${c.y-2}" r="0.9" fill="${g.jacket}"/><path d="M${c.x-2},${c.y+1} Q${c.x},${c.y+3} ${c.x+2},${c.y+1}" stroke="${g.jacket}" stroke-width="0.8" fill="none"/>`},
                 {key:'wolf',   draw:(g,c)=>`<path d="M${c.x-7},${c.y+5} L${c.x-6},${c.y-4} L${c.x-2},${c.y-1} L${c.x+2},${c.y-1} L${c.x+6},${c.y-4} L${c.x+7},${c.y+5} Z" fill="${g.sigilColor}"/>`},
+                {key:'horse',  draw:(g,c)=>`<path d="M${c.x-6},${c.y+8} Q${c.x-7},${c.y+1} ${c.x-4},${c.y-3} L${c.x-3},${c.y-7} Q${c.x-1},${c.y-9} ${c.x+3},${c.y-8} L${c.x+7},${c.y-9} L${c.x+5},${c.y-5} L${c.x+2},${c.y-4} Q${c.x+4},${c.y+2} ${c.x+2},${c.y+8} L${c.x},${c.y+3} L${c.x-2},${c.y+8} Z" fill="${g.sigilColor}"/><circle cx="${c.x+1}" cy="${c.y-6}" r="0.9" fill="${g.jacket}"/>`},
                 {key:'sun',    draw:(g,c)=>`<circle cx="${c.x}" cy="${c.y}" r="5" fill="${g.sigilColor}"/><g stroke="${g.sigilColor}" stroke-width="1.4"><line x1="${c.x}" y1="${c.y-9}" x2="${c.x}" y2="${c.y-7}"/><line x1="${c.x}" y1="${c.y+7}" x2="${c.x}" y2="${c.y+9}"/><line x1="${c.x-9}" y1="${c.y}" x2="${c.x-7}" y2="${c.y}"/><line x1="${c.x+7}" y1="${c.y}" x2="${c.x+9}" y2="${c.y}"/></g>`},
                 {key:'moon',   draw:(g,c)=>`<path d="M${c.x+4},${c.y-6} a 6 6 0 1 0 0 12 a 4.5 4.5 0 1 1 0 -12 Z" fill="${g.sigilColor}"/>`},
                 {key:'anchor', draw:(g,c)=>`<circle cx="${c.x}" cy="${c.y-6}" r="1.6" fill="none" stroke="${g.sigilColor}" stroke-width="1.4"/><path d="M${c.x},${c.y-4} L${c.x},${c.y+7} M${c.x-5},${c.y+7} Q${c.x},${c.y+10} ${c.x+5},${c.y+7}" stroke="${g.sigilColor}" stroke-width="1.6" fill="none" stroke-linecap="round"/>`},
@@ -24726,6 +25215,77 @@
                 </svg>`;
             }
             window.renderSoldierSVG = renderSoldierSVG;
+
+            // ---- Battle-canvas sprite cache ----------------------------------
+            // The battle canvas is 2D, so we rasterise the SAME designed SVG
+            // soldier into an <img> once per unique uniform and stamp it on every
+            // dot. This guarantees the battlefield uniform matches the designer
+            // preview exactly. Returns null until the image has decoded.
+            const _spriteCache = {};
+            window.getUniformSprite = function(u) {
+                if (!u) return null;
+                const key = JSON.stringify(u);
+                let entry = _spriteCache[key];
+                if (entry) return entry.ready ? entry.img : null;
+                const svg = renderSoldierSVG(u, 96);
+                const img = new Image();
+                entry = { img, ready: false };
+                _spriteCache[key] = entry;
+                img.onload = () => { entry.ready = true; };
+                img.onerror = () => { delete _spriteCache[key]; };
+                img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+                return null;
+            };
+
+            function _shade(hex, lum) {
+                if (window._shadeColor) return window._shadeColor(hex, lum);
+                return hex;
+            }
+            // AI nations (and anyone who never opened the designer) get a uniform
+            // derived from their player colour. The jacket stays the nation
+            // colour for instant recognition, while trim / helmet / pattern /
+            // sigil vary deterministically by player index so every army looks
+            // distinct and intentionally "designed".
+            const TRIMS = ['#f5f1e8','#ca8a04','#cbd5e1','#94a3b8','#854d0e','#0f766e'];
+            function deriveUniform(p, idx) {
+                const col = (p && p.color) || '#888888';
+                const i = idx || 0;
+                return {
+                    jacket: col,
+                    trim: TRIMS[i % TRIMS.length],
+                    helmet: _shade(col, -0.55),
+                    sigilColor: TRIMS[(i + 2) % TRIMS.length],
+                    sigil: SIGILS[i % SIGILS.length].key,
+                    pattern: PATTERNS[i % PATTERNS.length]
+                };
+            }
+            const _pick = arr => arr[Math.floor(Math.random() * arr.length)];
+            // Let an AI nation (re)design its uniform. Called from the AI turn:
+            // it ensures a uniform exists and, now and then, restyles it — the
+            // jacket usually keeps the nation colour so the army stays readable.
+            window._maybeAIChangeUniform = function(p, idx) {
+                if (!p) return;
+                if (!p.uniform) { p.uniform = deriveUniform(p, idx); return; }
+                if (Math.random() >= 0.12) return;        // ~12% of turns
+                const col = p.color || p.uniform.jacket;
+                p.uniform = {
+                    jacket: Math.random() < 0.75 ? col : _pick(PALETTE),
+                    trim: _pick(PALETTE),
+                    helmet: _pick(PALETTE),
+                    sigilColor: _pick(PALETTE),
+                    sigil: _pick(SIGILS).key,
+                    pattern: _pick(PATTERNS)
+                };
+                if (typeof logEvent === 'function') logEvent(`🎽 ${p.name || ('AI ' + (idx + 1))} unveiled a new uniform.`);
+            };
+            // Resolve (and cache) the uniform for a given player index.
+            window._resolveUniform = function(idx) {
+                if (idx == null || typeof gameState === 'undefined' || !gameState.players) return null;
+                const p = gameState.players[idx];
+                if (!p) return null;
+                if (!p.uniform) p.uniform = deriveUniform(p, idx);
+                return p.uniform;
+            };
 
             function defaultUniform() {
                 return { jacket:'#991b1b', trim:'#f5f1e8', helmet:'#262626', sigilColor:'#f5f1e8', sigil:'sword', pattern:'sash' };
